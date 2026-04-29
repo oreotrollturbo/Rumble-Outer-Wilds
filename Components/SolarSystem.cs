@@ -12,7 +12,7 @@ public class SolarSystem : MonoBehaviour
 
     public void StartSolarSystem()
     {
-        //TODO Probe cannoooooooon
+        Main.solarSystem.OrbitalProbeCannon.GetComponent<OrbitalProbeCannon>().StartFiringSequence();
     }
 
     public void Scale(float scale)
@@ -34,10 +34,5 @@ public class SolarSystem : MonoBehaviour
             ell.meltStartDistance *= scale;
             ell.meltCompleteDistance *= scale;
         }
-    }
-
-    public void Rotate()
-    {
-        //TODO
     }
 }
