@@ -13,22 +13,33 @@ public class OrbitalProbe : MonoBehaviour
 {
     public OrbitalProbe(IntPtr ptr) : base(ptr) {}
 
-    private float probeSpeed = 1f;
+    private float probeSpeed = 30f;
+
+    private Quaternion rotOffset = Quaternion.Euler(0, 0, 90f);
 
     // Offset from the tip transform in its local space (tweak to sit inside barrel)
-    private Vector3 middleLocalOffset = new Vector3(-0.2f, 0f, 0f);
+    private Vector3 middleLocalOffset = new Vector3(-1.67f, 0, 0);
+
+    private Transform probeHalo;
 
     private Transform midTransform;
     private bool isLaunched = false;
     private Vector3 launchDirection;
+    
+    private Transform cannonTransform;
 
     void Start()
     {
-        // Grab the tip from the cannon's hierarchy:
+        probeHalo = transform.GetChild(0);
+        probeHalo.gameObject.SetActive(false);
+        // Grab the middle from the cannon's hierarchy:
         // SolarSystem root -> OrbitalProbeCannon -> probeCannonRoot (child 0) -> tip (child 2)
         Transform cannonRoot = Main.solarSystem.OrbitalProbeCannon.transform;
         Transform probeCannonRoot = cannonRoot.GetChild(0);
         midTransform = probeCannonRoot.GetChild(1);
+        transform.rotation = midTransform.rotation * rotOffset;
+        
+        cannonTransform = cannonRoot;
     }
 
     void FixedUpdate()
@@ -37,7 +48,7 @@ public class OrbitalProbe : MonoBehaviour
         {
             // Dock: follow tip transform with offset
             transform.position = midTransform.TransformPoint(middleLocalOffset);
-            transform.rotation = midTransform.rotation;
+            transform.rotation = midTransform.rotation * rotOffset;
         }
         else
         {
@@ -48,14 +59,15 @@ public class OrbitalProbe : MonoBehaviour
 
     public void StartLaunch()
     {
+        probeHalo.gameObject.SetActive(true);
         // Snapshot the forward direction of the tip at launch time
-        launchDirection = midTransform.forward;
+        launchDirection = cannonTransform.forward;
         isLaunched = true;
     }
 
     public void Reinitialise()
     {
         isLaunched = false;
-        // FixedUpdate will snap it back to the tip on the next frame
+        probeHalo.gameObject.SetActive(true);
     }
 }

@@ -177,8 +177,8 @@ namespace OuterWildsRumble
 
             if (solarSystem.Root != null)
             {
-                solarSystem.Sun.GetComponent<SupernovaSun>()?.ResetAfterExplosion();
                 MelonCoroutines.Start(solarSystem.Sun.GetComponent<SupernovaSun>().FindPlayerAndSetup());
+                solarSystem.Root.GetComponent<SolarSystem>().StartSolarSystem();
             }
         }
 
@@ -249,6 +249,7 @@ namespace OuterWildsRumble
                 
             if (solarSystem.GiantsDeep != null) solarSystem.GiantsDeep.transform.SetParent(solarSystem.Root.transform, true);
             if (solarSystem.OrbitalProbeCannon != null) solarSystem.OrbitalProbeCannon.transform.SetParent(solarSystem.Root.transform, true);
+            if (solarSystem.OrbitalProbe != null) solarSystem.OrbitalProbe.transform.SetParent(solarSystem.Root.transform, true);
             if (solarSystem.QuantumMoon != null) solarSystem.QuantumMoon.transform.SetParent(solarSystem.Root.transform, true);
                 
             if (solarSystem.DarkBramble != null) solarSystem.DarkBramble.transform.SetParent(solarSystem.Root.transform, true);
@@ -329,7 +330,7 @@ namespace OuterWildsRumble
             solarSystem.WhiteHoleMaterial  = GetMaterial("WhiteHoleMaterial");
             solarSystem.BlackHoleMaterial  = GetMaterial("BlackholeMaterial");
 
-            FixSolarSystemShaders();
+            //FixSolarSystemShaders(); TODO CHECK IF REQUIRED IN VR
 
             // Free the bundle data; instantiated GameObjects and Material references stay alive.
             outerWildsBundle.Unload(false);
@@ -337,18 +338,6 @@ namespace OuterWildsRumble
 
             //Test stuff
             //LoadAndSpawn("AtmospherePlanet");
-        }
-        
-        GameObject LoadAndSpawn(string assetName)
-        {
-            var asset = AssetBundles.LoadAssetFromStream<GameObject>(this, outerWildsBundlePath, assetName);
-            if (asset != null)
-            {
-                MelonLogger.Msg($"Loaded: {assetName}");
-                return GameObject.Instantiate(asset);
-            }
-            MelonLogger.Error($"Failed to load asset: {assetName}");
-            return null;
         }
         
         public static void FixShaders(GameObject spawnedObject)
@@ -410,7 +399,7 @@ namespace OuterWildsRumble
             if (solarSystem.HollowsLantern != null) FixShaders(solarSystem.HollowsLantern);
     
             //if (solarSystem.GiantsDeep != null) FixShaders(solarSystem.GiantsDeep);
-            if (solarSystem.OrbitalProbeCannon != null) FixShaders(solarSystem.OrbitalProbeCannon);
+            //if (solarSystem.OrbitalProbeCannon != null) FixShaders(solarSystem.OrbitalProbeCannon);
             if (solarSystem.QuantumMoon != null) FixShaders(solarSystem.QuantumMoon);
     
             if (solarSystem.DarkBramble != null) FixShaders(solarSystem.DarkBramble);
@@ -728,23 +717,18 @@ namespace OuterWildsRumble
                 Orbiter cannonOrbit = solarSystem.OrbitalProbeCannon.AddComponent<Orbiter>();
                 
                 cannonOrbit.orbitParent = solarSystem.GiantsDeep.transform; 
-                cannonOrbit.orbitDistance = 1.8f;                
+                cannonOrbit.orbitDistance = 1.6f;                
                 cannonOrbit.orbitSpeed = 10f;                 
                 cannonOrbit.spinSpeed = 10f;
                 cannonOrbit.orbitAxis = Vector3.up;
                 cannonOrbit.randomisePos = false;
                 
-                solarSystem.OrbitalProbeCannon.transform.GetChild(0).gameObject.SetActive(false);
+                solarSystem.OrbitalProbeCannon.AddComponent<OrbitalProbeCannon>();
 
-
-                if (true) //TODO
+                if (solarSystem.OrbitalProbe != null)
                 {
-                    Transform probeCannonBase = solarSystem.OrbitalProbeCannon.transform.GetChild(0);
-                    probeCannonBase.GetChild(0).rotation = Quaternion.Euler(354.7151f, 225.9565f, 0);
-                    probeCannonBase.GetChild(1).rotation = Quaternion.Euler(-0f, 0f, 69.0547f);
-                    
-                    probeCannonBase.GetChild(2).rotation = Quaternion.Euler(-0, 0, 312.6561f);
-                    probeCannonBase.GetChild(2).localPosition = new Vector3(3.7276f, 0.006f, -0.006f);
+                    solarSystem.OrbitalProbe.transform.localScale = Vector3.one * 0.001f;
+                    solarSystem.OrbitalProbe.AddComponent<OrbitalProbe>();
                 }
             }
         }
