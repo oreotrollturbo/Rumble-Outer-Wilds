@@ -36,6 +36,8 @@ public class Orbiter : MonoBehaviour
         }
     }
 
+    public Quaternion? customRotation = null; // when set, overrides spin rotation
+
     void FixedUpdate()
     {
         if (orbitParent)
@@ -58,9 +60,16 @@ public class Orbiter : MonoBehaviour
 
             if (spinEnabled)
             {
-                Quaternion tiltRot = Quaternion.Euler(orbitAngles);
-                Quaternion spinRot = Quaternion.AngleAxis(_currentSpinAngle, spinAxis);
-                transform.rotation = orbitParent.rotation * tiltRot * spinRot;
+                if (customRotation.HasValue)
+                {
+                    transform.rotation = customRotation.Value;
+                }
+                else
+                {
+                    Quaternion tiltRot = Quaternion.Euler(orbitAngles);
+                    Quaternion spinRot = Quaternion.AngleAxis(_currentSpinAngle, spinAxis);
+                    transform.rotation = orbitParent.rotation * tiltRot * spinRot;
+                }
             }
         }
     }

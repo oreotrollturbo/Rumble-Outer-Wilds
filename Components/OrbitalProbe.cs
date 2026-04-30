@@ -60,8 +60,7 @@ public class OrbitalProbe : MonoBehaviour
     public void StartLaunch()
     {
         probeHalo.gameObject.SetActive(true);
-        // Snapshot the forward direction of the tip at launch time
-        launchDirection = cannonTransform.forward;
+        launchDirection = cannonTransform.right; //NOT .forward
         isLaunched = true;
     }
 

@@ -717,13 +717,14 @@ namespace OuterWildsRumble
                 Orbiter cannonOrbit = solarSystem.OrbitalProbeCannon.AddComponent<Orbiter>();
                 
                 cannonOrbit.orbitParent = solarSystem.GiantsDeep.transform; 
-                cannonOrbit.orbitDistance = 1.6f;                
+                cannonOrbit.orbitDistance = 1.3f;                
                 cannonOrbit.orbitSpeed = 10f;                 
                 cannonOrbit.spinSpeed = 10f;
                 cannonOrbit.orbitAxis = Vector3.up;
                 cannonOrbit.randomisePos = false;
                 
-                solarSystem.OrbitalProbeCannon.AddComponent<OrbitalProbeCannon>();
+                var probeCannon = solarSystem.OrbitalProbeCannon.AddComponent<OrbitalProbeCannon>();
+                probeCannon.orbiter = cannonOrbit;
 
                 if (solarSystem.OrbitalProbe != null)
                 {
