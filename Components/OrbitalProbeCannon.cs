@@ -115,7 +115,7 @@ public class OrbitalProbeCannon : MonoBehaviour
 
     private IEnumerator FiringSequence()
     {
-        yield return new WaitForSeconds(8f);
+        yield return new WaitForSeconds(10f);
         orbiter.spinEnabled = false;
         Vector3 predictedPosition = orbiter.GetPositionAtAngle(orbiter.GetOrbitAngleAfter(timeToAim));
 

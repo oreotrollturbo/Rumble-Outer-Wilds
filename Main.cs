@@ -180,7 +180,6 @@ namespace OuterWildsRumble
             if (solarSystem.Root != null)
             {
                 MelonCoroutines.Start(solarSystem.Sun.GetComponent<SupernovaSun>().FindPlayerAndSetup());
-                solarSystem.Root.GetComponent<SolarSystem>().StartSolarSystem();
             }
         }
 
@@ -267,6 +266,7 @@ namespace OuterWildsRumble
             solarSystem.Root.GetComponent<SolarSystem>().Scale(30f);
             solarSystem.Root.transform.position += new Vector3(0, 260f, 0);
             
+            solarSystem.Root.GetComponent<SolarSystem>().StartSolarSystem();
             MelonLogger.Msg($"Finished setup!");
         }
         
@@ -310,7 +310,7 @@ namespace OuterWildsRumble
             solarSystem.HourGlassTwins = LoadAndSpawn("HourGlassTwinsGO");
             solarSystem.TimberHearth   = LoadAndSpawn("TimberHearth");
             solarSystem.Attlerock      = LoadAndSpawn("Attlerock");
-            solarSystem.BrittleHollow      = LoadAndSpawn("BrittleHollowFullGO");
+            solarSystem.BrittleHollow      = LoadAndSpawn("BrittleHollowBetter"); //TODO  BrittleHollowFullGO
             solarSystem.HollowsLantern     = LoadAndSpawn("HollowsLantern");
             solarSystem.GiantsDeep     = LoadAndSpawn("GiantsDeep");
             solarSystem.OrbitalProbeCannon = LoadAndSpawn("OrbitalProbeCannonGO");
@@ -332,7 +332,7 @@ namespace OuterWildsRumble
             solarSystem.WhiteHoleMaterial  = GetMaterial("WhiteHoleMaterial");
             solarSystem.BlackHoleMaterial  = GetMaterial("BlackholeMaterial");
 
-            //FixSolarSystemShaders(); TODO CHECK IF REQUIRED IN VR
+            //FixSolarSystemShaders();
 
             // Free the bundle data; instantiated GameObjects and Material references stay alive.
             outerWildsBundle.Unload(false);
@@ -801,8 +801,8 @@ namespace OuterWildsRumble
             { 
                 { solarSystem.HourGlassTwins.transform.GetChild(2), 0.59f },
                 { solarSystem.HourGlassTwins.transform.GetChild(0), 0.59f },
-                { solarSystem.TimberHearth.transform,   0.86f },
-                { solarSystem.BrittleHollow.transform,  0.72f },
+                { solarSystem.TimberHearth.transform,   0.96f },
+                { solarSystem.BrittleHollow.transform,  0.87f },
                 { solarSystem.GiantsDeep.transform,     1.7f },
                 { solarSystem.DarkBramble.transform,    1.7f }
             };

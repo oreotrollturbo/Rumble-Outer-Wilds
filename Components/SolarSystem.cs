@@ -34,5 +34,13 @@ public class SolarSystem : MonoBehaviour
             ell.meltStartDistance *= scale;
             ell.meltCompleteDistance *= scale;
         }
+        
+        
+        var quantumOrbiter = Main.solarSystem.QuantumMoon.GetComponent<QuantumOrbiter>();
+        var keys = new List<Transform>(quantumOrbiter.orbitParents.Keys);
+        foreach (var key in keys)
+        {
+            quantumOrbiter.orbitParents[key] *= scale;
+        }
     }
 }
