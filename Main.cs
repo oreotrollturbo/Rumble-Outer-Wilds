@@ -181,6 +181,11 @@ namespace OuterWildsRumble
             {
                 MelonCoroutines.Start(solarSystem.Sun.GetComponent<SupernovaSun>().FindPlayerAndSetup());
             }
+
+            if (solarSystem.Sun.GetComponent<SupernovaSun>().currentPhase == SupernovaSun.Phase.Done)
+            {
+                solarSystem.Sun.GetComponent<SupernovaSun>().ResetAfterExplosion();
+            }
         }
 
         public void ReplaceAllShaders()

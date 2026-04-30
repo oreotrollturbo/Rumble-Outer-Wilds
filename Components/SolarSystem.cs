@@ -42,5 +42,7 @@ public class SolarSystem : MonoBehaviour
         {
             quantumOrbiter.orbitParents[key] *= scale;
         }
+        
+        Main.solarSystem.Sun.GetComponent<SupernovaSun>().interloperSwallowDistance  *= scale;
     }
 }

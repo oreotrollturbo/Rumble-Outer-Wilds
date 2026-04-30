@@ -46,14 +46,13 @@ public class SupernovaSun : MonoBehaviour
     public float waitAfterRed = 60 + 32f;
     public float collapseDuration = 9.5f;
     public float explosionDuration = 3.7f;
-    public float wallDuration = 32f;            // kept for compatibility (no longer used)
     public Vector3 collapseScale = new(0.08f, 0.08f, 0.08f);
     public Vector3 explosionTargetScale = new(2.5f, 2.5f, 2.5f);
     // How much bigger than the original the sun should be at peak red — set per-axis.
     public Vector3 redGrowthScale = new(0.05f, 0.05f, 0.05f);
     //public Vector3 explosionMaxScale = new(15f, 15f, 15f);
 
-    private float interloperSwallowDistance = 239.8f;
+    public float interloperSwallowDistance = 3.2978f;
 
     // ---------- Light & colour references ----------
     public Light sunLight;
@@ -63,8 +62,8 @@ public class SupernovaSun : MonoBehaviour
     public Color sunlightBlue = Color.cyan;
 
     // ---------- Internal state ----------
-    private enum Phase { Red, RedFullWait, Collapse, Explosion, Wall, Done }
-    private Phase currentPhase = Phase.Red;
+    public enum Phase { Red, RedFullWait, Collapse, Explosion, Wall, Done }
+    public Phase currentPhase = Phase.Red;
     private float phaseTimer = 0f;
 
     private Renderer sunRenderer;
@@ -485,7 +484,6 @@ public class SupernovaSun : MonoBehaviour
 
         gameObject.SetActive(false);
         currentPhase = Phase.Done;
-        ResetAfterExplosion();
     }
 
     private float CalculateWorldRadius(Transform obj)
