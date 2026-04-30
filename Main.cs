@@ -103,7 +103,7 @@ namespace OuterWildsRumble
 
             if (replacementShader == null)
             {
-                MelonLogger.Error("SHADER IS NULL NOOOOOOOOO");
+                MelonLogger.Error("SHADER IS NULL NOOOOOOOOO"); //yikes
             }
         }
         
