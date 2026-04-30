@@ -43,6 +43,8 @@ namespace OuterWildsRumble
         public static ScriptableRendererData activeRenderData;
 
         public static Shader replacementShader;
+
+        public static GameObject prefabSignalScope;
         
         public static string folderPath = MelonEnvironment.UserDataDirectory + @"\OuterWildsRumble";
         
@@ -170,9 +172,9 @@ namespace OuterWildsRumble
             
             
             
-            var SignalScope = GameObject.Instantiate(solarSystem.SignalScope);
-            SignalScope.AddComponent<SignalScope>();
-            SignalScope.transform.localScale = new Vector3(2, 2, 2);
+            solarSystem.SignalScope = GameObject.Instantiate(prefabSignalScope);
+            solarSystem.SignalScope.AddComponent<SignalScope>();
+            solarSystem.SignalScope.transform.localScale = new Vector3(2, 2, 2);
 
 
             if (solarSystem.Root != null)
@@ -322,8 +324,8 @@ namespace OuterWildsRumble
             GameObject.DontDestroyOnLoad(solarSystem.PlayerShip);
 
             // Prefab cache: instances die with the player belt, so re-instantiate in SceneLoaded
-            solarSystem.SignalScope = outerWildsBundle.LoadAsset<GameObject>("SignalscopeGO");
-            solarSystem.SignalScope.hideFlags = HideFlags.DontUnloadUnusedAsset;
+            prefabSignalScope = outerWildsBundle.LoadAsset<GameObject>("SignalscopeGO");
+            prefabSignalScope.hideFlags = HideFlags.DontUnloadUnusedAsset;
             MelonLogger.Msg("Loaded: SignalscopeGO");
 
 

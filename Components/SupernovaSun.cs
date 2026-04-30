@@ -42,7 +42,7 @@ public class SupernovaSun : MonoBehaviour
     private RequiredTarget requiredTarget;
 
     // ---------- Timing & scale settings ----------
-    public int secondsToFullRed = 60 * 1;
+    public int secondsToFullRed = 60 * 22;
     public float waitAfterRed = 60 + 32f;
     public float collapseDuration = 9.5f;
     public float explosionDuration = 3.7f;
@@ -104,6 +104,7 @@ public class SupernovaSun : MonoBehaviour
     // ---------- Unity lifecycle ----------
     void Start()
     {
+        MelonCoroutines.Start(FindPlayerAndSetup());
         sunRenderer = GetComponent<Renderer>();
         if (sunRenderer == null) return;
         sunMaterial = sunRenderer.material;
@@ -222,7 +223,7 @@ public class SupernovaSun : MonoBehaviour
 
         GameObject inteloper = Main.solarSystem.Interloper;
 
-        if (inteloper.activeSelf && Vector3.Distance(inteloper.transform.position,transform.position) < 5.2f)
+        if (Vector3.Distance(inteloper.transform.position,transform.position) < 7.8f)
         {
             inteloper.SetActive(false);
         }
