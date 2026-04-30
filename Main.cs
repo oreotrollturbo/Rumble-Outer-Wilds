@@ -310,7 +310,7 @@ namespace OuterWildsRumble
             solarSystem.HourGlassTwins = LoadAndSpawn("HourGlassTwinsGO");
             solarSystem.TimberHearth   = LoadAndSpawn("TimberHearth");
             solarSystem.Attlerock      = LoadAndSpawn("Attlerock");
-            solarSystem.BrittleHollow      = LoadAndSpawn("BrittleHollowHollow");
+            solarSystem.BrittleHollow      = LoadAndSpawn("BrittleHollowFullGO");
             solarSystem.HollowsLantern     = LoadAndSpawn("HollowsLantern");
             solarSystem.GiantsDeep     = LoadAndSpawn("GiantsDeep");
             solarSystem.OrbitalProbeCannon = LoadAndSpawn("OrbitalProbeCannonGO");

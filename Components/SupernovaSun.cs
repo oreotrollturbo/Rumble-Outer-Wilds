@@ -53,6 +53,8 @@ public class SupernovaSun : MonoBehaviour
     public Vector3 redGrowthScale = new(0.05f, 0.05f, 0.05f);
     //public Vector3 explosionMaxScale = new(15f, 15f, 15f);
 
+    private float interloperSwallowDistance = 239.8f;
+
     // ---------- Light & colour references ----------
     public Light sunLight;
     public Color sunlightOriginal;
@@ -223,7 +225,7 @@ public class SupernovaSun : MonoBehaviour
 
         GameObject inteloper = Main.solarSystem.Interloper;
 
-        if (Vector3.Distance(inteloper.transform.position,transform.position) < 7.8f)
+        if (Vector3.Distance(inteloper.transform.position,transform.position) < interloperSwallowDistance)
         {
             inteloper.SetActive(false);
         }
@@ -483,6 +485,7 @@ public class SupernovaSun : MonoBehaviour
 
         gameObject.SetActive(false);
         currentPhase = Phase.Done;
+        ResetAfterExplosion();
     }
 
     private float CalculateWorldRadius(Transform obj)
