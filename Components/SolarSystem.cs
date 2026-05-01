@@ -13,6 +13,7 @@ public class SolarSystem : MonoBehaviour
     public void StartSolarSystem()
     {
         Main.solarSystem.OrbitalProbeCannon.GetComponent<OrbitalProbeCannon>().StartFiringSequence();
+        Main.solarSystem.BrittleHollow.GetComponent<BrittleHollow>().SolarSystemRestart();
     }
 
     public void Scale(float scale)

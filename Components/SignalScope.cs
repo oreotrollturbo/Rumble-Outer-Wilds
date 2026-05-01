@@ -56,6 +56,16 @@ public class SignalScope : MonoBehaviour
     
     Dictionary<GameObject,MusicEmitter> musicEmitters = new Dictionary<GameObject,MusicEmitter>();
 
+    // --- STABILIZATION VARIABLES ---
+    private Vector3 originalLocalPos;
+    private Quaternion originalLocalRot;
+    private Vector3 smoothedPos;
+    private Quaternion smoothedRot;
+    private Vector3 cameraVelocity = Vector3.zero;
+    
+    public float positionSmoothTime = 0.05f; // Adjust in inspector or here
+    public float rotationSmoothing = 15f;    // Adjust in inspector or here
+
     public SignalScope(IntPtr ptr) : base(ptr)
     {
     }
@@ -68,6 +78,16 @@ public class SignalScope : MonoBehaviour
         startingZoom = Camera.GetComponent<Camera>().fieldOfView;
         currentFOV = Camera.GetComponent<Camera>().fieldOfView;
         Screen = gameObject.transform.GetChild(35).gameObject;
+
+        // --- STABILIZATION SETUP ---
+        // Save the exact offsets the camera has relative to the SignalScope.
+        // We DO NOT unparent the camera. It stays exactly where it is in the hierarchy.
+        originalLocalPos = Camera.transform.localPosition;
+        originalLocalRot = Camera.transform.localRotation;
+        
+        smoothedPos = Camera.transform.position;
+        smoothedRot = Camera.transform.rotation;
+        // ---------------------------
 
         MelonCoroutines.Start(FindPlayerAndSetup());
 
@@ -157,15 +177,34 @@ public class SignalScope : MonoBehaviour
         HandleMusicChange();
     }
 
+    // --- STABILIZATION LOGIC ---
+    void LateUpdate()
+    {
+        if (!hasSetUp || !isHolding) return;
+
+        if (Camera.activeSelf)
+        {
+            // Calculate where the camera WANTS to be based on its strict offsets
+            Vector3 idealWorldPos = transform.TransformPoint(originalLocalPos);
+            Quaternion idealWorldRot = transform.rotation * originalLocalRot;
+
+            // Smoothly transition our standalone coordinates toward the ideal coordinates
+            smoothedPos = Vector3.SmoothDamp(smoothedPos, idealWorldPos, ref cameraVelocity, positionSmoothTime);
+            smoothedRot = Quaternion.Slerp(smoothedRot, idealWorldRot, Time.deltaTime * rotationSmoothing);
+
+            // Overwrite the camera's position. Because this is LateUpdate, it applies right over the jittery parent VR tracking.
+            Camera.transform.position = smoothedPos;
+            Camera.transform.rotation = smoothedRot;
+        }
+    }
+
     public IEnumerator FindPlayerAndSetup()
     {
         while (Calls.Players.GetLocalPlayer() == null || 
                Calls.Players.GetLocalPlayer().Controller == null || 
                Calls.Players.GetLocalPlayer().Controller.PlayerVisuals == null)
         {
-            // Abort if the scene changes while we are waiting
             if (this == null) yield break; 
-        
             yield return new WaitForSeconds(0.5f);
         }
 
@@ -205,6 +244,16 @@ public class SignalScope : MonoBehaviour
 
     void EnableScreen(bool enable)
     {
+        if (enable && !Camera.activeSelf)
+        {
+            // Instantly reset the tracking so the camera doesn't visually "lag" or slide into place the moment you pull it off your belt
+            smoothedPos = transform.TransformPoint(originalLocalPos);
+            smoothedRot = transform.rotation * originalLocalRot;
+            
+            Camera.transform.position = smoothedPos;
+            Camera.transform.rotation = smoothedRot;
+        }
+
         Camera.SetActive(enable);
         Screen.SetActive(enable);
     }
@@ -267,7 +316,6 @@ public class SignalScope : MonoBehaviour
 
         return 1f - (angleToTarget / currentDetectionAngle);
     }
-
 
     public void TurnOffAllMusic()
     {

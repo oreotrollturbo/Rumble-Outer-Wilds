@@ -635,6 +635,8 @@ namespace OuterWildsRumble
             brittleHollowOrbit.spinSpeed = 7f;     
             brittleHollowOrbit.orbitAxis = Vector3.up;
 
+            solarSystem.BrittleHollow.AddComponent<BrittleHollow>();
+
             if (solarSystem.BlackHoleMaterial)
             {
                 GameObject blackHole = GameObject.CreatePrimitive(PrimitiveType.Sphere);
