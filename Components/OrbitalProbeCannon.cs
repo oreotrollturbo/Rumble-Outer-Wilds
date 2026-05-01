@@ -9,21 +9,18 @@ namespace OuterWildsRumble.Components;
 [RegisterTypeInIl2Cpp]
 public class OrbitalProbeCannon : MonoBehaviour
 {
-    public OrbitalProbeCannon(IntPtr ptr) : base(ptr)
-    {
-    }
+    public OrbitalProbeCannon(IntPtr ptr) : base(ptr) {}
 
     private Transform baseTransform;
     private Transform middleTransform;
     private Transform tipTransform;
     private Light explosionLight;
-
     private Transform explosionTransform;
 
     private float fadeInDuration = 0.6f;
     private float fadeOutDuration = 2.3f;
-    private float breakupDelay = 3.1f; // seconds after explosion starts before pieces move
-    private float breakupDuration = 18f; // how long pieces take to fully reach target transforms
+    private float breakupDelay = 3.1f;
+    private float breakupDuration = 18f;
 
     private float timeToAim = 10f;
     private float explosionTime = 6f;
@@ -41,8 +38,9 @@ public class OrbitalProbeCannon : MonoBehaviour
     private float expandFraction = 0.75f;
     private float explosionPeakLightIntensity = 150f;
 
-    // Explosion is pinned here in local space — 2 units offset on X, otherwise at origin
     private Vector3 explosionLocalPosition = new Vector3(0, 0.5636f, 1.3854f);
+
+    public bool hasFiredBefore;
 
     private bool isAimed = false;
     private GameObject aimExclusionTarget;
@@ -51,22 +49,97 @@ public class OrbitalProbeCannon : MonoBehaviour
     private Quaternion targetRotation;
     public Orbiter orbiter;
 
+    // ── Initial-state snapshots (captured in Start, restored on Restart) ──────
+    private Vector3 baseInitialLocalPosition;
+    private Quaternion baseInitialLocalRotation;
+    private Vector3 middleInitialLocalPosition;
+    private Quaternion middleInitialLocalRotation;
+    private Vector3 tipInitialLocalPosition;
+    private Quaternion tipInitialLocalRotation;
+    private Quaternion cannonInitialWorldRotation;
+
+    // ── Active coroutine handles so we can kill them on Restart ──────────────
+    private object firingCoroutine;
+    private object explosionCoroutine;
+
     void Start()
     {
         aimExclusionTarget = Main.solarSystem.GiantsDeep;
         Transform probeCannonRoot = gameObject.transform.GetChild(0);
-        baseTransform = probeCannonRoot.GetChild(0);
+        baseTransform   = probeCannonRoot.GetChild(0);
         middleTransform = probeCannonRoot.GetChild(1);
-        tipTransform = probeCannonRoot.GetChild(2);
+        tipTransform    = probeCannonRoot.GetChild(2);
 
         orbiter = GetComponent<Orbiter>();
 
         explosionTransform = middleTransform.GetChild(0);
-        explosionLight = explosionTransform.GetChild(2).GetComponent<Light>(); //brightens peak is at 150
-        explosionTransform.localScale = new Vector3(0.01f, 0.01f, 0.01f);
+        explosionLight = explosionTransform.GetChild(2).GetComponent<Light>();
+        explosionTransform.localScale    = new Vector3(0.01f, 0.01f, 0.01f);
         explosionTransform.localPosition = explosionLocalPosition;
         explosionTransform.gameObject.SetActive(false);
+
+        // Snapshot the as-spawned local transforms — these are the "ready to fire" positions
+        baseInitialLocalPosition   = baseTransform.localPosition;
+        baseInitialLocalRotation   = baseTransform.localRotation;
+        middleInitialLocalPosition = middleTransform.localPosition;
+        middleInitialLocalRotation = middleTransform.localRotation;
+        tipInitialLocalPosition    = tipTransform.localPosition;
+        tipInitialLocalRotation    = tipTransform.localRotation;
+        cannonInitialWorldRotation = transform.rotation;
     }
+
+    // ── Public entry points ──────────────────────────────────────────────────
+
+    public void StartFiringSequence()
+    {
+        MelonLogger.Msg("Starting firing sequence");
+        firingCoroutine = MelonCoroutines.Start(FiringSequence());
+    }
+
+    /// <summary>
+    /// Stops any in-progress sequence, snaps everything back to its spawn-time
+    /// state, then kicks off a fresh firing sequence — ready to use on loop reset.
+    /// </summary>
+    public void Restart()
+    {
+        MelonLogger.Msg("[OrbitalProbeCannon] Restarting");
+
+        // Kill any running coroutines
+        if (firingCoroutine   != null) { MelonCoroutines.Stop(firingCoroutine);   firingCoroutine   = null; }
+        if (explosionCoroutine != null) { MelonCoroutines.Stop(explosionCoroutine); explosionCoroutine = null; }
+
+        // Restore cannon piece transforms
+        baseTransform.localPosition   = baseInitialLocalPosition;
+        baseTransform.localRotation   = baseInitialLocalRotation;
+        middleTransform.localPosition = middleInitialLocalPosition;
+        middleTransform.localRotation = middleInitialLocalRotation;
+        tipTransform.localPosition    = tipInitialLocalPosition;
+        tipTransform.localRotation    = tipInitialLocalRotation;
+
+        // Restore cannon world orientation
+        transform.rotation = cannonInitialWorldRotation;
+
+        // Clean up explosion VFX
+        if (explosionLight != null) explosionLight.intensity = 0f;
+        explosionTransform.localPosition = explosionLocalPosition;
+        explosionTransform.gameObject.SetActive(false);
+
+        // Reset aim state and re-enable normal orbital spin
+        isAimed = false;
+        if (orbiter != null)
+        {
+            orbiter.customRotation = transform.rotation;
+            orbiter.spinEnabled    = true;
+        }
+
+        // Reset the probe so it docks back in the barrel
+        var probe = Main.solarSystem.OrbitalProbe?.GetComponent<OrbitalProbe>();
+        if (probe != null) probe.Reinitialise();
+
+        // Kick off the next firing cycle
+    }
+
+    // ── Private helpers ──────────────────────────────────────────────────────
 
     private Quaternion GenerateSafeRotation(Vector3 fromPosition)
     {
@@ -107,12 +180,6 @@ public class OrbitalProbeCannon : MonoBehaviour
         }
     }
 
-    public void StartFiringSequence()
-    {
-        MelonLogger.Msg("Starting firing sequence");
-        MelonCoroutines.Start(FiringSequence());
-    }
-
     private IEnumerator FiringSequence()
     {
         yield return new WaitForSeconds(10f);
@@ -129,7 +196,7 @@ public class OrbitalProbeCannon : MonoBehaviour
 
         yield return new WaitForSeconds(timeBetweenLaunchAndExplosion);
 
-        MelonCoroutines.Start(ExplosionSequence());
+        explosionCoroutine = MelonCoroutines.Start(ExplosionSequence());
     }
 
     private IEnumerator ExplosionSequence()
@@ -145,7 +212,6 @@ public class OrbitalProbeCannon : MonoBehaviour
         explosionTransform.gameObject.SetActive(true);
         if (explosionLight != null) explosionLight.intensity = 0f;
 
-        // Phase 1: fade in
         float elapsed = 0f;
         while (elapsed < fadeInDuration)
         {
@@ -157,7 +223,6 @@ public class OrbitalProbeCannon : MonoBehaviour
             yield return null;
         }
 
-        // Phase 2: fade out
         elapsed = 0f;
         while (elapsed < fadeOutDuration)
         {
@@ -174,53 +239,48 @@ public class OrbitalProbeCannon : MonoBehaviour
         explosionTransform.gameObject.SetActive(false);
         if (explosionLight != null) explosionLight.intensity = 0f;
 
-        // Breakup delay — starts counting from when the explosion began, so subtract time already spent
         float timeAlreadyElapsed = fadeInDuration + fadeOutDuration;
         float remainingDelay = breakupDelay - timeAlreadyElapsed;
         if (remainingDelay > 0f)
             yield return new WaitForSeconds(remainingDelay);
 
-        // Snapshot piece starting transforms right before they begin moving
         Vector3 baseStartPos = baseTransform.localPosition;
         Quaternion baseStartRot = baseTransform.localRotation;
-
         Vector3 middleStartPos = middleTransform.localPosition;
         Quaternion middleStartRot = middleTransform.localRotation;
-
         Vector3 tipStartPos = tipTransform.localPosition;
         Quaternion tipStartRot = tipTransform.localRotation;
 
-        // Phase 3: breakup
         elapsed = 0f;
         while (elapsed < breakupDuration)
         {
             elapsed += Time.deltaTime;
             float t = Mathf.Clamp01(elapsed / breakupDuration);
 
-            baseTransform.localPosition = Vector3.Lerp(baseStartPos, baseTagetPosition, t);
-            baseTransform.localRotation = Quaternion.Slerp(baseStartRot, baseTagetRotation, t);
-
+            baseTransform.localPosition   = Vector3.Lerp(baseStartPos,   baseTagetPosition,   t);
+            baseTransform.localRotation   = Quaternion.Slerp(baseStartRot,   baseTagetRotation,   t);
             middleTransform.localPosition = Vector3.Lerp(middleStartPos, middleTagetPosition, t);
             middleTransform.localRotation = Quaternion.Slerp(middleStartRot, middleTagetRotation, t);
-
-            tipTransform.localPosition = Vector3.Lerp(tipStartPos, tipTagetPosition, t);
-            tipTransform.localRotation = Quaternion.Slerp(tipStartRot, tipTagetRotation, t);
+            tipTransform.localPosition    = Vector3.Lerp(tipStartPos,    tipTagetPosition,    t);
+            tipTransform.localRotation    = Quaternion.Slerp(tipStartRot,    tipTagetRotation,    t);
 
             yield return null;
         }
 
-        // Cleanup — snap to final transforms
-        baseTransform.localPosition = baseTagetPosition;
-        baseTransform.localRotation = baseTagetRotation;
+        baseTransform.localPosition   = baseTagetPosition;
+        baseTransform.localRotation   = baseTagetRotation;
         middleTransform.localPosition = middleTagetPosition;
         middleTransform.localRotation = middleTagetRotation;
-        tipTransform.localPosition = tipTagetPosition;
-        tipTransform.localRotation = tipTagetRotation;
+        tipTransform.localPosition    = tipTagetPosition;
+        tipTransform.localRotation    = tipTagetRotation;
 
         if (orbiter != null)
         {
-            orbiter.customRotation = transform.rotation; // lock to current broken orientation
-            orbiter.spinEnabled = true;
+            orbiter.customRotation = transform.rotation;
+            orbiter.spinEnabled    = true;
         }
+
+        explosionCoroutine = null;
+        hasFiredBefore = true;
     }
 }

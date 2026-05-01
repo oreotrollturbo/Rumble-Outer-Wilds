@@ -12,8 +12,12 @@ public class SolarSystem : MonoBehaviour
 
     public void StartSolarSystem()
     {
-        Main.solarSystem.OrbitalProbeCannon.GetComponent<OrbitalProbeCannon>().StartFiringSequence();
+        if (Main.solarSystem.OrbitalProbeCannon.GetComponent<OrbitalProbeCannon>().hasFiredBefore)
+        {
+            Main.solarSystem.OrbitalProbeCannon.GetComponent<OrbitalProbeCannon>().Restart(); //TODO rework logic silly !
+        }
         Main.solarSystem.BrittleHollow.GetComponent<BrittleHollow>().SolarSystemRestart();
+        Main.solarSystem.OrbitalProbeCannon.GetComponent<OrbitalProbeCannon>().StartFiringSequence();
     }
 
     public void Scale(float scale)

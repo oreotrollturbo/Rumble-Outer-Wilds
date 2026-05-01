@@ -315,7 +315,7 @@ namespace OuterWildsRumble
             solarSystem.HourGlassTwins = LoadAndSpawn("HourGlassTwinsGO");
             solarSystem.TimberHearth   = LoadAndSpawn("TimberHearth");
             solarSystem.Attlerock      = LoadAndSpawn("Attlerock");
-            solarSystem.BrittleHollow      = LoadAndSpawn("BrittleHollowBetter"); //TODO  BrittleHollowFullGO
+            solarSystem.BrittleHollow      = LoadAndSpawn("BrittleHollowFullGO1");
             solarSystem.HollowsLantern     = LoadAndSpawn("HollowsLantern");
             solarSystem.GiantsDeep     = LoadAndSpawn("GiantsDeep");
             solarSystem.OrbitalProbeCannon = LoadAndSpawn("OrbitalProbeCannonGO");
@@ -463,7 +463,7 @@ namespace OuterWildsRumble
         void CreateWhiteHole()
         {
             solarSystem.WhiteHole = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            solarSystem.WhiteHole.transform.position = solarSystem.Root.transform.position + new Vector3(0,0, 17.6f);
+            solarSystem.WhiteHole.transform.position = solarSystem.Root.transform.position + new Vector3(0,0, 18.2f);
             solarSystem.WhiteHole.transform.localScale = Vector3.one * 0.14f;
             solarSystem.WhiteHole.name = "WhiteHole";
 
@@ -650,7 +650,7 @@ namespace OuterWildsRumble
                 
                 blackHole.transform.SetParent(solarSystem.BrittleHollow.transform,false);
                 blackHole.transform.localPosition = new Vector3(0, 0, 0);
-                blackHole.transform.localScale = new Vector3(2, 2, 2);
+                blackHole.transform.localScale = new Vector3(1.4f, 1.4f, 1.4f);
             }
     
             if (solarSystem.HollowsLantern != null)
@@ -762,7 +762,7 @@ namespace OuterWildsRumble
             solarSystem.WhiteHoleStation.transform.localScale = Vector3.one * 0.1f;
             
             Vector3 targetPosition = solarSystem.WhiteHole.transform.position;
-            targetPosition.z -= 0.3f;
+            targetPosition.z -= 0.8f;
             solarSystem.WhiteHoleStation.transform.position = targetPosition;
             solarSystem.WhiteHoleStation.transform.rotation = Quaternion.Euler(0, 90f, 0);
         }
