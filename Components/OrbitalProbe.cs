@@ -13,7 +13,7 @@ public class OrbitalProbe : MonoBehaviour
 {
     public OrbitalProbe(IntPtr ptr) : base(ptr) {}
 
-    private float probeSpeed = 30f;
+    public float probeSpeed = 30f;
 
     private Quaternion rotOffset = Quaternion.Euler(0, 0, 90f);
 

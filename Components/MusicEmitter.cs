@@ -20,20 +20,37 @@ public class MusicEmitter: MonoBehaviour
 
     void Start()
     {
-        clipData = AudioManager.PlaySoundIfFileExists(Path.Combine(Main.folderPath,musicFileName) ,0,true);
+        clipData = AudioManager.PlaySoundIfFileExists(
+            Path.Combine(Main.folderPath, musicFileName), 0, true);
     }
 
     public void SetVolume(float volume)
     {
-        if (!gameObject.activeSelf && clipData != null && volume > 0f)
+        if (clipData == null) return;
+
+        // Always silence if inactive, regardless of requested volume
+        float target = gameObject.activeSelf
+            ? Mathf.Clamp(volume, 0f, maxVolume)
+            : 0f;
+
+        // Use a tighter threshold so near-zero volumes still get zeroed out
+        if (Mathf.Abs(clipData.Reader.Volume - target) > 0.001f)
         {
-            AudioManager.ChangeVolume(clipData, 0);
-            return;
+            AudioManager.ChangeVolume(clipData, target);
         }
-        
-        if (clipData != null && Math.Abs(clipData.Reader.Volume - volume) > 0.01)
-        {
-           AudioManager.ChangeVolume(clipData, Mathf.Clamp(volume, 0, maxVolume));
-        }
+    }
+
+    void OnDisable()
+    {
+        // Immediately silence when the GameObject is turned off
+        if (clipData != null)
+            AudioManager.ChangeVolume(clipData, 0f);
+    }
+
+    void OnDestroy()
+    {
+        // Full cleanup when the component is removed
+        AudioManager.StopPlayback(clipData);
+        clipData = null;
     }
 }

@@ -2,6 +2,7 @@
 using MelonLoader;
 using MelonLoader.Utils;
 using OuterWildsRumble.Components;
+using OuterWildsRumble.UIFrameworkSettings;
 using RumbleModdingAPI.RMAPI;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -12,6 +13,7 @@ using Object = UnityEngine.Object;
 
 [assembly: MelonInfo(typeof(OuterWildsRumble.Main), BuildInfo.ModName, BuildInfo.ModVersion, BuildInfo.Author)]
 [assembly: MelonGame("Buckethead Entertainment", "RUMBLE")]
+[assembly: MelonAdditionalDependencies("UIFramework")]
 
 namespace OuterWildsRumble
 {
@@ -55,6 +57,8 @@ namespace OuterWildsRumble
                 MelonLogger.Warning("File at " + folderPath + " does not exist");
                 Directory.CreateDirectory(folderPath);
             }
+
+            OwSystemSettings.Setup(this);
             
             Actions.onMapInitialized += SceneLoaded;
             ClassInjector.RegisterTypeInIl2Cpp<Orbiter>();
@@ -267,8 +271,8 @@ namespace OuterWildsRumble
             
             //if (solarSystem.PlayerShip != null) solarSystem.PlayerShip.transform.SetParent(solarSystem.Root.transform, true);
             
-            
             solarSystem.Root.GetComponent<SolarSystem>().Scale(30f);
+            OwSystemSettings.ApplyToSolarSystem();
             solarSystem.Root.transform.position += new Vector3(0, 260f, 0);
             
             solarSystem.Root.GetComponent<SolarSystem>().StartSolarSystem();

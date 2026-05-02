@@ -62,6 +62,9 @@
             <HintPath>$(RumblePath)/MelonLoader/net6/Newtonsoft.Json.dll</HintPath>
             <Private>false</Private>
         </Reference>
+        <Reference Include="UIFramework">
+          <HintPath>O:\SteamLibrary\steamapps\common\RUMBLE\Mods\UIFramework.dll</HintPath>
+        </Reference>
         <Reference Include="Unity.RenderPipelines.Core.Runtime">
             <HintPath>$(RumblePath)/MelonLoader/Il2CppAssemblies/Unity.RenderPipelines.Core.Runtime.dll</HintPath>
             <Private>false</Private>

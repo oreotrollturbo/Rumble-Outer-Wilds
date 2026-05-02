@@ -17,14 +17,14 @@ public class OrbitalProbeCannon : MonoBehaviour
     private Light explosionLight;
     private Transform explosionTransform;
 
-    private float fadeInDuration = 0.6f;
-    private float fadeOutDuration = 2.3f;
-    private float breakupDelay = 3.1f;
-    private float breakupDuration = 18f;
+    public float fadeInDuration = 0.6f;
+    public float fadeOutDuration = 2.3f;
+    public float breakupDelay = 3.1f;
+    public float breakupDuration = 18f;
 
-    private float timeToAim = 10f;
-    private float explosionTime = 6f;
-    private float timeBetweenLaunchAndExplosion = 0.15f;
+    public float timeToAim = 10f;
+    public float explosionTime = 6f;
+    public float timeBetweenLaunchAndExplosion = 0.15f;
 
     private Vector3 baseTagetPosition = new Vector3(0, 0, 0);
     private Quaternion baseTagetRotation = Quaternion.Euler(354.7151f, 225.9565f, 0);

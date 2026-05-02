@@ -327,6 +327,10 @@ public class SignalScope : MonoBehaviour
 
     public void StopMusicEmitter(GameObject go)
     {
+        if (musicEmitters.TryGetValue(go, out MusicEmitter emitter))
+        {
+            emitter.SetVolume(0f);
+        }
         musicEmitters.Remove(go);
     }
 }
