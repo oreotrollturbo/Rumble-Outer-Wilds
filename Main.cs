@@ -29,9 +29,7 @@ namespace OuterWildsRumble
     public class Main : MelonMod
     {
         public static SolarSystemData solarSystem;
-
-        public static float heightOffset = 260f;
-        public static Vector3 systemCenter = new Vector3(-32f, 5.5f + heightOffset, 0f);
+        
         public static Camera playerCam;
         
         const string outerWildsBundlePath = "OuterWildsRumble.OuterWildsStuff.outerwilds";
@@ -114,67 +112,19 @@ namespace OuterWildsRumble
 
         private void SceneLoaded(string mapName)
         {
-            // var cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            // cube.name = "ShaderHolder";
-            // cube.GetComponent<MeshRenderer>().material.shader = replacementShader;
-
-            // string shaderName = GameObject.Find("SCENE").transform.GetChild(0).GetChild(0).gameObject.GetComponent<MeshRenderer>().material.shader.name;
-            // MelonLogger.Msg("Shader name is: " + shaderName);
-            // "Shader Graphs/MobileEnvironmentUV0"
-            
             ReplaceAllShaders();
             
             RenderSettings.fog = false; 
             playerCam = Camera.main;
-            switch (mapName)
-            {
-                case "Gym":
-                    if (solarSystem.Root == null)
-                    {
-                        SetupSolarSystem();
-                    }
-                    solarSystem.Root.transform.position = new Vector3(2.28f, 16.06f + heightOffset, -306.16f);
-                    solarSystem.Root.transform.rotation = Quaternion.Euler(0, 0, 0);
-                    GameObject.Find("Player Controller(Clone)").transform.GetChild(2).GetChild(0).GetChild(0).GetChild(1).gameObject.SetActive(false);
-                    
-                    solarSystem.PlayerShip.transform.position = new Vector3(-35.4736f, 10.75f, -15.9372f);
-                    solarSystem.PlayerShip.transform.rotation = Quaternion.Euler(-0, 163f, 0);
-                    break;
-                
-                case "Map0":
-                    solarSystem.Root.transform.position = new Vector3(325.45f,76f + heightOffset,240.54f);
-                    solarSystem.Root.transform.rotation = Quaternion.Euler(0, 0, 0);
 
-                    Vector3 pos = new Vector3(15.7553f, 5.7286f, 29.0445f);
-                    Quaternion rot = Quaternion.Euler(349.3421f, 295.3221f, 358.0536f);
-                    if (!Calls.Players.IsHost())
-                    {
-                        pos = new Vector3(22.8553f, 23.9273f, -28.9091f);
-                        rot = Quaternion.Euler(6f, 53.4914f, 359.1993f);
-                    }
-                    
-                    solarSystem.PlayerShip.transform.position = pos;
-                    solarSystem.PlayerShip.transform.rotation = rot;
-                    break;
-                
-                case "Map1":
-                    solarSystem.Root.transform.position = new Vector3(0,20.5f + heightOffset,0);
-                    solarSystem.Root.transform.rotation = Quaternion.Euler(0, 0, 0);
-                    
-                    solarSystem.PlayerShip.transform.position = new Vector3(-34.4782f, 19.8146f, -14.1971f);
-                    solarSystem.PlayerShip.transform.rotation = Quaternion.Euler(359.8188f, 143.5267f, 6.4373f);
-                    break;
-                
-                case "Park":
-                    solarSystem.Root.transform.position = new Vector3(373.32f, 471f + heightOffset, 520.5325f);
-                    solarSystem.Root.transform.rotation = Quaternion.Euler(0, 124.1311f, 0);
-                    
-                    solarSystem.PlayerShip.transform.position = new Vector3(-17.3906f, 5.0094f, -24.2655f);
-                    solarSystem.PlayerShip.transform.rotation = Quaternion.Euler(0f, 88.8748f, 356.2899f);
-                    break;
+            if (mapName == "Gym")
+            {
+                if (solarSystem.Root == null)
+                {
+                    SetupSolarSystem();
+                }
+                GameObject.Find("Player Controller(Clone)").transform.GetChild(2).GetChild(0).GetChild(0).GetChild(1).gameObject.SetActive(false);
             }
-            
-            
             
             solarSystem.SignalScope = GameObject.Instantiate(prefabSignalScope);
             solarSystem.SignalScope.AddComponent<SignalScope>();
@@ -234,8 +184,6 @@ namespace OuterWildsRumble
             solarSystem.Root = new GameObject("OuterWilds_System");
             solarSystem.Root.AddComponent<SolarSystem>();
             
-            solarSystem.Root.transform.position = systemCenter;
-                
             GameObject.DontDestroyOnLoad(solarSystem.Root);
             
             MelonLogger.Msg("Loading assets");
@@ -330,7 +278,9 @@ namespace OuterWildsRumble
             solarSystem.Interloper         = LoadAndSpawn("InterloperGameObject");
 
             solarSystem.PlayerShip         = LoadAndSpawn("HearthianSpaceShip");
+            solarSystem.TapeRecorder         = LoadAndSpawn("ow_recorderGO");
             GameObject.DontDestroyOnLoad(solarSystem.PlayerShip);
+            GameObject.DontDestroyOnLoad(solarSystem.TapeRecorder);
 
             // Prefab cache: instances die with the player belt, so re-instantiate in SceneLoaded
             prefabSignalScope = outerWildsBundle.LoadAsset<GameObject>("SignalscopeGO");
@@ -341,7 +291,6 @@ namespace OuterWildsRumble
             solarSystem.WhiteHoleMaterial  = GetMaterial("WhiteHoleMaterial");
             solarSystem.BlackHoleMaterial  = GetMaterial("BlackholeMaterial");
 
-            //FixSolarSystemShaders();
 
             // Free the bundle data; instantiated GameObjects and Material references stay alive.
             outerWildsBundle.Unload(false);
@@ -349,79 +298,6 @@ namespace OuterWildsRumble
 
             //Test stuff
             //LoadAndSpawn("AtmospherePlanet");
-        }
-        
-        public static void FixShaders(GameObject spawnedObject)
-        {
-            // Use "UI/Default" for full brightness
-            // Use "Universal Render Pipeline/Lit" for the games dynamic lighting !
-            string shaderName = "Universal Render Pipeline/Lit";
-
-            Shader vanillaShader = Shader.Find(shaderName);
-
-            if (vanillaShader == null)
-            {
-                MelonLogger.Warning($"Could not find shader: {shaderName}");
-                return;
-            }
-
-            Renderer[] allRenderers = spawnedObject.GetComponentsInChildren<Renderer>(true);
-    
-            // Check if this is the HourGlassTwins once at the start
-            bool isTwins = spawnedObject.name.Contains("HourGlassTwins");
-
-            foreach (Renderer renderer in allRenderers)
-            {
-                if (isTwins && renderer.gameObject.name.Contains("Proxy"))
-                {
-                    //MelonLogger.Msg("Skipping Sand on HourGlassTwins");
-                    continue;
-                }
-
-                foreach (Material mat in renderer.materials)
-                {
-                    if (mat.name.ToLower().Contains("sand") || mat.shader.name.ToLower().Contains("sand"))
-                    {
-                        //MelonLogger.Msg("Found sand, ignoring");
-                        continue;
-                    }
-                    mat.shader = vanillaShader;
-                }
-            }
-
-            MelonLogger.Msg($"Successfully updated shaders on {spawnedObject.name} to {shaderName}!");
-        }
-        
-        public static void FixSolarSystemShaders()
-        {
-            MelonLogger.Msg("Starting shader fix for the Solar System...");
-            
-            //pass each GameObject field into the FixShaders method.
-            if (solarSystem.Root != null) FixShaders(solarSystem.Root);
-            
-            if (solarSystem.SunStation != null) FixShaders(solarSystem.SunStation);
-    
-            if (solarSystem.HourGlassTwins != null) FixShaders(solarSystem.HourGlassTwins);
-    
-            if (solarSystem.TimberHearth != null) FixShaders(solarSystem.TimberHearth);
-            if (solarSystem.Attlerock != null) FixShaders(solarSystem.Attlerock);
-    
-            if (solarSystem.BrittleHollow != null) FixShaders(solarSystem.BrittleHollow);
-            if (solarSystem.HollowsLantern != null) FixShaders(solarSystem.HollowsLantern);
-    
-            //if (solarSystem.GiantsDeep != null) FixShaders(solarSystem.GiantsDeep);
-            //if (solarSystem.OrbitalProbeCannon != null) FixShaders(solarSystem.OrbitalProbeCannon);
-            if (solarSystem.QuantumMoon != null) FixShaders(solarSystem.QuantumMoon);
-    
-            if (solarSystem.DarkBramble != null) FixShaders(solarSystem.DarkBramble);
-    
-            if (solarSystem.WhiteHole != null) FixShaders(solarSystem.WhiteHole);
-            if (solarSystem.WhiteHoleStation != null) FixShaders(solarSystem.WhiteHoleStation);
-    
-            if (solarSystem.Interloper != null) FixShaders(solarSystem.Interloper);
-            if (solarSystem.PlayerShip != null) FixShaders(solarSystem.PlayerShip);
-
-            MelonLogger.Msg("Solar System shaders successfully updated!");
         }
 
         void CreateSun()
@@ -440,28 +316,6 @@ namespace OuterWildsRumble
 
             SupernovaSun supernovaSun = solarSystem.Sun.AddComponent<SupernovaSun>();
             supernovaSun.sunLight = sunLight;
-
-
-            // var mat = solarSystem.Sun.GetComponent<Renderer>().material;
-            // var shader = mat.shader;
-
-            // int count = shader.GetPropertyCount();
-            // MelonLogger.Msg("SUN CORE PROPERTIES");
-            // for (int i = 0; i < count; i++)
-            // {
-            //     MelonLogger.Msg("Shader property:" + shader.GetPropertyName(i));
-            // }
-            //
-            //
-            // var mat1 = solarSystem.Sun.transform.GetChild(0).GetComponent<Renderer>().material;
-            // var shader1 = mat1.shader;
-            //
-            // int count1 = shader1.GetPropertyCount();
-            // MelonLogger.Msg("SUN HALO PROPERTIES");
-            // for (int i = 0; i < count1; i++)
-            // {
-            //     MelonLogger.Msg("Shader property:" + shader1.GetPropertyName(i));
-            // }
         }
 
         void CreateWhiteHole()
@@ -629,8 +483,7 @@ namespace OuterWildsRumble
         void SetupBrittleHollow()
         {
             solarSystem.BrittleHollow.transform.localScale = Vector3.one * 0.1f;
-    
-            // Add the Orbiter component
+            
             Orbiter brittleHollowOrbit = solarSystem.BrittleHollow.AddComponent<Orbiter>();
     
             brittleHollowOrbit.orbitParent = solarSystem.Sun.transform;  
@@ -855,6 +708,7 @@ namespace OuterWildsRumble
 
         public GameObject PlayerShip;
         public GameObject SignalScope;
+        public GameObject TapeRecorder;
 
         public Material BlackHoleMaterial;
         public Material WhiteHoleMaterial;
