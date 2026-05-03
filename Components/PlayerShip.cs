@@ -16,9 +16,10 @@ public class PlayerShip : MonoBehaviour
     {
     }
 
-
     void Start()
-    {
+    { 
+        DontDestroyOnLoad(gameObject);
+        transform.localScale = new Vector3(1.5f, 1.5f, 1.5f);
         transform.position = new Vector3(-35.4736f, 10.75f, -15.9372f);
         transform.rotation = Quaternion.Euler(-0, 163f, 0);
         Actions.onMapInitialized += SceneLoaded;

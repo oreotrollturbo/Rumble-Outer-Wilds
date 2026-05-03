@@ -1,4 +1,5 @@
 ﻿using Il2CppInterop.Runtime.Injection;
+using Il2CppTMPro;
 using MelonLoader;
 using MelonLoader.Utils;
 using OuterWildsRumble.Components;
@@ -23,7 +24,7 @@ namespace OuterWildsRumble
         public const string ModVersion = "1.0.0";
         public const string Description = "For my fellow hatchlings";
         public const string Author = "oreotrollturbo";
-        public const string Company = "";
+        public const string Company = "Rumble.LLC";
     }
 
     public class Main : MelonMod
@@ -39,7 +40,6 @@ namespace OuterWildsRumble
         public static Material copyDepthMaterial;
         public static AtmosphereProfile defaultAtmosphereProfile;
         public static ComputeShader opticalDepth;
-        
         public static ScriptableRendererData activeRenderData;
 
         public static Shader replacementShader;
@@ -193,6 +193,8 @@ namespace OuterWildsRumble
             CreateSun();
             CreateWhiteHole();
             SetupOrbitals();
+            SetupPlayerShip();
+            SetupTapeRecorder();
             
             if (solarSystem.Sun != null) solarSystem.Sun.transform.SetParent(solarSystem.Root.transform, true);
             if (solarSystem.SunStation != null) solarSystem.SunStation.transform.SetParent(solarSystem.Root.transform, true);
@@ -279,18 +281,14 @@ namespace OuterWildsRumble
 
             solarSystem.PlayerShip         = LoadAndSpawn("HearthianSpaceShip");
             solarSystem.TapeRecorder         = LoadAndSpawn("ow_recorderGO");
-            GameObject.DontDestroyOnLoad(solarSystem.PlayerShip);
-            GameObject.DontDestroyOnLoad(solarSystem.TapeRecorder);
 
             // Prefab cache: instances die with the player belt, so re-instantiate in SceneLoaded
             prefabSignalScope = outerWildsBundle.LoadAsset<GameObject>("SignalscopeGO");
             prefabSignalScope.hideFlags = HideFlags.DontUnloadUnusedAsset;
             MelonLogger.Msg("Loaded: SignalscopeGO");
 
-
             solarSystem.WhiteHoleMaterial  = GetMaterial("WhiteHoleMaterial");
             solarSystem.BlackHoleMaterial  = GetMaterial("BlackholeMaterial");
-
 
             // Free the bundle data; instantiated GameObjects and Material references stay alive.
             outerWildsBundle.Unload(false);
@@ -359,8 +357,6 @@ namespace OuterWildsRumble
                 SetupInterloper();
                 // must be called after "parent" planets
                 SetupQuantumMoon();
-                
-                SetupPlayerShip();
                 
                 MusicEmitter emitter = solarSystem.HourGlassTwins.AddComponent<MusicEmitter>();
                 emitter.musicFileName = "OW_TravelerTheme_drums.wav"; 
@@ -674,7 +670,12 @@ namespace OuterWildsRumble
 
         void SetupPlayerShip()
         {
-            solarSystem.PlayerShip.transform.localScale = new Vector3(1.5f, 1.5f, 1.5f);
+            solarSystem.PlayerShip.AddComponent<PlayerShip>();
+        }
+        
+        void SetupTapeRecorder()
+        {
+            solarSystem.TapeRecorder.AddComponent<QuantumTapeRecorder>();
         }
     }
     
@@ -712,5 +713,59 @@ namespace OuterWildsRumble
 
         public Material BlackHoleMaterial;
         public Material WhiteHoleMaterial;
+    }
+    
+    
+    public class ButtonWithLabel
+    {
+        public GameObject button;
+        public GameObject label;
+
+        public ButtonWithLabel(Vector3 localPosition, string labelText, string objectName, Transform parent)
+        {
+            // Create button at origin with identity rotation
+            button = Create.NewButton(
+                Vector3.zero, 
+                Quaternion.identity
+            );
+    
+            button.name = objectName;
+            if (parent != null)
+            {
+                button.transform.SetParent(parent, false); // Set parent while maintaining local space
+            }
+
+            // Set local transforms
+            button.transform.localPosition = localPosition;
+            button.transform.localRotation = Quaternion.Euler(90, 180, 0);
+    
+            // Create label as child of button
+            label = Create.NewText(labelText, 0.5f, Color.white, Vector3.zero, Quaternion.identity);
+            label.name = objectName + " label";
+            label.transform.SetParent(button.transform, false);
+            label.transform.localPosition = new Vector3(0, 0.1f, 0f); // Position below button   0f, 0f, 0.12f
+            label.transform.localRotation = Quaternion.Euler(90, 180, 0);
+            
+            TextMeshPro tmp = label.GetComponent<TextMeshPro>();
+            tmp.text = labelText;
+            tmp.enableWordWrapping = false;       // Prevents line breaks
+            tmp.overflowMode = TextOverflowModes.Overflow; // Allows text to extend infinitely
+        }
+
+        public ButtonWithLabel(Vector3 localPosition, string labelText, string objectName, GameObject parent)
+            : this(localPosition, labelText, objectName, parent.transform)
+        {
+        }
+
+        public void ChangeLabelText(string newLabel)
+        {
+            label.GetComponent<TextMeshPro>().text = newLabel;
+        }
+
+        public void Destroy()
+        {
+            GameObject.Destroy(button);
+            GameObject.Destroy(label);
+        }
     }
 }

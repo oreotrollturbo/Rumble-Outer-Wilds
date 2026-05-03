@@ -13,7 +13,7 @@ public class MusicEmitter: MonoBehaviour
 {
     public MusicEmitter(IntPtr ptr) : base(ptr) {}
 
-    public string musicFileName; //TODO set
+    public string musicFileName;
     private AudioManager.ClipData clipData;
     private float maxVolume = 1f;
 

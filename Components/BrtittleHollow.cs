@@ -134,14 +134,12 @@ internal static class BrittleHollowCoroutines
     public static IEnumerator BreakPiecesRoutine(BrittleHollow bh)
     {
         var remaining = new List<Transform>(bh.destructibleParts);
-        MelonLogger.Msg($"[BrittleHollow] BreakPiecesRoutine started — {remaining.Count} pieces queued.");
 
         while (remaining.Count > 0)
         {
             if (bh.cancelled) yield break;
 
             float wait = Random.Range(bh.breakIntervalMin, bh.breakIntervalMax);
-            MelonLogger.Msg($"[BrittleHollow] Next break in {wait:F1}s — {remaining.Count} pieces remaining.");
             yield return new WaitForSeconds(wait);
 
             if (bh.cancelled) yield break;
@@ -152,7 +150,6 @@ internal static class BrittleHollowCoroutines
 
             if (piece == null) continue;
 
-            MelonLogger.Msg($"[BrittleHollow] Breaking piece: {piece.name}");
             bh.StartTracked(BreakPiece(bh, piece));
         }
 

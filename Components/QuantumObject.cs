@@ -9,9 +9,10 @@ namespace OuterWildsRumble.Components;
 public class QuantumObject : MonoBehaviour
 {
     private bool hasChangedPositions;
+    public bool canTeleport = true;
     private Renderer _renderer;
 
-    public List<Vector3> teleportPositions = new();
+    public Dictionary<Vector3,Quaternion> teleportPositions = new();
 
 
     public QuantumObject(IntPtr ptr) : base(ptr)
@@ -21,10 +22,17 @@ public class QuantumObject : MonoBehaviour
     private void Start()
     {
         _renderer = GetComponent<Renderer>();
+
+        if (_renderer == null) //For the tape recorder specifically, coding is my passion :3
+        {
+            _renderer = transform.GetChild(0).GetChild(0).GetComponent<Renderer>();
+        }
     }
 
     void FixedUpdate()
     {
+        if (!canTeleport) return;
+        
         bool isBeingLookedAt = _renderer.isVisible;
 
         if (hasChangedPositions)
@@ -42,17 +50,21 @@ public class QuantumObject : MonoBehaviour
             return;
         }
 
-
         if (teleportPositions.Count > 0)
         {
             int attempts = 0;
             bool foundSafeSpot = false;
             Vector3 potentialPos = Vector3.zero;
+            Quaternion potentialRot = Quaternion.identity;
+
+            // Create a list of keys to randomly select from
+            List<Vector3> positions = new List<Vector3>(teleportPositions.Keys);
 
             while (attempts < 5 && !foundSafeSpot)
             {
-                int index = UnityEngine.Random.Range(0, teleportPositions.Count);
-                potentialPos = teleportPositions[index];
+                int index = UnityEngine.Random.Range(0, positions.Count);
+                potentialPos = positions[index];
+                potentialRot = teleportPositions[potentialPos];
 
                 if (!IsPositionObserved(potentialPos))
                 {
@@ -65,6 +77,7 @@ public class QuantumObject : MonoBehaviour
             if (foundSafeSpot)
             {
                 transform.position = potentialPos;
+                transform.rotation = potentialRot;
                 hasChangedPositions = true;
             }
         }

@@ -12,8 +12,6 @@ public class SolarSystem : MonoBehaviour
     public SolarSystem(IntPtr ptr) : base(ptr) {}
     
     public static float heightOffset = 260f;
-    public static Vector3 systemCenter = new Vector3(-32f, 5.5f + heightOffset, 0f);
-
     public void Start()
     {
         Actions.onMapInitialized += SceneLoaded;
