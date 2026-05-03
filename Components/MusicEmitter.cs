@@ -14,6 +14,7 @@ public class MusicEmitter: MonoBehaviour
     public MusicEmitter(IntPtr ptr) : base(ptr) {}
 
     public string musicFileName;
+    public bool isEnabled = true;
     private AudioManager.ClipData clipData;
     private float maxVolume = 1f;
 
@@ -27,6 +28,8 @@ public class MusicEmitter: MonoBehaviour
     public void SetVolume(float volume)
     {
         if (clipData == null) return;
+        
+        if (!isEnabled) volume = 0f;
 
         // Always silence if inactive, regardless of requested volume
         float target = gameObject.activeSelf

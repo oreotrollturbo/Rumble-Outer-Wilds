@@ -46,6 +46,8 @@ public class OrbitalProbeCannon : MonoBehaviour
     private GameObject aimExclusionTarget;
     private float exclusionAngle = 60f;
 
+    public bool fireProbe = true;
+
     private Quaternion targetRotation;
     public Orbiter orbiter;
 
@@ -92,6 +94,8 @@ public class OrbitalProbeCannon : MonoBehaviour
 
     public void StartFiringSequence()
     {
+        if (!fireProbe) return;
+        
         MelonLogger.Msg("Starting firing sequence");
         firingCoroutine = MelonCoroutines.Start(FiringSequence());
     }

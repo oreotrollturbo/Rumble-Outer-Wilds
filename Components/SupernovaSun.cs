@@ -17,6 +17,8 @@ public class SupernovaSun : MonoBehaviour
     private const string supernovaExplosionSoundName = "Sun_supernova_explosion.wav";
     private const string supernovaWallSoundName = "Sun_supernova_wall.wav";
     
+    public bool DoTimeLoop = true;
+    
     private const float wallBaseVolume = 0.1f;
     private float wallRampRange = 0f;
     private AudioManager.ClipData wallClip;
@@ -172,7 +174,15 @@ public class SupernovaSun : MonoBehaviour
     {
         if (!sunMaterial || !haloMaterial) return;
 
-        phaseTimer += Time.deltaTime;
+        if (DoTimeLoop)
+        {
+            phaseTimer += Time.deltaTime;
+        }
+        else
+        {
+            phaseTimer = 0f;
+            return;
+        }
 
         switch (currentPhase)
         {

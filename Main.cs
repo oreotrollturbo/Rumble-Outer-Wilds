@@ -221,7 +221,7 @@ namespace OuterWildsRumble
             
             //if (solarSystem.PlayerShip != null) solarSystem.PlayerShip.transform.SetParent(solarSystem.Root.transform, true);
             
-            solarSystem.Root.GetComponent<SolarSystem>().Scale(30f);
+            solarSystem.Root.GetComponent<SolarSystem>().Scale(OwSystemSettings.SolarSystemScale);
             OwSystemSettings.ApplyToSolarSystem();
             solarSystem.Root.transform.position += new Vector3(0, 260f, 0);
             

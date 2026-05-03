@@ -34,6 +34,8 @@ public class BrittleHollow : MonoBehaviour
 
     private List<object> _activeCoroutines = new();
 
+    public bool breakApart = true;
+
     void Start()
     {
         var bhRoot = transform.GetChild(0);
@@ -137,7 +139,7 @@ internal static class BrittleHollowCoroutines
 
         while (remaining.Count > 0)
         {
-            if (bh.cancelled) yield break;
+            if (bh.cancelled || !bh.breakApart) yield break;
 
             float wait = Random.Range(bh.breakIntervalMin, bh.breakIntervalMax);
             yield return new WaitForSeconds(wait);

@@ -11,11 +11,9 @@ namespace OuterWildsRumble.UIFrameworkSettings
         // ── Paths ─────────────────────────────────────────────────────────────────
         private const string UserDataPath = "UserData/OuterWildsRumble/";
         private const string ConfigFile = "settings.cfg";
+        
         public const float SolarSystemScale = 30f;
-
-        // =========================================================================
-        // CATEGORIES (created in Setup)
-        // =========================================================================
+        
         private static MelonPreferences_Category globalCat;
         private static MelonPreferences_Category sunCat;
         private static MelonPreferences_Category sunStationCat;
@@ -43,6 +41,7 @@ namespace OuterWildsRumble.UIFrameworkSettings
         // SUN
         // =========================================================================
         public static MelonPreferences_Entry<bool>  SunEnabled;
+        public static MelonPreferences_Entry<bool>  SunDoTimeLoop;
         public static MelonPreferences_Entry<int>   SunSecondsToFullRed;
         public static MelonPreferences_Entry<float> SunWaitAfterRed;
         public static MelonPreferences_Entry<float> SunExpansionSpeed;
@@ -91,6 +90,7 @@ namespace OuterWildsRumble.UIFrameworkSettings
         public static MelonPreferences_Entry<float> BrittleHollowOrbitDistance;
         public static MelonPreferences_Entry<float> BrittleHollowOrbitSpeed;
         public static MelonPreferences_Entry<float> BrittleHollowSpinSpeed;
+        public static MelonPreferences_Entry<bool> BrittleHollowBreakAppart;
         public static MelonPreferences_Entry<float> BrittleHollowBreakIntervalMin;
         public static MelonPreferences_Entry<float> BrittleHollowBreakIntervalMax;
         public static MelonPreferences_Entry<float> BrittleHollowSuckSpeed;
@@ -120,6 +120,7 @@ namespace OuterWildsRumble.UIFrameworkSettings
         public static MelonPreferences_Entry<float> OrbitalProbeCannonOrbitDistance;
         public static MelonPreferences_Entry<float> OrbitalProbeCannonOrbitSpeed;
         public static MelonPreferences_Entry<float> OrbitalProbeCannonSpinSpeed;
+        public static MelonPreferences_Entry<bool> OrbitalProbeCannonFire;
         public static MelonPreferences_Entry<float> OrbitalProbeCannonTimeToAim;
         public static MelonPreferences_Entry<float> OrbitalProbeCannonExplosionTime;
         public static MelonPreferences_Entry<float> OrbitalProbeCannonBreakupDuration;
@@ -137,6 +138,7 @@ namespace OuterWildsRumble.UIFrameworkSettings
         public static MelonPreferences_Entry<float> QuantumMoonOrbitDistance;
         public static MelonPreferences_Entry<float> QuantumMoonOrbitSpeed;
         public static MelonPreferences_Entry<float> QuantumMoonSpinSpeed;
+        public static MelonPreferences_Entry<bool> QuantumMoonPlayMusic;
 
         // =========================================================================
         // DARK BRAMBLE
@@ -218,6 +220,9 @@ namespace OuterWildsRumble.UIFrameworkSettings
             SunEnabled = sunCat.CreateEntry(
                 "Sun_Enabled", true,
                 "Enabled", "Toggle the Sun");
+            SunDoTimeLoop = sunCat.CreateEntry(
+                "Sun_TimeLoop", true,
+                "Do sun time loop", "Let the sun change stages and eventually go kaboom :3");
             SunSecondsToFullRed = sunCat.CreateEntry(
                 "Sun_SecondsToFullRed", 60 * 22,
                 "Seconds to Full Red",
@@ -325,6 +330,9 @@ namespace OuterWildsRumble.UIFrameworkSettings
             BrittleHollowSpinSpeed = brittleHollowCat.CreateEntry(
                 "BrittleHollow_SpinSpeed", 7.0f,
                 "Spin Speed", "Self-rotation degrees per second");
+            BrittleHollowBreakAppart = brittleHollowCat.CreateEntry(
+                "BrittleHollow_BreakApart", true,
+                "Break apart", "Weather chunks of brittle hollow will break apart and warp to the white hole");
             BrittleHollowBreakIntervalMin = brittleHollowCat.CreateEntry(
                 "BrittleHollow_BreakIntervalMin", 28f,
                 "Break Interval Min (s)",
@@ -390,6 +398,9 @@ namespace OuterWildsRumble.UIFrameworkSettings
             OrbitalProbeCannonSpinSpeed = probeCannonCat.CreateEntry(
                 "OrbitalProbeCannon_SpinSpeed", 10f,
                 "Spin Speed", "Self-rotation degrees per second");
+            OrbitalProbeCannonFire = probeCannonCat.CreateEntry(
+                "OrbitalProbeCannon_Fire", true,
+                "Fire probe", "Weather the orbital probe cannon will fire the probe (and then break)");
             OrbitalProbeCannonTimeToAim = probeCannonCat.CreateEntry(
                 "OrbitalProbeCannon_TimeToAim", 10f,
                 "Time to Aim (s)",
@@ -408,9 +419,9 @@ namespace OuterWildsRumble.UIFrameworkSettings
                 "OrbitalProbe_Enabled", true,
                 "Enabled", "Toggle the Orbital Probe");
             OrbitalProbeSpeed = orbitalProbeCat.CreateEntry(
-                "OrbitalProbe_Speed", 30f,
+                "OrbitalProbe_Speed", 40f,
                 "Launch Speed",
-                "World units per second after launch");
+                "How fast the probe will go once fired");
 
             // Quantum Moon
             QuantumMoonEnabled = quantumMoonCat.CreateEntry(
@@ -426,6 +437,9 @@ namespace OuterWildsRumble.UIFrameworkSettings
             QuantumMoonSpinSpeed = quantumMoonCat.CreateEntry(
                 "QuantumMoon_SpinSpeed", 4f,
                 "Spin Speed", "Self-rotation degrees per second");
+            QuantumMoonPlayMusic = quantumMoonCat.CreateEntry(
+                "QuantumMoon_PlayMusic", false,
+                "Play Music", "Toggles the mysterious music coming from the quantum moon. Who could possibly be on it?");
 
             // Dark Bramble
             DarkBrambleEnabled = darkBrambleCat.CreateEntry(
@@ -510,6 +524,7 @@ namespace OuterWildsRumble.UIFrameworkSettings
                     sn.expansionSpeedWorldUnitsPerSec = SunExpansionSpeed.Value;
                     sn.collapseDuration              = SunCollapseDuration.Value;
                     sn.explosionDuration             = SunExplosionDuration.Value;
+                    sn.DoTimeLoop                    = SunDoTimeLoop.Value;
                 }
             }
 
@@ -581,6 +596,7 @@ namespace OuterWildsRumble.UIFrameworkSettings
                 var bh = sys.BrittleHollow.GetComponent<BrittleHollow>();
                 if (bh != null)
                 {
+                    bh.breakApart       = BrittleHollowBreakAppart.Value;
                     bh.breakIntervalMin = BrittleHollowBreakIntervalMin.Value;
                     bh.breakIntervalMax = BrittleHollowBreakIntervalMax.Value;
                     bh.suckSpeed        = BrittleHollowSuckSpeed.Value;
@@ -626,6 +642,7 @@ namespace OuterWildsRumble.UIFrameworkSettings
                 var cannon = sys.OrbitalProbeCannon.GetComponent<OrbitalProbeCannon>();
                 if (cannon != null)
                 {
+                    cannon.fireProbe       = OrbitalProbeCannonFire.Value;
                     cannon.timeToAim       = OrbitalProbeCannonTimeToAim.Value;
                     cannon.explosionTime   = OrbitalProbeCannonExplosionTime.Value;
                     cannon.breakupDuration = OrbitalProbeCannonBreakupDuration.Value;
@@ -649,6 +666,11 @@ namespace OuterWildsRumble.UIFrameworkSettings
                     orb.orbitDistance = QuantumMoonOrbitDistance.Value * SolarSystemScale;
                     orb.orbitSpeed    = QuantumMoonOrbitSpeed.Value;
                     orb.spinSpeed     = QuantumMoonSpinSpeed.Value;
+                }
+                var mus = sys.QuantumMoon.GetComponent<MusicEmitter>();
+                if (mus != null)
+                {
+                    mus.isEnabled = false;
                 }
             }
 
