@@ -112,7 +112,10 @@ namespace OuterWildsRumble
 
         private void SceneLoaded(string mapName)
         {
-            ReplaceAllShaders();
+            if (OwSystemSettings.ShaderReplacement.Value)
+            {
+                ReplaceAllShaders();
+            }
             
             RenderSettings.fog = false; 
             playerCam = Camera.main;
@@ -125,18 +128,20 @@ namespace OuterWildsRumble
                 }
                 GameObject.Find("Player Controller(Clone)").transform.GetChild(2).GetChild(0).GetChild(0).GetChild(1).gameObject.SetActive(false);
             }
-            
-            solarSystem.SignalScope = GameObject.Instantiate(prefabSignalScope);
-            solarSystem.SignalScope.AddComponent<SignalScope>();
-            solarSystem.SignalScope.transform.localScale = new Vector3(2, 2, 2);
 
+            if (OwSystemSettings.SignalScopeEnabled.Value)
+            {
+                solarSystem.SignalScope = GameObject.Instantiate(prefabSignalScope);
+                solarSystem.SignalScope.AddComponent<SignalScope>();
+                solarSystem.SignalScope.transform.localScale = new Vector3(2, 2, 2);
+            }
 
             if (solarSystem.Root != null)
             {
                 MelonCoroutines.Start(solarSystem.Sun.GetComponent<SupernovaSun>().FindPlayerAndSetup());
             }
 
-            if (solarSystem.Sun.GetComponent<SupernovaSun>().currentPhase == SupernovaSun.Phase.Done)
+            if (solarSystem.Sun.GetComponent<SupernovaSun>().currentPhase == SupernovaSun.Phase.Done && !OwSystemSettings.SunResetAfterSupernovaEnd.Value)
             {
                 solarSystem.Sun.GetComponent<SupernovaSun>().ResetAfterExplosion();
             }
@@ -676,6 +681,8 @@ namespace OuterWildsRumble
         void SetupTapeRecorder()
         {
             solarSystem.TapeRecorder.AddComponent<QuantumTapeRecorder>();
+
+            solarSystem.TapeRecorder.SetActive(OwSystemSettings.TapeRecorderToggle.Value);
         }
     }
     

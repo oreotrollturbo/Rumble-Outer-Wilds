@@ -2,6 +2,7 @@
 using MelonLoader;
 using MelonLoader.Preferences;
 using OuterWildsRumble.Components;
+using RumbleModdingAPI.RMAPI;
 using UIFramework;
 
 namespace OuterWildsRumble.UIFrameworkSettings
@@ -31,17 +32,44 @@ namespace OuterWildsRumble.UIFrameworkSettings
         private static MelonPreferences_Category whiteHoleStationCat;
         private static MelonPreferences_Category interloperCat;
         private static MelonPreferences_Category playerShipCat;
+        private static MelonPreferences_Category signalScopeCat;
 
         // =========================================================================
         // GLOBAL
         // =========================================================================
-        public static MelonPreferences_Entry<bool> EnabledEntry;
+        public static MelonPreferences_Entry<bool> EnabledSolarSystem;
+        public static MelonPreferences_Entry<bool> ShaderReplacement;
+        
+        public static MelonPreferences_Entry<float> SolarSystemGymX;
+        public static MelonPreferences_Entry<float> SolarSystemGymY;
+        public static MelonPreferences_Entry<float> SolarSystemGymZ;
+        
+        public static MelonPreferences_Entry<float> SolarSystemRingX;
+        public static MelonPreferences_Entry<float> SolarSystemRingY;
+        public static MelonPreferences_Entry<float> SolarSystemRingZ;
+        
+        public static MelonPreferences_Entry<float> SolarSystemPitX;
+        public static MelonPreferences_Entry<float> SolarSystemPitY;
+        public static MelonPreferences_Entry<float> SolarSystemPitZ;
+        
+        public static MelonPreferences_Entry<float> SolarSystemParkX;
+        public static MelonPreferences_Entry<float> SolarSystemParkY;
+        public static MelonPreferences_Entry<float> SolarSystemParkZ;
+        
+        public static MelonPreferences_Entry<bool> TapeRecorderToggle;
 
         // =========================================================================
         // SUN
         // =========================================================================
         public static MelonPreferences_Entry<bool>  SunEnabled;
         public static MelonPreferences_Entry<bool>  SunDoTimeLoop;
+        public static MelonPreferences_Entry<bool>  SunResetAfterSupernovaEnd;
+        
+        public static MelonPreferences_Entry<float>  SunEndTimesMusicVolume;
+        public static MelonPreferences_Entry<float>  SunCollapseVolume;
+        public static MelonPreferences_Entry<float>  SunExplodeVolume;
+        public static MelonPreferences_Entry<float>  SunSupernovaWallVolume;
+        
         public static MelonPreferences_Entry<int>   SunSecondsToFullRed;
         public static MelonPreferences_Entry<float> SunWaitAfterRed;
         public static MelonPreferences_Entry<float> SunExpansionSpeed;
@@ -169,7 +197,18 @@ namespace OuterWildsRumble.UIFrameworkSettings
         // PLAYER SHIP
         // =========================================================================
         public static MelonPreferences_Entry<bool> PlayerShipEnabled;
-
+        
+        
+        // =========================================================================
+        // SIGNAL SCOPE
+        // =========================================================================
+        public static MelonPreferences_Entry<bool> SignalScopeEnabled;
+        public static MelonPreferences_Entry<bool> SignalScopePlayMusic;
+        public static MelonPreferences_Entry<bool> SignalScopeGrabDuringMatches;
+        
+        public static MelonPreferences_Entry<float> SignalScopeZoomIncrement;
+        public static MelonPreferences_Entry<float> SignalScopeMaxZoom;
+        public static MelonPreferences_Entry<float> SignalScopeMinZoom;
         // =========================================================================
         // SETUP
         // =========================================================================
@@ -198,6 +237,7 @@ namespace OuterWildsRumble.UIFrameworkSettings
             whiteHoleStationCat= MelonPreferences.CreateCategory("OWR_WhiteHoleStation","White Hole Station");
             interloperCat      = MelonPreferences.CreateCategory("OWR_Interloper",    "Interloper");
             playerShipCat      = MelonPreferences.CreateCategory("OWR_PlayerShip",    "Player Ship");
+            signalScopeCat      = MelonPreferences.CreateCategory("OWR_SignalScope",    "SignalScope");
 
             // Make all categories write to the same config file
             var allCategories = new[] {
@@ -212,10 +252,57 @@ namespace OuterWildsRumble.UIFrameworkSettings
             // ── Populate entries in their categories ─────────────────────────────
 
             // General
-            EnabledEntry = globalCat.CreateEntry(
-                "Enabled", true,
-                "Enable Mod", "Master toggle for the mod");
+            EnabledSolarSystem = globalCat.CreateEntry(
+                "OW_Enabled_SolarSystem", true,
+                "Enable Solar System", "Toggles the solar system in the sky on/off");
+            ShaderReplacement = globalCat.CreateEntry(
+                "OW_Shader_Replacement", true,
+                "Enable Shader Replacement", "Replaces the games shaders to allow lighting from other light sources");
+            
+            SolarSystemGymX = globalCat.CreateEntry(
+                "OW_SolarSystemGymX", 2.28f,
+                "Solar System Gym X", "The X position (in-game coordinates) of the solar system in the gym");
+            SolarSystemGymY = globalCat.CreateEntry(
+                "OW_SolarSystemGymY", 276f,
+                "Solar System Gym Y", "The Y position (in-game coordinates) of the solar system in the gym");
+            SolarSystemGymZ = globalCat.CreateEntry(
+                "OW_SolarSystemGymZ", -306f,
+                "Solar System Gym Z", "The Z position (in-game coordinates) of the solar system in the gym");
+            
+            SolarSystemRingX = globalCat.CreateEntry(
+                "OW_SolarSystemRingX", 325.45f,
+                "Solar System Ring X", "The X position (in-game coordinates) of the solar system in the ring");
+            SolarSystemRingY = globalCat.CreateEntry(
+                "OW_SolarSystemRingY", 334f,
+                "Solar System Ring Y", "The Y position (in-game coordinates) of the solar system in the ring");
+            SolarSystemRingZ = globalCat.CreateEntry(
+                "OW_SolarSystemRingZ", 240.54f,
+                "Solar System Ring Z", "The Z position (in-game coordinates) of the solar system in the ring");
+            
+            SolarSystemPitX = globalCat.CreateEntry(
+                "OW_SolarSystemPitX", 0f,
+                "Solar System Pit X", "The X position (in-game coordinates) of the solar system in the pit");
+            SolarSystemPitY = globalCat.CreateEntry(
+                "OW_SolarSystemPitY", 208.5f,
+                "Solar System Pit Y", "The Y position (in-game coordinates) of the solar system in the pit");
+            SolarSystemPitZ = globalCat.CreateEntry(
+                "OW_SolarSystemPitZ", 0f,
+                "Solar System Pit Z", "The Z position (in-game coordinates) of the solar system in the pit");
+            
+            SolarSystemParkX = globalCat.CreateEntry(
+                "OW_SolarSystemParkX", 373.32f,
+                "Solar System Park X", "The X position (in-game coordinates) of the solar system in the park");
+            SolarSystemParkY = globalCat.CreateEntry(
+                "OW_SolarSystemParkY", 731f,
+                "Solar System Park Y", "The Y position (in-game coordinates) of the solar system in the park");
+            SolarSystemParkZ = globalCat.CreateEntry(
+                "OW_SolarSystemParkZ", 520.5f,
+                "Solar System Park Z", "The Z position (in-game coordinates) of the solar system in the park");
 
+            TapeRecorderToggle = globalCat.CreateEntry(
+                "OW_Strange_Toggle", false,
+                "Dolyl ht P", "WARNING contains spoilers for the base game ending. Are you willing to find and investigate?");
+            
             // Sun
             SunEnabled = sunCat.CreateEntry(
                 "Sun_Enabled", true,
@@ -223,6 +310,25 @@ namespace OuterWildsRumble.UIFrameworkSettings
             SunDoTimeLoop = sunCat.CreateEntry(
                 "Sun_TimeLoop", true,
                 "Do sun time loop", "Let the sun change stages and eventually go kaboom :3");
+            
+            SunResetAfterSupernovaEnd = sunCat.CreateEntry(
+                "Sun_ResetInstantly", false,
+                "Instant Reset", "Resets the solar system right after the supernova finishes");
+            
+            SunEndTimesMusicVolume = sunCat.CreateEntry(
+                "Sun_EndTimesVolume", 0.2f,
+                "End Times Volume", "The volume of the end times music from 1 to 0.00 . To disable the music just set it to 0");
+            SunCollapseVolume = sunCat.CreateEntry(
+                "Sun_CollapseVolume", 1f,
+                "Sun Collapsing Volume", "The volume of the end times music from 1 to 0.00 . To disable the music just set it to 0");
+            SunExplodeVolume = sunCat.CreateEntry(
+                "Sun_ExplodeVolume", 1f,
+                "Sun Exploding Volume", "The volume of the sun's explosion from 1 to 0.00 . To disable the music just set it to 0");
+            SunSupernovaWallVolume = sunCat.CreateEntry(
+                "Sun_SuperNovaWallVolume", 1f,
+                "Supernova Wall Volume", "The volume of the sun's supernova wall (the wind rushing n stuff) from 1 to 0.00 . To disable the music just set it to 0");
+            
+            
             SunSecondsToFullRed = sunCat.CreateEntry(
                 "Sun_SecondsToFullRed", 60 * 22,
                 "Seconds to Full Red",
@@ -439,7 +545,7 @@ namespace OuterWildsRumble.UIFrameworkSettings
                 "Spin Speed", "Self-rotation degrees per second");
             QuantumMoonPlayMusic = quantumMoonCat.CreateEntry(
                 "QuantumMoon_PlayMusic", false,
-                "Play Music", "Toggles the mysterious music coming from the quantum moon. Who could possibly be on it?");
+                "Play Music", "Toggles the mysterious music coming from the quantum moon. WARNING only enable if you've finished the base game");
 
             // Dark Bramble
             DarkBrambleEnabled = darkBrambleCat.CreateEntry(
@@ -484,6 +590,31 @@ namespace OuterWildsRumble.UIFrameworkSettings
             PlayerShipEnabled = playerShipCat.CreateEntry(
                 "PlayerShip_Enabled", true,
                 "Enabled", "Toggle the Hearthian spaceship model");
+            
+            // SignalScope
+            SignalScopeEnabled = signalScopeCat.CreateEntry(
+                "SignalScope_Enabled", true,
+                "Enabled", "Toggle the SignalScope");
+            
+            SignalScopePlayMusic = signalScopeCat.CreateEntry(
+                "SignalScope_Music_Enabled", true,
+                "Play music", "Toggle the SignalScope playing music when you point it at planets");
+            
+            SignalScopeGrabDuringMatches = signalScopeCat.CreateEntry(
+                "SignalScope_Grabbing_During_Matches", true,
+                "Grabbable During Matches", "Weather the signalscope can be grabbed during a match (once the match ends it can be grabbed)");
+            
+            SignalScopeZoomIncrement = signalScopeCat.CreateEntry(
+                "SignalScope_Zoom_Increment", 4.6f,
+                "Zoom Increment", "By how much the signalscope will zoom every button press (its an FOV slider)");
+            
+            SignalScopeMinZoom = signalScopeCat.CreateEntry(
+                "SignalScope_Min_Zoom", 120f,
+                "Minimum Zoom", "The minimum zoom the signalscope can reach (camera FOV)");
+            
+            SignalScopeMaxZoom = signalScopeCat.CreateEntry(
+                "SignalScope_Max_Zoom", 1.5f,
+                "Maximum Zoom", "The maximum zoom the signalscope can reach (camera FOV)");
 
             // ── Register all categories with UIFramework ─────────────────────────
             var uiHandle = UI.Register((MelonBase)modInstance,
@@ -492,7 +623,7 @@ namespace OuterWildsRumble.UIFrameworkSettings
                 hollowsLanternCat, giantsDeepCat, probeCannonCat,
                 orbitalProbeCat, quantumMoonCat, darkBrambleCat,
                 whiteHoleCat, whiteHoleStationCat, interloperCat,
-                playerShipCat);
+                playerShipCat, signalScopeCat);
 
             uiHandle.OnModSaved += OnSettingsSaved;
         }
@@ -512,6 +643,9 @@ namespace OuterWildsRumble.UIFrameworkSettings
         public static void ApplyToSolarSystem()
         {
             var sys = Main.solarSystem;
+
+            sys.Root.SetActive(EnabledSolarSystem.Value);
+            sys.Root.GetComponent<SolarSystem>().SceneLoaded(Calls.Scene.GetSceneName());
 
             if (sys.Sun != null)
             {
@@ -704,7 +838,25 @@ namespace OuterWildsRumble.UIFrameworkSettings
             }
 
             if (sys.PlayerShip != null)
+            {
                 sys.PlayerShip.SetActive(PlayerShipEnabled.Value);
+            }
+
+            if (sys.SignalScope != null)
+            {
+                var scope = sys.SignalScope.GetComponent<SignalScope>();
+                scope.playMusic = SignalScopePlayMusic.Value;
+                scope.grabDuringMatches = SignalScopeGrabDuringMatches.Value;
+                
+                scope.minZoom = SignalScopeMinZoom.Value;
+                scope.maxZoom = SignalScopeMaxZoom.Value;
+                scope.zoomIncrement = SignalScopeZoomIncrement.Value;
+            }
+
+            if (sys.TapeRecorder != null)
+            {
+                sys.TapeRecorder.SetActive(TapeRecorderToggle.Value);
+            }
         }
     }
 }

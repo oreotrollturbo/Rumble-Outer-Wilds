@@ -24,10 +24,11 @@ public class SignalScope : MonoBehaviour
     private const float releaseThreshold = 0.1f;
 
     private float currentFOV;
-    private float zoomIncrement = 4.6f;
     
-    private float maxZoom = 120f;
-    private float minZoom = 1.5f;
+    public float zoomIncrement = 4.6f;
+    
+    public float minZoom = 120f;
+    public float maxZoom = 1.5f;
 
     private float startingZoom;
     
@@ -63,8 +64,15 @@ public class SignalScope : MonoBehaviour
     private Quaternion smoothedRot;
     private Vector3 cameraVelocity = Vector3.zero;
     
-    public float positionSmoothTime = 0.05f; // Adjust in inspector or here
-    public float rotationSmoothing = 15f;    // Adjust in inspector or here
+    public float positionSmoothTime = 0.05f; 
+    public float rotationSmoothing = 15f;    
+    
+    public bool playMusic = true;
+    public bool grabDuringMatches = true;
+    
+    private bool isInMatch;
+
+    private bool allMusicOff;
 
     public SignalScope(IntPtr ptr) : base(ptr)
     {
@@ -94,8 +102,11 @@ public class SignalScope : MonoBehaviour
         //Actions.onMapInitialized += SceneLoaded; TODO make signalscope carry over, right not it gets re loaded every scene
         
         SetupButtons();
-        
         CacheMusicEmitters();
+
+        Actions.onMapInitialized += (string val) => isInMatch = false;
+        Actions.onMatchStarted += () => isInMatch = true;
+        Actions.onMatchEnded += () => isInMatch = false;
     }
 
     void CacheMusicEmitters()
@@ -126,13 +137,13 @@ public class SignalScope : MonoBehaviour
         Action zoomInAction = () =>
         {
             currentFOV = Camera.GetComponent<Camera>().fieldOfView;
-            Camera.GetComponent<Camera>().fieldOfView = Mathf.Clamp(currentFOV - zoomIncrement, minZoom, maxZoom);
+            Camera.GetComponent<Camera>().fieldOfView = Mathf.Clamp(currentFOV - zoomIncrement, maxZoom, minZoom);
         };
 
         Action zoomOutAction = () =>
         {
             currentFOV = Camera.GetComponent<Camera>().fieldOfView;
-            Camera.GetComponent<Camera>().fieldOfView = Mathf.Clamp(currentFOV + zoomIncrement, minZoom, maxZoom);
+            Camera.GetComponent<Camera>().fieldOfView = Mathf.Clamp(currentFOV + zoomIncrement, maxZoom, minZoom);
         };
         
         ZoomInButton = Create.NewButton(zoomInAction);
@@ -154,22 +165,17 @@ public class SignalScope : MonoBehaviour
         ZoomOutButton.transform.localScale = new Vector3(0.08f, 0.08f, 0.08f);
     }
 
-    void SceneLoaded(string sceneName)
-    {
-        MelonCoroutines.Start(FindPlayerAndSetup());
-    }
-
     void FixedUpdate()
     {
         if (!hasSetUp) return;
         
         float rightTrigger = Calls.ControllerMap.RightController.GetTrigger();
 
-        if (!isHolding && rightTrigger > holdThreshold && IsHandCloseEnough(rightHandTransform.position))
+        if (!isHolding && rightTrigger > holdThreshold && IsHandCloseEnough(rightHandTransform.position) && !(grabDuringMatches && isInMatch))
         {
             Grab();
         }
-        else if (isHolding && rightTrigger <= releaseThreshold)
+        else if (isHolding && rightTrigger <= releaseThreshold || (grabDuringMatches && isInMatch))
         {
             ReleaseToBelt();
         }
@@ -266,22 +272,24 @@ public class SignalScope : MonoBehaviour
 
     private void HandleMusicChange()
     {
-        if (!isHolding)
+        if (!isHolding || !playMusic)
         {
             TurnOffAllMusic();
             return;
         }
+        
+        allMusicOff = false;
 
         float currentDetectionAngle;
 
         if (currentFOV <= startingZoom)
         {
-            float t = Mathf.InverseLerp(minZoom, startingZoom, currentFOV);
+            float t = Mathf.InverseLerp(maxZoom, startingZoom, currentFOV);
             currentDetectionAngle = Mathf.Lerp(minDetectionAngle, detectionAngleBase, t);
         }
         else
         {
-            float t = Mathf.InverseLerp(startingZoom, maxZoom, currentFOV);
+            float t = Mathf.InverseLerp(startingZoom, minZoom, currentFOV);
             currentDetectionAngle = Mathf.Lerp(detectionAngleBase, maxDetectionAngle, t);
         }
 
@@ -319,6 +327,8 @@ public class SignalScope : MonoBehaviour
 
     public void TurnOffAllMusic()
     {
+        if (allMusicOff) return;
+        allMusicOff = true;
         foreach (var emitter in musicEmitters.Values)
         {
             emitter.SetVolume(0f);

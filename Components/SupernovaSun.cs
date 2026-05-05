@@ -4,6 +4,7 @@ using System.IO;
 using AudioSchtuff;
 using MelonLoader;
 using OuterWildsRumble.Components.SupernovaUtils;
+using OuterWildsRumble.UIFrameworkSettings;
 using RumbleModdingAPI.RMAPI;
 using UnityEngine;
 
@@ -19,7 +20,6 @@ public class SupernovaSun : MonoBehaviour
     
     public bool DoTimeLoop = true;
     
-    private const float wallBaseVolume = 0.1f;
     private float wallRampRange = 0f;
     private AudioManager.ClipData wallClip;
 
@@ -359,7 +359,7 @@ public class SupernovaSun : MonoBehaviour
         if (surfaceDistance <= 0f)
             volume = 1f;
         else
-            volume = Mathf.Lerp(wallBaseVolume, 1f, 1f - Mathf.Clamp01(surfaceDistance / wallRampRange));
+            volume = Mathf.Lerp(OwSystemSettings.SunSupernovaWallVolume.Value, 1f, 1f - Mathf.Clamp01(surfaceDistance / wallRampRange));
 
         wallClip.Reader.Volume = volume;
     }
@@ -414,7 +414,7 @@ public class SupernovaSun : MonoBehaviour
         if (currentPhase != Phase.Red) return;
         Main.solarSystem.SunStation.gameObject.SetActive(false); //TODO swallow interloper
         
-        AudioManager.PlaySoundIfFileExists(Path.Combine(Main.folderPath, endTimesSoundName), 0.2f);
+        AudioManager.PlaySoundIfFileExists(Path.Combine(Main.folderPath, endTimesSoundName), OwSystemSettings.SunEndTimesMusicVolume.Value);
         currentPhase = Phase.RedFullWait;
         phaseTimer = 0f;
         MelonCoroutines.Start(HandlePostRedSequence());
@@ -426,7 +426,7 @@ public class SupernovaSun : MonoBehaviour
 
         currentPhase = Phase.Collapse;
         phaseTimer = 0f;
-        AudioManager.PlaySoundIfFileExists(Path.Combine(Main.folderPath, supernovaCollapseSoundName));
+        AudioManager.PlaySoundIfFileExists(Path.Combine(Main.folderPath, supernovaCollapseSoundName),OwSystemSettings.SunCollapseVolume.Value);
     
         Transform collapseObject = gameObject.transform.GetChild(1);
         Vector3 originalScale = collapseObject.localScale;
@@ -446,8 +446,8 @@ public class SupernovaSun : MonoBehaviour
 
         currentPhase = Phase.Explosion;
         phaseTimer = 0f;
-        AudioManager.PlaySoundIfFileExists(Path.Combine(Main.folderPath, supernovaExplosionSoundName), 1f, false);
-        wallClip = AudioManager.PlaySoundIfFileExists(Path.Combine(Main.folderPath, supernovaWallSoundName), wallBaseVolume, true);
+        AudioManager.PlaySoundIfFileExists(Path.Combine(Main.folderPath, supernovaExplosionSoundName), OwSystemSettings.SunExplodeVolume.Value, false);
+        wallClip = AudioManager.PlaySoundIfFileExists(Path.Combine(Main.folderPath, supernovaWallSoundName), OwSystemSettings.SunSupernovaWallVolume.Value, true);
         yield return new WaitForSeconds(explosionDuration);
 
         // ✅ Force final state before entering Wall phase — no white flash
@@ -494,6 +494,10 @@ public class SupernovaSun : MonoBehaviour
 
         gameObject.SetActive(false);
         currentPhase = Phase.Done;
+        if (OwSystemSettings.SunResetAfterSupernovaEnd.Value)
+        {
+            ResetAfterExplosion();
+        }
     }
 
     private float CalculateWorldRadius(Transform obj)

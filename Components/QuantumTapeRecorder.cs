@@ -7,6 +7,7 @@ using MelonLoader;
 using UnityEngine;
 using Il2CppInterop.Runtime;
 using Il2CppRUMBLE.Interactions.InteractionBase;
+using OuterWildsRumble.UIFrameworkSettings;
 using RumbleModdingAPI.RMAPI;
 using Random = UnityEngine.Random;
 
@@ -79,7 +80,7 @@ public class QuantumTapeRecorder : MonoBehaviour
     private void SetupQuantumPositions()
     {
         quantumStates.Add(new QuantumState(new Vector3(-37.9188f, 8.8919f, -14.7885f), Quaternion.Euler(0, 24.6467f, 0), "ow_audio1.wav"));
-        quantumStates.Add(new QuantumState(new Vector3(-16.1541f, -0.4519f, 4.4417f), Quaternion.Euler(300f, 169.4723f, 0), "ow_audio2.wav"));
+        quantumStates.Add(new QuantumState(new Vector3(-15.9541f, -0.4519f, 4.1417f), Quaternion.Euler(300f, 169.4723f, 0), "ow_audio2.wav"));
         quantumStates.Add(new QuantumState(new Vector3(9.8858f, -3.3028f, -12.2372f), Quaternion.Euler(0, 222.0513f, 0), "ow_audio3.wav"));
         quantumStates.Add(new QuantumState(new Vector3(11.1949f, 0.3814f, 5.4248f), Quaternion.Euler(300.818f, 129.545f, 0), "ow_audio4.wav"));
 
@@ -182,7 +183,7 @@ public class QuantumTapeRecorder : MonoBehaviour
 
     private void SceneLoaded(string mapName)
     {
-        gameObject.SetActive(mapName == "Gym");
+        gameObject.SetActive(mapName == "Gym" && OwSystemSettings.TapeRecorderToggle.Value);
 
         if (activeClip != null)
         {
