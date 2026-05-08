@@ -32,6 +32,8 @@ namespace OuterWildsRumble
         public static SolarSystemData solarSystem;
         
         public static Camera playerCam;
+
+        public static bool isInMatch;
         
         const string outerWildsBundlePath = "OuterWildsRumble.OuterWildsStuff.outerwilds";
         const string eventHorizonBundlePath = "OuterWildsRumble.OuterWildsStuff.eventhorizon";
@@ -59,6 +61,12 @@ namespace OuterWildsRumble
             OwSystemSettings.Setup(this);
             
             Actions.onMapInitialized += SceneLoaded;
+            
+            Actions.onMapInitialized += (string val) => isInMatch = false;
+            Actions.onMatchStarted += () => isInMatch = true;
+            Actions.onMatchEnded += () => isInMatch = false;
+            
+            
             ClassInjector.RegisterTypeInIl2Cpp<Orbiter>();
             ClassInjector.RegisterTypeInIl2Cpp<EllipticalOrbiter>();
             ClassInjector.RegisterTypeInIl2Cpp<QuantumObject>();
@@ -115,6 +123,11 @@ namespace OuterWildsRumble
             if (OwSystemSettings.ShaderReplacement.Value)
             {
                 ReplaceAllShaders();
+            }
+
+            if (OwSystemSettings.OnlySunLighting.Value)
+            {
+                HandleOnlySunLighting(mapName);
             }
             
             RenderSettings.fog = false; 
@@ -180,6 +193,18 @@ namespace OuterWildsRumble
                 item.lightmapIndex = -1;
                 item.lightProbeUsage = (LightProbeUsage)0;
                 item.reflectionProbeUsage = (ReflectionProbeUsage)0;
+            }
+        }
+
+        void HandleOnlySunLighting(string mapName)
+        {
+            if (mapName.Contains("Map"))
+            {
+                GameObject.Find("Lighting & Effects").transform.GetChild(0).gameObject.SetActive(false);
+            }
+            else
+            {
+                GameObject.Find("LIGHTING").SetActive(false);
             }
         }
 
@@ -269,7 +294,7 @@ namespace OuterWildsRumble
                 return null;
             }
 
-            solarSystem.Sun = LoadAndSpawn("SunV2");
+            solarSystem.Sun = LoadAndSpawn("SunV3");
             solarSystem.SunStation         = LoadAndSpawn("SunStation");
             solarSystem.HourGlassTwins = LoadAndSpawn("HourGlassTwinsGO");
             solarSystem.TimberHearth   = LoadAndSpawn("TimberHearth");

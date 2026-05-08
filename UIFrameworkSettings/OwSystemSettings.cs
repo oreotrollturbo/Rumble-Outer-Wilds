@@ -39,6 +39,7 @@ namespace OuterWildsRumble.UIFrameworkSettings
         // =========================================================================
         public static MelonPreferences_Entry<bool> EnabledSolarSystem;
         public static MelonPreferences_Entry<bool> ShaderReplacement;
+        public static MelonPreferences_Entry<bool> OnlySunLighting;
         
         public static MelonPreferences_Entry<float> SolarSystemGymX;
         public static MelonPreferences_Entry<float> SolarSystemGymY;
@@ -63,6 +64,8 @@ namespace OuterWildsRumble.UIFrameworkSettings
         // =========================================================================
         public static MelonPreferences_Entry<bool>  SunEnabled;
         public static MelonPreferences_Entry<bool>  SunDoTimeLoop;
+        public static MelonPreferences_Entry<bool>  SunDoTimeLoopInMatches;
+        public static MelonPreferences_Entry<bool>  SunStayRed;
         public static MelonPreferences_Entry<bool>  SunResetAfterSupernovaEnd;
         
         public static MelonPreferences_Entry<float>  SunEndTimesMusicVolume;
@@ -258,6 +261,9 @@ namespace OuterWildsRumble.UIFrameworkSettings
             ShaderReplacement = globalCat.CreateEntry(
                 "OW_Shader_Replacement", true,
                 "Enable Shader Replacement", "Replaces the games shaders to allow lighting from other light sources");
+            OnlySunLighting = globalCat.CreateEntry(
+                "OW_OnlySunLighting", false,
+                "Only sun lighting", "Removes the built-in light source of the scene leaving the sun to be the only thing lighting everything up");
             
             SolarSystemGymX = globalCat.CreateEntry(
                 "OW_SolarSystemGymX", 2.28f,
@@ -310,6 +316,13 @@ namespace OuterWildsRumble.UIFrameworkSettings
             SunDoTimeLoop = sunCat.CreateEntry(
                 "Sun_TimeLoop", true,
                 "Do sun time loop", "Let the sun change stages and eventually go kaboom :3");
+            SunStayRed = sunCat.CreateEntry(
+                "Sun_StayRed", false,
+                "Stay Red", "Makes the sun stay red if the time loop is disabled");
+            
+            SunDoTimeLoopInMatches = sunCat.CreateEntry(
+                "Sun_TimeLoopInMatches", true,
+                "Do sun time loop in matches", "Let the sun change stages during matches, (disable this to stop supernovas in matches)");
             
             SunResetAfterSupernovaEnd = sunCat.CreateEntry(
                 "Sun_ResetInstantly", false,

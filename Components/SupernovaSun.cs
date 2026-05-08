@@ -176,12 +176,18 @@ public class SupernovaSun : MonoBehaviour
 
         if (DoTimeLoop)
         {
-            phaseTimer += Time.deltaTime;
+            if ((OwSystemSettings.SunDoTimeLoopInMatches.Value && !Main.isInMatch) || !OwSystemSettings.SunDoTimeLoopInMatches.Value)
+            {
+                phaseTimer += Time.deltaTime;
+            }
         }
         else
         {
             phaseTimer = 0f;
-            return;
+            if (OwSystemSettings.SunStayRed.Value)
+            {
+                currentPhase = Phase.RedFullWait;
+            }
         }
 
         switch (currentPhase)

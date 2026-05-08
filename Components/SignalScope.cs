@@ -55,23 +55,19 @@ public class SignalScope : MonoBehaviour
 
     private bool hasSetUp;
     
-    Dictionary<GameObject,MusicEmitter> musicEmitters = new Dictionary<GameObject,MusicEmitter>();
+    Dictionary<GameObject, MusicEmitter> musicEmitters = new Dictionary<GameObject, MusicEmitter>();
 
-    // --- STABILIZATION VARIABLES ---
-    private Vector3 originalLocalPos;
-    private Quaternion originalLocalRot;
-    private Vector3 smoothedPos;
-    private Quaternion smoothedRot;
-    private Vector3 cameraVelocity = Vector3.zero;
+    // --- VIRTUAL PARENTING VARIABLES ---
+    private Vector3 scopeVelocity = Vector3.zero;
+    private Quaternion scopeSmoothedRot;
     
-    public float positionSmoothTime = 0.05f; 
-    public float rotationSmoothing = 15f;    
-    
+    public float scopePositionSmoothTime = 0.05f;
+    public float scopeRotationSmoothing = 15f;
+    // ------------------------------------
+
     public bool playMusic = true;
     public bool grabDuringMatches = true;
     
-    private bool isInMatch;
-
     private bool allMusicOff;
 
     public SignalScope(IntPtr ptr) : base(ptr)
@@ -87,26 +83,10 @@ public class SignalScope : MonoBehaviour
         currentFOV = Camera.GetComponent<Camera>().fieldOfView;
         Screen = gameObject.transform.GetChild(35).gameObject;
 
-        // --- STABILIZATION SETUP ---
-        // Save the exact offsets the camera has relative to the SignalScope.
-        // We DO NOT unparent the camera. It stays exactly where it is in the hierarchy.
-        originalLocalPos = Camera.transform.localPosition;
-        originalLocalRot = Camera.transform.localRotation;
-        
-        smoothedPos = Camera.transform.position;
-        smoothedRot = Camera.transform.rotation;
-        // ---------------------------
-
         MelonCoroutines.Start(FindPlayerAndSetup());
 
-        //Actions.onMapInitialized += SceneLoaded; TODO make signalscope carry over, right not it gets re loaded every scene
-        
         SetupButtons();
         CacheMusicEmitters();
-
-        Actions.onMapInitialized += (string val) => isInMatch = false;
-        Actions.onMatchStarted += () => isInMatch = true;
-        Actions.onMatchEnded += () => isInMatch = false;
     }
 
     void CacheMusicEmitters()
@@ -152,8 +132,8 @@ public class SignalScope : MonoBehaviour
         ZoomOutButton = Create.NewButton(zoomOutAction);
         ZoomOutButton.name = "ZoomOutButton";
         
-        ZoomInButton.transform.SetParent(transform,false);
-        ZoomOutButton.transform.SetParent(transform,false);
+        ZoomInButton.transform.SetParent(transform, false);
+        ZoomOutButton.transform.SetParent(transform, false);
         
         ZoomInButton.transform.localPosition = zoomInButtonLocalPosition;
         ZoomOutButton.transform.localPosition = zoomOutButtonLocalPosition;
@@ -171,11 +151,11 @@ public class SignalScope : MonoBehaviour
         
         float rightTrigger = Calls.ControllerMap.RightController.GetTrigger();
 
-        if (!isHolding && rightTrigger > holdThreshold && IsHandCloseEnough(rightHandTransform.position) && !(grabDuringMatches && isInMatch))
+        if (!isHolding && rightTrigger > holdThreshold && IsHandCloseEnough(rightHandTransform.position) && (grabDuringMatches || !Main.isInMatch))
         {
             Grab();
         }
-        else if (isHolding && rightTrigger <= releaseThreshold || (grabDuringMatches && isInMatch))
+        else if (isHolding && (rightTrigger <= releaseThreshold || (!grabDuringMatches && Main.isInMatch)))
         {
             ReleaseToBelt();
         }
@@ -183,25 +163,23 @@ public class SignalScope : MonoBehaviour
         HandleMusicChange();
     }
 
-    // --- STABILIZATION LOGIC ---
+    // --- VIRTUAL PARENTING LOGIC ---
     void LateUpdate()
     {
         if (!hasSetUp || !isHolding) return;
 
-        if (Camera.activeSelf)
-        {
-            // Calculate where the camera WANTS to be based on its strict offsets
-            Vector3 idealWorldPos = transform.TransformPoint(originalLocalPos);
-            Quaternion idealWorldRot = transform.rotation * originalLocalRot;
+        // Compute where the scope ideally sits relative to the hand
+        Vector3 idealPos = rightHandTransform.TransformPoint(handLocalPosition);
+        Quaternion idealRot = rightHandTransform.rotation * handLocalRotation;
 
-            // Smoothly transition our standalone coordinates toward the ideal coordinates
-            smoothedPos = Vector3.SmoothDamp(smoothedPos, idealWorldPos, ref cameraVelocity, positionSmoothTime);
-            smoothedRot = Quaternion.Slerp(smoothedRot, idealWorldRot, Time.deltaTime * rotationSmoothing);
+        // Smoothly drive the scope there — camera inherits this as a plain child
+        transform.position = Vector3.SmoothDamp(
+            transform.position, idealPos, ref scopeVelocity, scopePositionSmoothTime);
 
-            // Overwrite the camera's position. Because this is LateUpdate, it applies right over the jittery parent VR tracking.
-            Camera.transform.position = smoothedPos;
-            Camera.transform.rotation = smoothedRot;
-        }
+        scopeSmoothedRot = Quaternion.Slerp(
+            scopeSmoothedRot, idealRot, Time.deltaTime * scopeRotationSmoothing);
+
+        transform.rotation = scopeSmoothedRot;
     }
 
     public IEnumerator FindPlayerAndSetup()
@@ -230,9 +208,16 @@ public class SignalScope : MonoBehaviour
 
     private void Grab()
     {
-        transform.SetParent(rightHandTransform);
-        transform.localPosition = handLocalPosition;
-        transform.localRotation = handLocalRotation;
+        // Detach from belt but do NOT re-parent to the hand
+        transform.SetParent(null);
+
+        // Snap to the correct position immediately so there's no slide-in on first grab
+        Vector3 idealPos = rightHandTransform.TransformPoint(handLocalPosition);
+        Quaternion idealRot = rightHandTransform.rotation * handLocalRotation;
+        transform.position = idealPos;
+        transform.rotation = idealRot;
+        scopeSmoothedRot = idealRot;
+        scopeVelocity = Vector3.zero;
 
         isHolding = true;
         EnableScreen(true);
@@ -250,16 +235,6 @@ public class SignalScope : MonoBehaviour
 
     void EnableScreen(bool enable)
     {
-        if (enable && !Camera.activeSelf)
-        {
-            // Instantly reset the tracking so the camera doesn't visually "lag" or slide into place the moment you pull it off your belt
-            smoothedPos = transform.TransformPoint(originalLocalPos);
-            smoothedRot = transform.rotation * originalLocalRot;
-            
-            Camera.transform.position = smoothedPos;
-            Camera.transform.rotation = smoothedRot;
-        }
-
         Camera.SetActive(enable);
         Screen.SetActive(enable);
     }
