@@ -817,7 +817,7 @@ namespace OuterWildsRumble.UIFrameworkSettings
                 var mus = sys.QuantumMoon.GetComponent<MusicEmitter>();
                 if (mus != null)
                 {
-                    mus.isEnabled = false;
+                    mus.isEnabled = QuantumMoonPlayMusic.Value;
                 }
             }
 

@@ -13,170 +13,219 @@ namespace OuterWildsRumble.Components;
 [RegisterTypeInIl2Cpp]
 public class SupernovaSun : MonoBehaviour
 {
-    private const string endTimesSoundName = "OW_EndTimes.wav";
-    private const string supernovaCollapseSoundName = "Sun_supernova_collapse.wav";
+    // ── Sound names ───────────────────────────────────────────────────────────
+    private const string endTimesSoundName           = "OW_EndTimes.wav";
+    private const string supernovaCollapseSoundName  = "Sun_supernova_collapse.wav";
     private const string supernovaExplosionSoundName = "Sun_supernova_explosion.wav";
-    private const string supernovaWallSoundName = "Sun_supernova_wall.wav";
-    
+    private const string supernovaWallSoundName      = "Sun_supernova_wall.wav";
+
+    // ── Settings ──────────────────────────────────────────────────────────────
     public bool DoTimeLoop = true;
-    
+
     private float wallRampRange = 0f;
     private AudioManager.ClipData wallClip;
 
-    private float extraDistance = 25f;          // how far beyond the surface the wall sound reaches max volume
+    private float extraDistance          = 25f;
     private float originalLightIntensity;
 
-    // ---------- Player & expansion control ----------
-    public Transform playerTransform;           // set externally via SetPlayerTransform()
+    // ── Player & expansion ────────────────────────────────────────────────────
+    public Transform playerTransform;
     private bool hasReachedPlayer = false;
-    private bool isFadingOut = false;
-    public float expansionSpeedWorldUnitsPerSec = 24f;   // world units per second during wall phase
+    private bool isFadingOut      = false;
+    public float expansionSpeedWorldUnitsPerSec = 24f;
 
-    // ---------- Required targets ----------
-    // The sun must engulf ALL of these (in addition to the player) before stopping.
-    // Populated in Start() from Main.solarSystem. Add or remove entries there as needed.
+    // ── Required target ───────────────────────────────────────────────────────
     private struct RequiredTarget
     {
         public Transform transform;
-        public float radius;    
-        public bool engulfed;
+        public float     radius;
+        public bool      engulfed;
     }
     private RequiredTarget requiredTarget;
 
-    // ---------- Timing & scale settings ----------
-    public int secondsToFullRed = 60 * 22;
-    public float waitAfterRed = 60 + 32f;
-    public float collapseDuration = 9.5f;
-    public float explosionDuration = 3.7f;
-    public Vector3 collapseScale = new(0.08f, 0.08f, 0.08f);
-    public Vector3 explosionTargetScale = new(2.5f, 2.5f, 2.5f);
-    // How much bigger than the original the sun should be at peak red — set per-axis.
-    public Vector3 redGrowthScale = new(0.05f, 0.05f, 0.05f);
-    //public Vector3 explosionMaxScale = new(15f, 15f, 15f);
+    // ── Timing & scale ────────────────────────────────────────────────────────
+    public int   secondsToFullRed           = 60 * 22;
+    public float waitAfterRed               = 60 + 32f;
+    public float collapseDuration           = 9.5f;
+    public float explosionDuration          = 3.7f;
+    public Vector3 collapseScale            = new(0.08f, 0.08f, 0.08f);
+    public Vector3 explosionTargetScale     = new(2.5f,  2.5f,  2.5f);
+    public Vector3 redGrowthScale           = new(0.05f, 0.05f, 0.05f);
+    public float interloperSwallowDistance  = 3.2978f;
 
-    public float interloperSwallowDistance = 3.2978f;
-
-    // ---------- Light & colour references ----------
+    // ── Light & colour ────────────────────────────────────────────────────────
     public Light sunLight;
     public Color sunlightOriginal;
-    public Color sunlightRed = new(0.73f, 0.116f, 0);
+    public Color sunlightRed   = new(0.73f, 0.116f, 0);
     public Color sunlightWhite = Color.white;
-    public Color sunlightBlue = Color.cyan;
+    public Color sunlightBlue  = Color.cyan;
 
-    // ---------- Internal state ----------
+    // ── Phase state ───────────────────────────────────────────────────────────
     public enum Phase { Red, RedFullWait, Collapse, Explosion, Wall, Done }
     public Phase currentPhase = Phase.Red;
-    private float phaseTimer = 0f;
+    private float phaseTimer  = 0f;
 
-    private Renderer sunRenderer;
+    // ── Dual-sun references ───────────────────────────────────────────────────
+    // Root hierarchy (this component lives on the root empty):
+    //   Root
+    //   ├── [0] transparentSunGO  — used from Explosion onward; supports _Alpha fade
+    //   └── [1] opaqueSunGO       — used during Red, RedFullWait, Collapse
+    //
+    // Each sun child is expected to have:
+    //   sunGO
+    //   ├── [0] Halo (Renderer)
+    //   └── [1] CollapseObject (corona/atmosphere — opaque sun only)
+    private GameObject opaqueSunGO;
+    private GameObject transparentSunGO;
+
+    private Renderer opaqueSunRenderer;
+    private Renderer transSunRenderer;
+
+    private Material opaqueSunMaterial;
+    private Material opaqueHaloMaterial;
+    private Material transSunMaterial;
+    private Material transHaloMaterial;
+
+    // Active convenience pointers — redirected from opaque → transparent at
+    // the start of the Explosion phase.  All phase-update methods use these.
     private Material sunMaterial;
-    private Renderer haloRenderer;
     private Material haloMaterial;
 
+    // ── Shader setting snapshots ──────────────────────────────────────────────
     private SunShaderUtils.SunCoreSettings startCore, redCore, whiteCore, superCore;
     private SunShaderUtils.SunHaloSettings startHalo, redHalo, whiteHalo, superHalo;
 
     private Vector3 initialScale;
 
-    // ---------- Swallowing system ----------
-    private struct BodyToSwallow
-    {
-        public Transform transform;
-        public float radius;
-    }
-    private List<BodyToSwallow> bodiesToSwallow = new ();
+    // ── Swallowing ────────────────────────────────────────────────────────────
+    private struct BodyToSwallow { public Transform transform; public float radius; }
+    private List<BodyToSwallow> bodiesToSwallow = new();
 
-    
     private float sunBaseRadius;
     private float sunRadiusPerUnitScale;
-    
+
+    // The corona object that shrinks away during Collapse (child 1 of opaque sun).
+    private Transform opaqueCollapseObject;
+
+    // ─────────────────────────────────────────────────────────────────────────
 
     public SupernovaSun(IntPtr ptr) : base(ptr) { }
 
+    // ── Public API ────────────────────────────────────────────────────────────
     public void SetBodiesToSwallow(List<Transform> transforms)
     {
         bodiesToSwallow.Clear();
         foreach (Transform t in transforms)
         {
             if (t == null) continue;
-            float radius = CalculateWorldRadius(t);
-            bodiesToSwallow.Add(new BodyToSwallow { transform = t, radius = radius });
+            bodiesToSwallow.Add(new BodyToSwallow { transform = t, radius = CalculateWorldRadius(t) });
         }
     }
 
-    // ---------- Unity lifecycle ----------
+    // ── Unity lifecycle ───────────────────────────────────────────────────────
     void Start()
     {
-        MelonCoroutines.Start(FindPlayerAndSetup());
-        sunRenderer = GetComponent<Renderer>();
-        if (sunRenderer == null) return;
-        sunMaterial = sunRenderer.material;
+        // Locate both sun GameObjects from the root.
+        transparentSunGO = transform.GetChild(0).gameObject;  // hidden until Explosion
+        opaqueSunGO      = transform.GetChild(1).gameObject;  // visible during Red…Collapse
 
-        if (transform.childCount > 0)
+        // Main renderers.
+        opaqueSunRenderer = opaqueSunGO.GetComponent<Renderer>();
+        transSunRenderer  = transparentSunGO.GetComponent<Renderer>();
+
+        if (opaqueSunRenderer == null || transSunRenderer == null) return;
+
+        opaqueSunMaterial = opaqueSunRenderer.material;
+        transSunMaterial  = transSunRenderer.material;
+
+        // Halo: child 0 of each sun — log the full child list so mismatches are obvious.
+        MelonLogger.Msg("[SupernovaSun] Opaque sun children:");
+        for (int i = 0; i < opaqueSunGO.transform.childCount; i++)
         {
-            haloRenderer = transform.GetChild(0).GetComponent<Renderer>();
-            haloMaterial = haloRenderer != null ? haloRenderer.material : null;
+            Transform c = opaqueSunGO.transform.GetChild(i);
+            MelonLogger.Msg($"  [{i}] {c.name}  Renderer={c.GetComponent<Renderer>() != null}");
         }
+        MelonLogger.Msg("[SupernovaSun] Transparent sun children:");
+        for (int i = 0; i < transparentSunGO.transform.childCount; i++)
+        {
+            Transform c = transparentSunGO.transform.GetChild(i);
+            MelonLogger.Msg($"  [{i}] {c.name}  Renderer={c.GetComponent<Renderer>() != null}");
+        }
+
+        Renderer opaqueHaloRenderer = opaqueSunGO.transform.childCount > 0
+            ? opaqueSunGO.transform.GetChild(0).GetComponent<Renderer>()
+            : null;
+        Renderer transHaloRenderer = transparentSunGO.transform.childCount > 0
+            ? transparentSunGO.transform.GetChild(0).GetComponent<Renderer>()
+            : null;
+
+        opaqueHaloMaterial = opaqueHaloRenderer != null ? opaqueHaloRenderer.material : null;
+        transHaloMaterial  = transHaloRenderer  != null ? transHaloRenderer.material  : null;
+
+        MelonLogger.Msg($"[SupernovaSun] opaqueHaloMaterial={opaqueHaloMaterial != null}  transHaloMaterial={transHaloMaterial != null}");
+
+        // Corona object that collapses: child 1 of the opaque sun.
+        if (opaqueSunGO.transform.childCount > 1)
+            opaqueCollapseObject = opaqueSunGO.transform.GetChild(1);
+
+        // Boot state: opaque visible, transparent hidden.
+        opaqueSunGO.SetActive(true);
+        transparentSunGO.SetActive(false);
+
+        // Active refs start on the opaque materials.
+        sunMaterial  = opaqueSunMaterial;
+        haloMaterial = opaqueHaloMaterial;
 
         initialScale = transform.localScale;
 
         if (sunLight != null)
         {
-            sunlightOriginal = sunLight.color;
+            sunlightOriginal     = sunLight.color;
             originalLightIntensity = sunLight.intensity;
         }
-            
 
-        MelonCoroutines.Start(InitializeAfterFrame());
-
-        sunBaseRadius = transform.GetChild(0).GetComponent<Renderer>().bounds.extents.magnitude;
+        // Compute radius from the opaque sun's renderer (it's visible at Start).
         sunBaseRadius = Mathf.Max(
-            sunRenderer.bounds.extents.x,
-            sunRenderer.bounds.extents.y,
-            sunRenderer.bounds.extents.z
-        );
+            opaqueSunRenderer.bounds.extents.x,
+            opaqueSunRenderer.bounds.extents.y,
+            opaqueSunRenderer.bounds.extents.z);
         sunRadiusPerUnitScale = sunBaseRadius / initialScale.x;
 
-        // Register required targets — radius is calculated once here, never again.
-        RequiredTarget CreateRequiredTarget(GameObject go)
+        // Required engulf target.
+        requiredTarget = new RequiredTarget
         {
-            return new RequiredTarget
-            {
-                transform = go.transform,
-                radius = CalculateWorldRadius(go.transform),
-                engulfed = false,
-            };
-        }
+            transform = Main.solarSystem.WhiteHole.transform,
+            radius    = CalculateWorldRadius(Main.solarSystem.WhiteHole.transform),
+            engulfed  = false,
+        };
 
-        requiredTarget = CreateRequiredTarget(Main.solarSystem.WhiteHole);
+        MelonCoroutines.Start(FindPlayerAndSetup());
+        MelonCoroutines.Start(InitializeAfterFrame());
     }
 
     public IEnumerator FindPlayerAndSetup()
     {
-        while (Calls.Players.GetLocalPlayer() == null || 
-               Calls.Players.GetLocalPlayer().Controller == null || 
+        while (Calls.Players.GetLocalPlayer() == null ||
+               Calls.Players.GetLocalPlayer().Controller == null ||
                Calls.Players.GetLocalPlayer().Controller.PlayerVisuals == null)
         {
-            // Abort if the scene changes while we are waiting
-            if (this == null) yield break; 
-        
+            if (this == null) yield break;
             yield return new WaitForSeconds(0.5f);
         }
-
         yield return new WaitForSeconds(1f);
-    
         if (this == null) yield break;
-
         playerTransform = Calls.Players.GetLocalPlayer().Controller.PlayerVisuals.transform.GetChild(1);
     }
 
+    // ── Fixed update ──────────────────────────────────────────────────────────
     void FixedUpdate()
     {
-        if (!sunMaterial || !haloMaterial) return;
+        if (sunMaterial == null) return;
 
         if (DoTimeLoop)
         {
-            if ((OwSystemSettings.SunDoTimeLoopInMatches.Value && !Main.isInMatch) || !OwSystemSettings.SunDoTimeLoopInMatches.Value)
+            if ((OwSystemSettings.SunDoTimeLoopInMatches.Value && !Main.isInMatch) ||
+                !OwSystemSettings.SunDoTimeLoopInMatches.Value)
             {
                 phaseTimer += Time.deltaTime;
             }
@@ -185,76 +234,52 @@ public class SupernovaSun : MonoBehaviour
         {
             phaseTimer = 0f;
             if (OwSystemSettings.SunStayRed.Value)
-            {
                 currentPhase = Phase.RedFullWait;
-            }
         }
 
         switch (currentPhase)
         {
-            case Phase.Red:
-                UpdateRedPhase();
-                break;
-            case Phase.RedFullWait:
-                UpdateRedFullWaitPhase();
-                break;
-            case Phase.Collapse:
-                UpdateCollapsePhase();
-                break;
-            case Phase.Explosion:
-                UpdateExplosionPhase();
-                break;
-            case Phase.Wall:
-                UpdateWallPhase();
-                break;
+            case Phase.Red:         UpdateRedPhase();         break;
+            case Phase.RedFullWait: UpdateRedFullWaitPhase(); break;
+            case Phase.Collapse:    UpdateCollapsePhase();    break;
+            case Phase.Explosion:   UpdateExplosionPhase();   break;
+            case Phase.Wall:        UpdateWallPhase();        break;
         }
     }
 
-    // ---------- Phase update methods ----------
+    // ── Phase updates ─────────────────────────────────────────────────────────
     private void UpdateRedPhase()
     {
-        float t = Mathf.Clamp01(phaseTimer / secondsToFullRed);
-        
-        float sizeT = Mathf.SmoothStep(0f, 1f, t);
+        float t      = Mathf.Clamp01(phaseTimer / secondsToFullRed);
+        float sizeT  = Mathf.SmoothStep(0f, 1f, t);
+        float colorT = Mathf.Pow(t, 3f);  // ease-in: stays orange longer
+
         transform.localScale = Vector3.Lerp(initialScale, initialScale + redGrowthScale, sizeT);
-
-        // COLOR: Use an exponential "Ease-In" curve. 
-        // Mathf.Pow(t, 2f) or Mathf.Pow(t, 3f) will make the sun stay its original 
-        // color for much longer, only aggressively turning red near the end.
-        float colorT = Mathf.Pow(t, 3f); 
-
         SunShaderUtils.ApplyCore(sunMaterial, LerpCore(startCore, redCore, colorT));
-        SunShaderUtils.ApplyHalo(haloMaterial, LerpHalo(startHalo, redHalo, colorT));
+        if (haloMaterial != null) SunShaderUtils.ApplyHalo(haloMaterial, LerpHalo(startHalo, redHalo, colorT));
         sunLight.color = Color.Lerp(sunlightOriginal, sunlightRed, colorT);
 
-        if (t >= 1f)
-            OnRedFull();
+        if (t >= 1f) OnRedFull();
     }
 
     private void UpdateRedFullWaitPhase()
     {
         SunShaderUtils.ApplyCore(sunMaterial, redCore);
-        SunShaderUtils.ApplyHalo(haloMaterial, redHalo);
-        sunLight.color = sunlightRed;
+        if (haloMaterial != null) SunShaderUtils.ApplyHalo(haloMaterial, redHalo);
+        sunLight.color       = sunlightRed;
         transform.localScale = initialScale + redGrowthScale;
 
-        GameObject inteloper = Main.solarSystem.Interloper;
-
-        if (Vector3.Distance(inteloper.transform.position,transform.position) < interloperSwallowDistance)
-        {
-            inteloper.SetActive(false);
-        }
+        GameObject interloper = Main.solarSystem.Interloper;
+        if (Vector3.Distance(interloper.transform.position, transform.position) < interloperSwallowDistance)
+            interloper.SetActive(false);
     }
 
     private void UpdateCollapsePhase()
     {
-        float t = Mathf.Clamp01(phaseTimer / collapseDuration);
-        t = Mathf.SmoothStep(0f, 1f, t);
-
+        float t = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(phaseTimer / collapseDuration));
         transform.localScale = Vector3.Lerp(initialScale + redGrowthScale, collapseScale, t);
-
         SunShaderUtils.ApplyCore(sunMaterial, LerpCore(redCore, whiteCore, t));
-        SunShaderUtils.ApplyHalo(haloMaterial, LerpHalo(redHalo, whiteHalo, t));
+        if (haloMaterial != null) SunShaderUtils.ApplyHalo(haloMaterial, LerpHalo(redHalo, whiteHalo, t));
         sunLight.color = Color.Lerp(sunlightRed, sunlightWhite, t);
     }
 
@@ -262,66 +287,52 @@ public class SupernovaSun : MonoBehaviour
     {
         float t = Mathf.Clamp01(phaseTimer / explosionDuration);
         transform.localScale = Vector3.Lerp(collapseScale, explosionTargetScale, t);
-
         SunShaderUtils.ApplyCore(sunMaterial, LerpCore(whiteCore, superCore, t));
-        SunShaderUtils.ApplyHalo(haloMaterial, LerpHalo(whiteHalo, superHalo, t));
+        if (haloMaterial != null) SunShaderUtils.ApplyHalo(haloMaterial, LerpHalo(whiteHalo, superHalo, t));
         sunLight.color = Color.Lerp(sunlightWhite, sunlightBlue, t);
-
-        // Keep updating wall-sound volume during explosion so the ramp is seamless.
         UpdateWallClipVolume();
     }
 
-    // ---------- Modified wall phase with continuous expansion & dynamic volume ----------
     private void UpdateWallPhase()
     {
-        // Keep core/halo super state
         SunShaderUtils.ApplyCore(sunMaterial, superCore);
-        SunShaderUtils.ApplyHalo(haloMaterial, superHalo);
+        if (haloMaterial != null) SunShaderUtils.ApplyHalo(haloMaterial, superHalo);
         sunLight.color = sunlightBlue;
 
         float currentRadius = sunRadiusPerUnitScale * transform.localScale.x;
-        Vector3 sunPos = transform.position;
+        Vector3 sunPos      = transform.position;
 
-        // Swallow other bodies
+        // Swallow bodies.
         for (int i = bodiesToSwallow.Count - 1; i >= 0; i--)
         {
             BodyToSwallow body = bodiesToSwallow[i];
-            Transform tr = body.transform;
+            Transform     tr   = body.transform;
             if (!tr.gameObject.activeSelf) continue;
-            float dist = Vector3.Distance(tr.position, sunPos);
-            if (currentRadius >= dist + body.radius + extraDistance)
+            if (currentRadius >= Vector3.Distance(tr.position, sunPos) + body.radius + extraDistance)
             {
                 tr.gameObject.SetActive(false);
-                Main.solarSystem.SignalScope.GetComponent<SignalScope>().StopMusicEmitter(tr.gameObject); //This should be fine
+                Main.solarSystem.SignalScope.GetComponent<SignalScope>().StopMusicEmitter(tr.gameObject);
             }
         }
 
         if (isFadingOut) return;
 
-        // Single target logic
         float farthestRequired = 0f;
-        
+
         if (requiredTarget.engulfed || !requiredTarget.transform.gameObject.activeSelf)
         {
             requiredTarget.engulfed = true;
         }
         else
         {
-            // 2. Calculate distance logic for the single target
-            float dist = Vector3.Distance(sunPos, requiredTarget.transform.position);
+            float dist   = Vector3.Distance(sunPos, requiredTarget.transform.position);
             float needed = dist + requiredTarget.radius + extraDistance;
-
             if (currentRadius >= needed)
-            {
                 requiredTarget.engulfed = true;
-            }
             else
-            {
                 farthestRequired = needed;
-            }
         }
 
-        // Check player
         float distToPlayer = Vector3.Distance(sunPos, playerTransform.position);
         if (!hasReachedPlayer)
         {
@@ -330,8 +341,9 @@ public class SupernovaSun : MonoBehaviour
             else
                 farthestRequired = Mathf.Max(farthestRequired, distToPlayer + extraDistance);
         }
+
         UpdateWallClipVolume();
-        
+
         if (requiredTarget.engulfed)
         {
             if (Main.solarSystem.DarkBramble.activeSelf)
@@ -340,89 +352,94 @@ public class SupernovaSun : MonoBehaviour
         }
         else
         {
-            float newWorldRadius = currentRadius + (expansionSpeedWorldUnitsPerSec * Time.deltaTime);
-            if (newWorldRadius > farthestRequired)
-                newWorldRadius = farthestRequired;
-
+            float newWorldRadius = Mathf.Min(
+                currentRadius + expansionSpeedWorldUnitsPerSec * Time.deltaTime,
+                farthestRequired);
             float newScaleX = newWorldRadius / sunRadiusPerUnitScale;
             transform.localScale = new Vector3(newScaleX, newScaleX, newScaleX);
         }
     }
 
-    // ---------- Shared volume helper ----------
-    // Called each frame during both Explosion and Wall phases so the
-    // volume ramps smoothly from wallBaseVolume (inaudible-ish) up to 1.0
-    // based purely on how close the expanding wall is to the player.
+    // ── Volume helper ─────────────────────────────────────────────────────────
     private void UpdateWallClipVolume()
     {
         if (wallClip == null) return;
 
-        float currentRadius = sunRadiusPerUnitScale * transform.localScale.x;
-        float distToPlayer  = Vector3.Distance(transform.position, playerTransform.position);
+        float currentRadius   = sunRadiusPerUnitScale * transform.localScale.x;
+        float distToPlayer    = Vector3.Distance(transform.position, playerTransform.position);
         float surfaceDistance = distToPlayer - currentRadius;
 
-        float volume;
-        if (surfaceDistance <= 0f)
-            volume = 1f;
-        else
-            volume = Mathf.Lerp(OwSystemSettings.SunSupernovaWallVolume.Value, 1f, 1f - Mathf.Clamp01(surfaceDistance / wallRampRange));
+        float volume = surfaceDistance <= 0f
+            ? 1f
+            : Mathf.Lerp(OwSystemSettings.SunSupernovaWallVolume.Value, 1f,
+                         1f - Mathf.Clamp01(surfaceDistance / wallRampRange));
 
         wallClip.Reader.Volume = volume;
     }
 
-    // ---------- Coroutines & helpers ----------
+    // ── Coroutines ────────────────────────────────────────────────────────────
     private IEnumerator InitializeAfterFrame()
     {
         yield return new WaitForEndOfFrame();
 
-        if (sunMaterial != null)
+        // Read shader defaults from the opaque sun — it is always available.
+        if (opaqueSunMaterial != null)
         {
-            startCore = SunShaderUtils.ReadCore(sunMaterial);
-            redCore = startCore;
-            redCore.Color1 = new Color(0.65f, 0.189f, 0);
-            redCore.Color2 = new Color(0.7f, 0.156f, 0.0f);
+            startCore = SunShaderUtils.ReadCore(opaqueSunMaterial);
+
+            redCore           = startCore;
+            redCore.Color1    = new Color(0.65f, 0.189f, 0);
+            redCore.Color2    = new Color(0.7f,  0.156f, 0f);
             redCore.SunBright = 1.8f;
 
-            whiteCore = startCore;
-            whiteCore.Color1 = Color.white;
-            whiteCore.Color2 = Color.white;
-            whiteCore.Color3 = Color.white;
-            whiteCore.Color4 = Color.white;
+            whiteCore           = startCore;
+            whiteCore.Color1    = Color.white;
+            whiteCore.Color2    = Color.white;
+            whiteCore.Color3    = Color.white;
+            whiteCore.Color4    = Color.white;
             whiteCore.SunBright = 2.5f;
 
-            superCore = startCore;
+            superCore           = startCore;
             superCore.SunBright = 1.8f;
-            superCore.Color2 = Color.white;
-            superCore.Color1 = Color.cornflowerBlue;
-            superCore.Color3 = Color.mediumBlue;
-            superCore.Color4 = Color.deepSkyBlue;
+            superCore.Color1    = Color.cornflowerBlue;
+            superCore.Color2    = Color.white;
+            superCore.Color3    = Color.mediumBlue;
+            superCore.Color4    = Color.deepSkyBlue;
+
+            // Pre-load start state into the transparent sun so it's ready when we swap.
+            SunShaderUtils.ApplyCore(transSunMaterial, startCore);
         }
 
-        if (haloMaterial != null)
+        if (opaqueHaloMaterial != null)
         {
-            startHalo = SunShaderUtils.ReadHalo(haloMaterial);
-            redHalo = startHalo;
-            redHalo.HaloRing1Color = new Color(0.8f, 0.2f, 0.01f);
-            redHalo.HaloRing2Color = new Color(0.749f, 0.112f, 0);
+            startHalo = SunShaderUtils.ReadHalo(opaqueHaloMaterial);
 
-            whiteHalo = startHalo;
-            whiteHalo.HaloRing1Color = Color.white;
-            whiteHalo.HaloRing2Color = Color.white;
+            redHalo                  = startHalo;
+            redHalo.HaloRing1Color   = new Color(0.8f,   0.2f,   0.01f);
+            redHalo.HaloRing2Color   = new Color(0.749f, 0.112f, 0);
 
-            superHalo = startHalo;
-            superHalo.HaloRing1Color = Color.darkCyan;
-            superHalo.HaloRing2Color = Color.cyan;
+            whiteHalo                  = startHalo;
+            whiteHalo.HaloRing1Color   = Color.white;
+            whiteHalo.HaloRing2Color   = Color.white;
+
+            superHalo                  = startHalo;
+            superHalo.HaloRing1Color   = Color.darkCyan;
+            superHalo.HaloRing2Color   = Color.cyan;
+
+            // Pre-load start state into the transparent sun's halo.
+            if (transHaloMaterial != null) SunShaderUtils.ApplyHalo(transHaloMaterial, startHalo);
         }
     }
 
     private void OnRedFull()
     {
         if (currentPhase != Phase.Red) return;
-        Main.solarSystem.SunStation.gameObject.SetActive(false); //TODO swallow interloper
-        
-        AudioManager.PlaySoundIfFileExists(Path.Combine(Main.folderPath, endTimesSoundName), OwSystemSettings.SunEndTimesMusicVolume.Value);
+        Main.solarSystem.SunStation.gameObject.SetActive(false);
+        AudioManager.PlaySoundIfFileExists(
+            Path.Combine(Main.folderPath, endTimesSoundName),
+            OwSystemSettings.SunEndTimesMusicVolume.Value);
         currentPhase = Phase.RedFullWait;
-        phaseTimer = 0f;
+        phaseTimer   = 0f;
         MelonCoroutines.Start(HandlePostRedSequence());
     }
 
@@ -430,42 +447,73 @@ public class SupernovaSun : MonoBehaviour
     {
         yield return new WaitForSeconds(waitAfterRed);
 
+        // ── Collapse — opaque sun shrinks its corona ──────────────────────────
         currentPhase = Phase.Collapse;
-        phaseTimer = 0f;
-        AudioManager.PlaySoundIfFileExists(Path.Combine(Main.folderPath, supernovaCollapseSoundName),OwSystemSettings.SunCollapseVolume.Value);
-    
-        Transform collapseObject = gameObject.transform.GetChild(1);
-        Vector3 originalScale = collapseObject.localScale;
-        float elapsed = 0f;
+        phaseTimer   = 0f;
+        AudioManager.PlaySoundIfFileExists(
+            Path.Combine(Main.folderPath, supernovaCollapseSoundName),
+            OwSystemSettings.SunCollapseVolume.Value);
 
-        while (elapsed < collapseDuration)
+        if (opaqueCollapseObject != null)
         {
-            elapsed += Time.deltaTime;
-            collapseObject.localScale = Vector3.Lerp(originalScale, Vector3.zero, elapsed / collapseDuration);
-            yield return null;
+            Vector3 originalCollapseScale = opaqueCollapseObject.localScale;
+            float elapsed = 0f;
+            while (elapsed < collapseDuration)
+            {
+                elapsed += Time.deltaTime;
+                opaqueCollapseObject.localScale =
+                    Vector3.Lerp(originalCollapseScale, Vector3.zero, elapsed / collapseDuration);
+                yield return null;
+            }
+            opaqueCollapseObject.gameObject.SetActive(false);
+            opaqueCollapseObject.localScale = originalCollapseScale; // preserve for reset
         }
-
-        collapseObject.gameObject.SetActive(false);
-        collapseObject.localScale = originalScale;
+        else
+        {
+            yield return new WaitForSeconds(collapseDuration);
+        }
 
         yield return new WaitForSeconds(0.2f);
 
+        // ── Swap to transparent sun ───────────────────────────────────────────
+        // Seed the transparent sun with the final white-collapse state so there
+        // is no visual pop on the first Explosion frame.
+        SunShaderUtils.ApplyCore(transSunMaterial, whiteCore);
+        if (transHaloMaterial != null) SunShaderUtils.ApplyHalo(transHaloMaterial, whiteHalo);
+        transSunMaterial.SetFloat("_Alpha", 1f);
+        if (transHaloMaterial != null) transHaloMaterial.SetFloat("_Alpha", 1f);
+
+        opaqueSunGO.SetActive(false);
+        transparentSunGO.SetActive(true);
+
+        // Redirect active material refs to the transparent sun.
+        sunMaterial  = transSunMaterial;
+        haloMaterial = transHaloMaterial;   // null is safe — all ApplyHalo calls are guarded
+
+        // ── Explosion ─────────────────────────────────────────────────────────
         currentPhase = Phase.Explosion;
-        phaseTimer = 0f;
-        AudioManager.PlaySoundIfFileExists(Path.Combine(Main.folderPath, supernovaExplosionSoundName), OwSystemSettings.SunExplodeVolume.Value, false);
-        wallClip = AudioManager.PlaySoundIfFileExists(Path.Combine(Main.folderPath, supernovaWallSoundName), OwSystemSettings.SunSupernovaWallVolume.Value, true);
+        phaseTimer   = 0f;
+        AudioManager.PlaySoundIfFileExists(
+            Path.Combine(Main.folderPath, supernovaExplosionSoundName),
+            OwSystemSettings.SunExplodeVolume.Value, false);
+        wallClip = AudioManager.PlaySoundIfFileExists(
+            Path.Combine(Main.folderPath, supernovaWallSoundName),
+            OwSystemSettings.SunSupernovaWallVolume.Value, true);
+
         yield return new WaitForSeconds(explosionDuration);
 
-        // ✅ Force final state before entering Wall phase — no white flash
+        // Force the final explosion state to avoid any flash at the Wall boundary.
         SunShaderUtils.ApplyCore(sunMaterial, superCore);
-        SunShaderUtils.ApplyHalo(haloMaterial, superHalo);
-        sunLight.color = sunlightBlue;
+        if (haloMaterial != null) SunShaderUtils.ApplyHalo(haloMaterial, superHalo);
+        sunLight.color       = sunlightBlue;
         transform.localScale = explosionTargetScale;
 
+        // ── Wall ──────────────────────────────────────────────────────────────
         currentPhase = Phase.Wall;
-        phaseTimer = 0f;
+        phaseTimer   = 0f;
         float currentRadius = sunRadiusPerUnitScale * transform.localScale.x;
-        wallRampRange = Mathf.Max(Vector3.Distance(transform.position, playerTransform.position) - currentRadius, 1f);
+        wallRampRange = Mathf.Max(
+            Vector3.Distance(transform.position, playerTransform.position) - currentRadius, 1f);
     }
 
     private IEnumerator FadeOutAndDisable()
@@ -473,12 +521,12 @@ public class SupernovaSun : MonoBehaviour
         isFadingOut = true;
 
         float fadeDuration = 4f;
-
         if (wallClip != null)
             AudioManager.FadeOut(wallClip, fadeDuration, 0, wallClip.Reader.Volume, true);
 
-        float startCoreAlpha = sunMaterial.GetFloat("_Alpha");
-        float startHaloAlpha = haloMaterial.GetFloat("_Alpha");
+        // At this point sunMaterial points to the transparent sun — _Alpha is valid.
+        float startCoreAlpha      = sunMaterial.GetFloat("_Alpha");
+        float startHaloAlpha      = haloMaterial != null ? haloMaterial.GetFloat("_Alpha") : 1f;
         float startLightIntensity = sunLight.intensity;
 
         float elapsed = 0f;
@@ -486,144 +534,133 @@ public class SupernovaSun : MonoBehaviour
         {
             elapsed += Time.deltaTime;
             float t = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(elapsed / fadeDuration));
-
             sunMaterial.SetFloat("_Alpha", Mathf.Lerp(startCoreAlpha, 0f, t));
-            haloMaterial.SetFloat("_Alpha", Mathf.Lerp(startHaloAlpha, 0f, t));
+            if (haloMaterial != null) haloMaterial.SetFloat("_Alpha", Mathf.Lerp(startHaloAlpha, 0f, t));
             sunLight.intensity = Mathf.Lerp(startLightIntensity, 0f, t);
-
             yield return null;
         }
 
         sunMaterial.SetFloat("_Alpha", 0f);
-        haloMaterial.SetFloat("_Alpha", 0f);
+        if (haloMaterial != null) haloMaterial.SetFloat("_Alpha", 0f);
         sunLight.intensity = 0f;
 
         gameObject.SetActive(false);
         currentPhase = Phase.Done;
+
         if (OwSystemSettings.SunResetAfterSupernovaEnd.Value)
-        {
             ResetAfterExplosion();
-        }
     }
 
-    private float CalculateWorldRadius(Transform obj)
-    {
-        Renderer[] allRenderers = obj.GetComponentsInChildren<Renderer>();
-        Vector3 pivot = obj.position;
-        float maxDist = 0f;
-
-        foreach (Renderer r in allRenderers)
-        {
-            string name = r.gameObject.name;
-            if (name.Contains("Proxy") || name.Contains("Sand"))
-                continue;
-
-            Vector3 center = r.bounds.center;
-            Vector3 extents = r.bounds.extents;
-            float dist = (center - pivot).magnitude + extents.magnitude;
-            if (dist > maxDist)
-                maxDist = dist;
-        }
-
-        return maxDist > 0f ? maxDist : 0.25f;
-    }
-
-    // ---------- Lerp helpers (unchanged) ----------
-    private SunShaderUtils.SunCoreSettings LerpCore(SunShaderUtils.SunCoreSettings a, SunShaderUtils.SunCoreSettings b, float t)
-    {
-        return new SunShaderUtils.SunCoreSettings
-        {
-            SunBright = Mathf.Lerp(a.SunBright, b.SunBright, t),
-            SunSpeed = a.SunSpeed,
-            Color1 = Color.Lerp(a.Color1, b.Color1, t),
-            Color2 = Color.Lerp(a.Color2, b.Color2, t),
-            Color3 = Color.Lerp(a.Color3, b.Color3, t),
-            Color4 = Color.Lerp(a.Color4, b.Color4, t),
-        };
-    }
-
-    private SunShaderUtils.SunHaloSettings LerpHalo(SunShaderUtils.SunHaloSettings a, SunShaderUtils.SunHaloSettings b, float t)
-    {
-        return new SunShaderUtils.SunHaloSettings
-        {
-            HaloRing1 = a.HaloRing1,
-            HaloRing1Color = Color.Lerp(a.HaloRing1Color, b.HaloRing1Color, t),
-            HaloRing1Size = a.HaloRing1Size,
-            HaloRing1Intensity = a.HaloRing1Intensity,
-            HaloRing1Strength = a.HaloRing1Strength,
-
-            HaloRing2 = a.HaloRing2,
-            HaloRing2Str = a.HaloRing2Str,
-            HaloRing2Thickness = a.HaloRing2Thickness,
-            HaloRing2Color = Color.Lerp(a.HaloRing2Color, b.HaloRing2Color, t),
-            HaloRing2Size = a.HaloRing2Size,
-            HaloRing2Intensity = a.HaloRing2Intensity,
-            HaloRing2Width = a.HaloRing2Width,
-        };
-    }
-    
+    // ── Reset ─────────────────────────────────────────────────────────────────
     /// <summary>
-    /// Resets the sun completely, but ONLY if it has already finished exploding (phase Done).
-    /// Call this when loading a new scene to prepare the sun for a fresh cycle.
+    /// Full reset back to Phase.Red. Only valid when currentPhase == Done.
     /// </summary>
     public void ResetAfterExplosion()
     {
-        if (currentPhase != Phase.Done)
-            return;
+        if (currentPhase != Phase.Done) return;
 
-        // Kill wall sound
+        // Stop wall sound.
         if (wallClip != null)
         {
             AudioManager.FadeOut(wallClip, 0f, 0f, 0f, true);
             wallClip = null;
         }
 
+        // Re-enable required target and swallowed bodies.
         requiredTarget.transform.gameObject.SetActive(true);
-        
-
-        // Swallowed bodies
         foreach (var body in bodiesToSwallow)
         {
             if (body.transform != null && !body.transform.gameObject.activeSelf)
                 body.transform.gameObject.SetActive(true);
         }
 
-        // Reset state
-        currentPhase = Phase.Red;
-        phaseTimer = 0f;
-        hasReachedPlayer = false;
-        isFadingOut = false;
+        // Restore opaque sun; hide transparent.
+        transparentSunGO.SetActive(false);
+        opaqueSunGO.SetActive(true);
 
-        // Restore visuals
+        // Restore the corona object on the opaque sun.
+        if (opaqueCollapseObject != null)
+        {
+            opaqueCollapseObject.localScale = Vector3.one;
+            opaqueCollapseObject.gameObject.SetActive(true);
+        }
+
+        // Reset transparent sun's _Alpha so it is ready for the next cycle.
+        transSunMaterial.SetFloat("_Alpha", 1f);
+        if (transHaloMaterial != null) transHaloMaterial.SetFloat("_Alpha", 1f);
+
+        // Redirect active refs back to the opaque materials.
+        sunMaterial  = opaqueSunMaterial;
+        haloMaterial = opaqueHaloMaterial;
+
+        // Reset state flags.
+        currentPhase     = Phase.Red;
+        phaseTimer       = 0f;
+        hasReachedPlayer = false;
+        isFadingOut      = false;
+        requiredTarget.engulfed = false;
+
         transform.localScale = initialScale;
 
-        if (sunMaterial != null)
-            SunShaderUtils.ApplyCore(sunMaterial, startCore);
-        if (haloMaterial != null)
-            SunShaderUtils.ApplyHalo(haloMaterial, startHalo);
+        SunShaderUtils.ApplyCore(sunMaterial, startCore);
+        if (haloMaterial != null) SunShaderUtils.ApplyHalo(haloMaterial, startHalo);
 
         if (sunLight != null)
         {
-            sunLight.color = sunlightOriginal;
+            sunLight.color     = sunlightOriginal;
             sunLight.intensity = originalLightIntensity;
         }
-        
-        gameObject.transform.GetChild(1).localScale = Vector3.one;
-        gameObject.transform.GetChild(1).gameObject.SetActive(true);
-        
-        
-        sunMaterial.SetFloat("_Alpha", 1f);
-        haloMaterial.SetFloat("_Alpha", 1f);
-
-        requiredTarget.engulfed = false;
 
         Main.solarSystem.SignalScope.GetComponent<SignalScope>().TurnOffAllMusic();
-        
         gameObject.SetActive(true);
-        
         Main.solarSystem.Root.GetComponent<SolarSystem>().StartSolarSystem();
 
-        // Re-read shader defaults on next frame
         MelonCoroutines.Start(InitializeAfterFrame());
     }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+    private float CalculateWorldRadius(Transform obj)
+    {
+        Renderer[] allRenderers = obj.GetComponentsInChildren<Renderer>();
+        Vector3    pivot        = obj.position;
+        float      maxDist      = 0f;
+        foreach (Renderer r in allRenderers)
+        {
+            string name = r.gameObject.name;
+            if (name.Contains("Proxy") || name.Contains("Sand")) continue;
+            float dist = (r.bounds.center - pivot).magnitude + r.bounds.extents.magnitude;
+            if (dist > maxDist) maxDist = dist;
+        }
+        return maxDist > 0f ? maxDist : 0.25f;
+    }
+
+    private SunShaderUtils.SunCoreSettings LerpCore(
+        SunShaderUtils.SunCoreSettings a, SunShaderUtils.SunCoreSettings b, float t)
+        => new()
+        {
+            SunBright = Mathf.Lerp(a.SunBright, b.SunBright, t),
+            SunSpeed  = a.SunSpeed,
+            Color1    = Color.Lerp(a.Color1, b.Color1, t),
+            Color2    = Color.Lerp(a.Color2, b.Color2, t),
+            Color3    = Color.Lerp(a.Color3, b.Color3, t),
+            Color4    = Color.Lerp(a.Color4, b.Color4, t),
+        };
+
+    private SunShaderUtils.SunHaloSettings LerpHalo(
+        SunShaderUtils.SunHaloSettings a, SunShaderUtils.SunHaloSettings b, float t)
+        => new()
+        {
+            HaloRing1          = a.HaloRing1,
+            HaloRing1Color     = Color.Lerp(a.HaloRing1Color, b.HaloRing1Color, t),
+            HaloRing1Size      = a.HaloRing1Size,
+            HaloRing1Intensity = a.HaloRing1Intensity,
+            HaloRing1Strength  = a.HaloRing1Strength,
+            HaloRing2          = a.HaloRing2,
+            HaloRing2Str       = a.HaloRing2Str,
+            HaloRing2Thickness = a.HaloRing2Thickness,
+            HaloRing2Color     = Color.Lerp(a.HaloRing2Color, b.HaloRing2Color, t),
+            HaloRing2Size      = a.HaloRing2Size,
+            HaloRing2Intensity = a.HaloRing2Intensity,
+            HaloRing2Width     = a.HaloRing2Width,
+        };
 }
