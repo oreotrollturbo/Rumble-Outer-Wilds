@@ -25,7 +25,7 @@ public class SupernovaSun : MonoBehaviour
     private float wallRampRange = 0f;
     private AudioManager.ClipData wallClip;
 
-    private float extraDistance          = 25f;
+    public double extraDistance          = 25f;
     private float originalLightIntensity;
 
     // ── Player & expansion ────────────────────────────────────────────────────
@@ -51,7 +51,7 @@ public class SupernovaSun : MonoBehaviour
     public Vector3 collapseScale            = new(0.08f, 0.08f, 0.08f);
     public Vector3 explosionTargetScale     = new(2.5f,  2.5f,  2.5f);
     public Vector3 redGrowthScale           = new(0.05f, 0.05f, 0.05f);
-    public float interloperSwallowDistance  = 3.2978f;
+    public double interloperSwallowDistance  = 3.2978 / 30;
 
     // ── Light & colour ────────────────────────────────────────────────────────
     public Light sunLight;
@@ -64,17 +64,7 @@ public class SupernovaSun : MonoBehaviour
     public enum Phase { Red, RedFullWait, Collapse, Explosion, Wall, Done }
     public Phase currentPhase = Phase.Red;
     private float phaseTimer  = 0f;
-
-    // ── Dual-sun references ───────────────────────────────────────────────────
-    // Root hierarchy (this component lives on the root empty):
-    //   Root
-    //   ├── [0] transparentSunGO  — used from Explosion onward; supports _Alpha fade
-    //   └── [1] opaqueSunGO       — used during Red, RedFullWait, Collapse
-    //
-    // Each sun child is expected to have:
-    //   sunGO
-    //   ├── [0] Halo (Renderer)
-    //   └── [1] CollapseObject (corona/atmosphere — opaque sun only)
+    
     private GameObject opaqueSunGO;
     private GameObject transparentSunGO;
 
@@ -138,34 +128,22 @@ public class SupernovaSun : MonoBehaviour
         opaqueSunMaterial = opaqueSunRenderer.material;
         transSunMaterial  = transSunRenderer.material;
 
-        // Halo: child 0 of each sun — log the full child list so mismatches are obvious.
-        MelonLogger.Msg("[SupernovaSun] Opaque sun children:");
-        for (int i = 0; i < opaqueSunGO.transform.childCount; i++)
-        {
-            Transform c = opaqueSunGO.transform.GetChild(i);
-            MelonLogger.Msg($"  [{i}] {c.name}  Renderer={c.GetComponent<Renderer>() != null}");
-        }
-        MelonLogger.Msg("[SupernovaSun] Transparent sun children:");
-        for (int i = 0; i < transparentSunGO.transform.childCount; i++)
-        {
-            Transform c = transparentSunGO.transform.GetChild(i);
-            MelonLogger.Msg($"  [{i}] {c.name}  Renderer={c.GetComponent<Renderer>() != null}");
-        }
+        // Halo: GetComponentsInChildren returns renderers depth-first, so [0] is always the
+        // sun body itself and [1] is the halo — regardless of how deep the halo sits.
+        // includeInactive:true ensures the transparent sun (currently hidden) is fully queried.
+        Renderer[] opaqueRenderers = opaqueSunGO.GetComponentsInChildren<Renderer>(true);
+        Renderer[] transRenderers  = transparentSunGO.GetComponentsInChildren<Renderer>(true);
 
-        Renderer opaqueHaloRenderer = opaqueSunGO.transform.childCount > 0
-            ? opaqueSunGO.transform.GetChild(0).GetComponent<Renderer>()
-            : null;
-        Renderer transHaloRenderer = transparentSunGO.transform.childCount > 0
-            ? transparentSunGO.transform.GetChild(0).GetComponent<Renderer>()
-            : null;
+        opaqueHaloMaterial = opaqueRenderers.Length > 1 ? opaqueRenderers[1].material : null;
+        transHaloMaterial  = transRenderers.Length  > 1 ? transRenderers[1].material  : null;
 
-        opaqueHaloMaterial = opaqueHaloRenderer != null ? opaqueHaloRenderer.material : null;
-        transHaloMaterial  = transHaloRenderer  != null ? transHaloRenderer.material  : null;
-
+        MelonLogger.Msg($"[SupernovaSun] opaque renderers={opaqueRenderers.Length}  trans renderers={transRenderers.Length}");
         MelonLogger.Msg($"[SupernovaSun] opaqueHaloMaterial={opaqueHaloMaterial != null}  transHaloMaterial={transHaloMaterial != null}");
 
-        // Corona object that collapses: child 1 of the opaque sun.
-        if (opaqueSunGO.transform.childCount > 1)
+        // Corona object (the ring that shrinks during Collapse): try named lookup first,
+        // fall back to child index 1 of the opaque sun.
+        opaqueCollapseObject = opaqueSunGO.transform.Find("Corona");
+        if (opaqueCollapseObject == null && opaqueSunGO.transform.childCount > 1)
             opaqueCollapseObject = opaqueSunGO.transform.GetChild(1);
 
         // Boot state: opaque visible, transparent hidden.
@@ -317,7 +295,7 @@ public class SupernovaSun : MonoBehaviour
 
         if (isFadingOut) return;
 
-        float farthestRequired = 0f;
+        double farthestRequired = 0d;
 
         if (requiredTarget.engulfed || !requiredTarget.transform.gameObject.activeSelf)
         {
@@ -326,7 +304,7 @@ public class SupernovaSun : MonoBehaviour
         else
         {
             float dist   = Vector3.Distance(sunPos, requiredTarget.transform.position);
-            float needed = dist + requiredTarget.radius + extraDistance;
+            double needed = dist + requiredTarget.radius + extraDistance;
             if (currentRadius >= needed)
                 requiredTarget.engulfed = true;
             else
@@ -339,8 +317,9 @@ public class SupernovaSun : MonoBehaviour
             if (currentRadius >= distToPlayer + extraDistance)
                 hasReachedPlayer = true;
             else
-                farthestRequired = Mathf.Max(farthestRequired, distToPlayer + extraDistance);
+                farthestRequired = Mathf.Max((float)farthestRequired, distToPlayer + (float)extraDistance);
         }
+        
 
         UpdateWallClipVolume();
 
@@ -354,7 +333,7 @@ public class SupernovaSun : MonoBehaviour
         {
             float newWorldRadius = Mathf.Min(
                 currentRadius + expansionSpeedWorldUnitsPerSec * Time.deltaTime,
-                farthestRequired);
+                (float)farthestRequired);
             float newScaleX = newWorldRadius / sunRadiusPerUnitScale;
             transform.localScale = new Vector3(newScaleX, newScaleX, newScaleX);
         }

@@ -22,7 +22,7 @@ public class SignalScope : MonoBehaviour
     private const float hold_distance = 0.115f;
     private const float holdThreshold = 0.9f;
     private const float releaseThreshold = 0.1f;
-
+    
     private float currentFOV;
     
     public float zoomIncrement = 4.6f;
@@ -32,9 +32,8 @@ public class SignalScope : MonoBehaviour
 
     private float startingZoom;
     
-    public float minDetectionAngle = 0.5f;   
-    public float detectionAngleBase = 8f;
-    public float maxDetectionAngle = 15f;    
+    public float zoomedInAngleScale  = 0.0625f;
+    public float zoomedOutAngleScale = 1.875f;
 
     private bool isHolding = false;
 
@@ -252,54 +251,51 @@ public class SignalScope : MonoBehaviour
             TurnOffAllMusic();
             return;
         }
-        
+
         allMusicOff = false;
 
-        float currentDetectionAngle;
-
+        // Compute zoom multiplier once — 1.0 at default FOV
+        float angleMultiplier;
         if (currentFOV <= startingZoom)
         {
-            float t = Mathf.InverseLerp(maxZoom, startingZoom, currentFOV);
-            currentDetectionAngle = Mathf.Lerp(minDetectionAngle, detectionAngleBase, t);
+            float t = Mathf.InverseLerp(startingZoom, maxZoom, currentFOV); // 0→1 as you zoom in
+            angleMultiplier = Mathf.Lerp(1f, zoomedInAngleScale, t);
         }
         else
         {
-            float t = Mathf.InverseLerp(startingZoom, minZoom, currentFOV);
-            currentDetectionAngle = Mathf.Lerp(detectionAngleBase, maxDetectionAngle, t);
+            float t = Mathf.InverseLerp(startingZoom, minZoom, currentFOV); // 0→1 as you zoom out
+            angleMultiplier = Mathf.Lerp(1f, zoomedOutAngleScale, t);
         }
 
         foreach (KeyValuePair<GameObject, MusicEmitter> entry in musicEmitters)
         {
             GameObject body = entry.Key;
             MusicEmitter emitter = entry.Value;
-            
+
             if (!body.activeSelf)
             {
                 emitter.SetVolume(0);
                 continue;
             }
 
-            float strength = GetSignalStrengthForTarget(body, currentDetectionAngle);
+            float strength = GetSignalStrengthForTarget(body, emitter.detectionAngle * angleMultiplier);
             emitter.SetVolume(strength);
         }
     }
-    
-    private float GetSignalStrengthForTarget(GameObject target, float currentDetectionAngle)
+
+    private float GetSignalStrengthForTarget(GameObject target, float detectionAngle)
     {
-        Vector3 scopePos = Camera.transform.position;
+        Vector3 scopePos     = Camera.transform.position;
         Vector3 scopeForward = Camera.transform.forward;
-        Vector3 dirToTarget = (target.transform.position - scopePos).normalized;
+        Vector3 dirToTarget  = (target.transform.position - scopePos).normalized;
 
         float angleToTarget = Vector3.Angle(scopeForward, dirToTarget);
 
-        if (angleToTarget > currentDetectionAngle)
-        {
+        if (angleToTarget > detectionAngle)
             return 0f;
-        }
 
-        return 1f - (angleToTarget / currentDetectionAngle);
+        return 1f - (angleToTarget / detectionAngle);
     }
-
     public void TurnOffAllMusic()
     {
         if (allMusicOff) return;

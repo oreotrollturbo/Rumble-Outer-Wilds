@@ -251,7 +251,6 @@ namespace OuterWildsRumble
             
             //if (solarSystem.PlayerShip != null) solarSystem.PlayerShip.transform.SetParent(solarSystem.Root.transform, true);
             
-            solarSystem.Root.GetComponent<SolarSystem>().Scale(OwSystemSettings.SolarSystemScale);
             OwSystemSettings.ApplyToSolarSystem();
             solarSystem.Root.transform.position += new Vector3(0, 260f, 0);
             
@@ -337,7 +336,7 @@ namespace OuterWildsRumble
             // let there be light
             Light sunLight = solarSystem.Sun.AddComponent<Light>();
             sunLight.type = LightType.Point;       
-            sunLight.range = 15000f;                 
+            sunLight.range = 19000f;     
             sunLight.intensity = 18000f;               
             sunLight.color = new Color(1f, 0.8392f, 0.7098f, 1f);
             sunLight.shadows = LightShadows.Soft;

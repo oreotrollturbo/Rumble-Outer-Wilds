@@ -15,6 +15,8 @@ public class MusicEmitter : MonoBehaviour
     public bool isEnabled = true;
     private AudioManager.ClipData clipData;
     private float maxVolume = 1f;
+    
+    public float detectionAngle = 8f;
 
     // --- Static sync state ---
     private static readonly List<MusicEmitter> pendingSync = new();

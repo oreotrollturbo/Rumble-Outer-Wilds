@@ -13,8 +13,6 @@ namespace OuterWildsRumble.UIFrameworkSettings
         private const string UserDataPath = "UserData/OuterWildsRumble/";
         private const string ConfigFile = "settings.cfg";
         
-        public const float SolarSystemScale = 30f;
-        
         private static MelonPreferences_Category globalCat;
         private static MelonPreferences_Category sunCat;
         private static MelonPreferences_Category sunStationCat;
@@ -40,6 +38,7 @@ namespace OuterWildsRumble.UIFrameworkSettings
         public static MelonPreferences_Entry<bool> EnabledSolarSystem;
         public static MelonPreferences_Entry<bool> ShaderReplacement;
         public static MelonPreferences_Entry<bool> OnlySunLighting;
+        public static MelonPreferences_Entry<float> SolarSystemScale;
         
         public static MelonPreferences_Entry<float> SolarSystemGymX;
         public static MelonPreferences_Entry<float> SolarSystemGymY;
@@ -63,6 +62,7 @@ namespace OuterWildsRumble.UIFrameworkSettings
         // SUN
         // =========================================================================
         public static MelonPreferences_Entry<bool>  SunEnabled;
+        public static MelonPreferences_Entry<bool>  SunKeepLight;
         public static MelonPreferences_Entry<bool>  SunDoTimeLoop;
         public static MelonPreferences_Entry<bool>  SunDoTimeLoopInMatches;
         public static MelonPreferences_Entry<bool>  SunStayRed;
@@ -264,6 +264,10 @@ namespace OuterWildsRumble.UIFrameworkSettings
             OnlySunLighting = globalCat.CreateEntry(
                 "OW_OnlySunLighting", false,
                 "Only sun lighting", "Removes the built-in light source of the scene leaving the sun to be the only thing lighting everything up");
+            SolarSystemScale = globalCat.CreateEntry(
+                "OW_SolarSystemScale", 30f,
+                "Solar System Scale", "The scale of the solar system ! UNSTABLE USE AT YOUR OWN RISK");
+            
             
             SolarSystemGymX = globalCat.CreateEntry(
                 "OW_SolarSystemGymX", 2.28f,
@@ -313,6 +317,9 @@ namespace OuterWildsRumble.UIFrameworkSettings
             SunEnabled = sunCat.CreateEntry(
                 "Sun_Enabled", true,
                 "Enabled", "Toggle the Sun");
+            SunKeepLight = sunCat.CreateEntry(
+                "Sun_KeepLight", true,
+                "Keep Light", "Keep the sun's light even after disabling it :3");
             SunDoTimeLoop = sunCat.CreateEntry(
                 "Sun_TimeLoop", true,
                 "Do sun time loop", "Let the sun change stages and eventually go kaboom :3");
@@ -461,11 +468,11 @@ namespace OuterWildsRumble.UIFrameworkSettings
                 "Break Interval Max (s)",
                 "Maximum seconds between chunk break events");
             BrittleHollowSuckSpeed = brittleHollowCat.CreateEntry(
-                "BrittleHollow_SuckSpeed", 1f,
+                "BrittleHollow_SuckSpeed", 1f /30f,
                 "Suck Speed",
                 "Units per second chunks move toward the black hole");
             BrittleHollowDriftSpeed = brittleHollowCat.CreateEntry(
-                "BrittleHollow_DriftSpeed", 0.09f,
+                "BrittleHollow_DriftSpeed", 0.09f /30f,
                 "Drift Speed",
                 "Units per second chunks drift near the white hole");
             BrittleHollowDriftMaxRadius = brittleHollowCat.CreateEntry(
@@ -662,7 +669,20 @@ namespace OuterWildsRumble.UIFrameworkSettings
 
             if (sys.Sun != null)
             {
-                sys.Sun.SetActive(SunEnabled.Value);
+                
+                if (SunKeepLight.Value)
+                {
+                    sys.Sun.SetActive(true);
+                    sys.Sun.transform.GetChild(0).gameObject.SetActive(SunEnabled.Value);
+                    sys.Sun.transform.GetChild(1).gameObject.SetActive(SunEnabled.Value);
+                }
+                else
+                {
+                    sys.Sun.SetActive(SunEnabled.Value);
+                    sys.Sun.transform.GetChild(0).gameObject.SetActive(false);
+                    sys.Sun.transform.GetChild(1).gameObject.SetActive(true);
+                }
+                
                 var sn = sys.Sun.GetComponent<SupernovaSun>();
                 if (sn != null)
                 {
@@ -681,7 +701,7 @@ namespace OuterWildsRumble.UIFrameworkSettings
                 var orb = sys.SunStation.GetComponent<Orbiter>();
                 if (orb != null)
                 {
-                    orb.orbitDistance = SunStationOrbitDistance.Value * SolarSystemScale;
+                    orb.orbitDistance = SunStationOrbitDistance.Value;
                     orb.orbitSpeed    = SunStationOrbitSpeed.Value;
                     orb.spinSpeed     = SunStationSpinSpeed.Value;
                 }
@@ -693,7 +713,7 @@ namespace OuterWildsRumble.UIFrameworkSettings
                 var orb = sys.HourGlassTwins.GetComponent<Orbiter>();
                 if (orb != null)
                 {
-                    orb.orbitDistance = HourGlassTwinsOrbitDistance.Value * SolarSystemScale;
+                    orb.orbitDistance = HourGlassTwinsOrbitDistance.Value;
                     orb.orbitSpeed    = HourGlassTwinsOrbitSpeed.Value;
                     orb.spinSpeed     = HourGlassTwinsSpinSpeed.Value;
                 }
@@ -712,7 +732,7 @@ namespace OuterWildsRumble.UIFrameworkSettings
                 var orb = sys.TimberHearth.GetComponent<Orbiter>();
                 if (orb != null)
                 {
-                    orb.orbitDistance = TimberHearthOrbitDistance.Value * SolarSystemScale;
+                    orb.orbitDistance = TimberHearthOrbitDistance.Value;
                     orb.orbitSpeed    = TimberHearthOrbitSpeed.Value;
                     orb.spinSpeed     = TimberHearthSpinSpeed.Value;
                 }
@@ -724,7 +744,7 @@ namespace OuterWildsRumble.UIFrameworkSettings
                 var orb = sys.Attlerock.GetComponent<Orbiter>();
                 if (orb != null)
                 {
-                    orb.orbitDistance = AttlerockOrbitDistance.Value * SolarSystemScale;
+                    orb.orbitDistance = AttlerockOrbitDistance.Value;
                     orb.orbitSpeed    = AttlerockOrbitSpeed.Value;
                     orb.spinSpeed     = AttlerockSpinSpeed.Value;
                 }
@@ -736,7 +756,7 @@ namespace OuterWildsRumble.UIFrameworkSettings
                 var orb = sys.BrittleHollow.GetComponent<Orbiter>();
                 if (orb != null)
                 {
-                    orb.orbitDistance = BrittleHollowOrbitDistance.Value * SolarSystemScale;
+                    orb.orbitDistance = BrittleHollowOrbitDistance.Value;
                     orb.orbitSpeed    = BrittleHollowOrbitSpeed.Value;
                     orb.spinSpeed     = BrittleHollowSpinSpeed.Value;
                 }
@@ -746,9 +766,6 @@ namespace OuterWildsRumble.UIFrameworkSettings
                     bh.breakApart       = BrittleHollowBreakAppart.Value;
                     bh.breakIntervalMin = BrittleHollowBreakIntervalMin.Value;
                     bh.breakIntervalMax = BrittleHollowBreakIntervalMax.Value;
-                    bh.suckSpeed        = BrittleHollowSuckSpeed.Value;
-                    bh.driftSpeed       = BrittleHollowDriftSpeed.Value;
-                    bh.driftMaxRadius   = BrittleHollowDriftMaxRadius.Value;
                 }
             }
 
@@ -758,7 +775,7 @@ namespace OuterWildsRumble.UIFrameworkSettings
                 var orb = sys.HollowsLantern.GetComponent<Orbiter>();
                 if (orb != null)
                 {
-                    orb.orbitDistance = HollowsLanternOrbitDistance.Value * SolarSystemScale;
+                    orb.orbitDistance = HollowsLanternOrbitDistance.Value;
                     orb.orbitSpeed    = HollowsLanternOrbitSpeed.Value;
                     orb.spinSpeed     = HollowsLanternSpinSpeed.Value;
                 }
@@ -770,7 +787,7 @@ namespace OuterWildsRumble.UIFrameworkSettings
                 var orb = sys.GiantsDeep.GetComponent<Orbiter>();
                 if (orb != null)
                 {
-                    orb.orbitDistance = GiantsDeepOrbitDistance.Value * SolarSystemScale;
+                    orb.orbitDistance = GiantsDeepOrbitDistance.Value;
                     orb.orbitSpeed    = GiantsDeepOrbitSpeed.Value;
                     orb.spinSpeed     = GiantsDeepSpinSpeed.Value;
                 }
@@ -782,7 +799,7 @@ namespace OuterWildsRumble.UIFrameworkSettings
                 var orb = sys.OrbitalProbeCannon.GetComponent<Orbiter>();
                 if (orb != null)
                 {
-                    orb.orbitDistance = OrbitalProbeCannonOrbitDistance.Value * SolarSystemScale;
+                    orb.orbitDistance = OrbitalProbeCannonOrbitDistance.Value;
                     orb.orbitSpeed    = OrbitalProbeCannonOrbitSpeed.Value;
                     orb.spinSpeed     = OrbitalProbeCannonSpinSpeed.Value;
                 }
@@ -810,7 +827,7 @@ namespace OuterWildsRumble.UIFrameworkSettings
                 var orb = sys.QuantumMoon.GetComponent<Orbiter>();
                 if (orb != null)
                 {
-                    orb.orbitDistance = QuantumMoonOrbitDistance.Value * SolarSystemScale;
+                    orb.orbitDistance = QuantumMoonOrbitDistance.Value;
                     orb.orbitSpeed    = QuantumMoonOrbitSpeed.Value;
                     orb.spinSpeed     = QuantumMoonSpinSpeed.Value;
                 }
@@ -827,7 +844,7 @@ namespace OuterWildsRumble.UIFrameworkSettings
                 var orb = sys.DarkBramble.GetComponent<Orbiter>();
                 if (orb != null)
                 {
-                    orb.orbitDistance = DarkBrambleOrbitDistance.Value * SolarSystemScale;
+                    orb.orbitDistance = DarkBrambleOrbitDistance.Value;
                     orb.orbitSpeed    = DarkBrambleOrbitSpeed.Value;
                 }
             }
@@ -844,7 +861,7 @@ namespace OuterWildsRumble.UIFrameworkSettings
                 var ell = sys.Interloper.GetComponent<EllipticalOrbiter>();
                 if (ell != null)
                 {
-                    ell.semiMinorAxis  = InterloperSemiMinorAxis.Value * SolarSystemScale;
+                    ell.semiMinorAxis  = InterloperSemiMinorAxis.Value;
                     ell.orbitSpeed     = InterloperOrbitSpeed.Value;
                     ell.speedIntensity = InterloperSpeedIntensity.Value;
                 }
@@ -870,6 +887,9 @@ namespace OuterWildsRumble.UIFrameworkSettings
             {
                 sys.TapeRecorder.SetActive(TapeRecorderToggle.Value);
             }
+            
+            
+            SolarSystemScaler.Apply(SolarSystemScale.Value);
         }
     }
 }

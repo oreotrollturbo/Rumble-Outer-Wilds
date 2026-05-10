@@ -26,13 +26,13 @@ public class OrbitalProbeCannon : MonoBehaviour
     public float explosionTime = 6f;
     public float timeBetweenLaunchAndExplosion = 0.15f;
 
-    private Vector3 baseTagetPosition = new Vector3(0, 0, 0);
+    public Vector3 baseTagetPosition = new Vector3(0, 0, 0);
     private Quaternion baseTagetRotation = Quaternion.Euler(354.7151f, 225.9565f, 0);
 
-    private Vector3 middleTagetPosition = new Vector3(1.919f, 0.00507f, -0.01671066f);
+    public Vector3 middleTagetPosition = new Vector3(1.919f, 0.00507f, -0.01671066f);
     private Quaternion middleTagetRotation = Quaternion.Euler(-0f, 0f, 69.0547f);
 
-    private Vector3 tipTagetPosition = new Vector3(3.7276f, 0.006f, -0.006f);
+    public Vector3 tipTagetPosition = new Vector3(3.7276f, 0.006f, -0.006f);
     private Quaternion tipTagetRotation = Quaternion.Euler(-0, 0, 312.6561f);
 
     private float expandFraction = 0.75f;
