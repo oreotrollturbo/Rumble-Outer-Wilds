@@ -669,7 +669,6 @@ namespace OuterWildsRumble.UIFrameworkSettings
 
             if (sys.Sun != null)
             {
-                
                 if (SunKeepLight.Value)
                 {
                     sys.Sun.SetActive(true);

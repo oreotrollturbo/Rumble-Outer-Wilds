@@ -212,7 +212,11 @@ public class SupernovaSun : MonoBehaviour
         {
             phaseTimer = 0f;
             if (OwSystemSettings.SunStayRed.Value)
+            {
                 currentPhase = Phase.RedFullWait;
+                transparentSunGO.SetActive(false);
+            }
+                
         }
 
         switch (currentPhase)
