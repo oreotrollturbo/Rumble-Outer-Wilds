@@ -21,7 +21,7 @@ namespace OuterWildsRumble
     public static class BuildInfo
     {
         public const string ModName = "OuterWildsRumble";
-        public const string ModVersion = "1.0.0";
+        public const string ModVersion = "1.8.0";
         public const string Description = "For my fellow hatchlings";
         public const string Author = "oreotrollturbo";
         public const string Company = "Rumble.LLC";
@@ -299,7 +299,8 @@ namespace OuterWildsRumble
             solarSystem.TimberHearth   = LoadAndSpawn("TimberHearth");
             solarSystem.Attlerock      = LoadAndSpawn("Attlerock");
             solarSystem.BrittleHollow      = LoadAndSpawn("BrittleHollowFullGO1");
-            solarSystem.HollowsLantern     = LoadAndSpawn("HollowsLantern");
+            solarSystem.HollowsLantern     = LoadAndSpawn("HollowsLanternGO");
+            solarSystem.LanternMeteor     = LoadAndSpawn("HotMeteorGO");
             solarSystem.GiantsDeep     = LoadAndSpawn("GiantsDeep");
             solarSystem.OrbitalProbeCannon = LoadAndSpawn("OrbitalProbeCannonGO");
             solarSystem.OrbitalProbe = LoadAndSpawn("NomaiProbe");
@@ -314,7 +315,7 @@ namespace OuterWildsRumble
             // Prefab cache: instances die with the player belt, so re-instantiate in SceneLoaded
             prefabSignalScope = outerWildsBundle.LoadAsset<GameObject>("SignalscopeGO");
             prefabSignalScope.hideFlags = HideFlags.DontUnloadUnusedAsset;
-            MelonLogger.Msg("Loaded: SignalscopeGO");
+            MelonLogger.Msg("Loaded Signalscope");
 
             solarSystem.WhiteHoleMaterial  = GetMaterial("WhiteHoleMaterial");
             solarSystem.BlackHoleMaterial  = GetMaterial("BlackholeMaterial");
@@ -548,37 +549,10 @@ namespace OuterWildsRumble
                 lanternOrbit.spinSpeed = 30f;            
                 lanternOrbit.orbitAxis = new Vector3(0.1f, 1f, 0f).normalized;
                 
-                if (solarSystem.HollowsLantern.transform.childCount > 1)
-                {
-                    Renderer r = solarSystem.HollowsLantern.transform.GetChild(1).GetComponent<Renderer>();
-            
-                    if (r != null)
-                    {
-                        // Set color to a lava-like orange/red
-                        Color lanternColor = new Color32(217, 103, 15, 255);
-
-                        // Set intensity (lower than White Hole, but still glowing)
-                        float intensity = 5.0f;
-                        Color finalEmission = lanternColor * intensity;
-
-                        Shader shader = Shader.Find("Universal Render Pipeline/Unlit");
-                        if (shader == null) shader = Shader.Find("Universal Render Pipeline/Lit");
-
-                        if (shader != null)
-                        {
-                            Material mat = new Material(shader);
-
-                            mat.SetColor("_BaseColor", lanternColor);
-            
-                            mat.EnableKeyword("_EMISSION");
-                            mat.SetColor("_EmissionColor", finalEmission);
-
-                            r.material = mat;
-                        }
-                    }
-                }
+                HollowsLantern hollowsLantern = solarSystem.HollowsLantern.AddComponent<HollowsLantern>();
+                solarSystem.LanternMeteor.transform.localScale = Vector3.one * 0.018f;
                 
-                Light lanternLight = solarSystem.HollowsLantern.AddComponent<Light>();
+                Light lanternLight = solarSystem.HollowsLantern.transform.GetChild(0).gameObject.AddComponent<Light>();
                 lanternLight.type = LightType.Point;       
                 lanternLight.range = 300f;                 
                 lanternLight.intensity = 100f;               
@@ -725,6 +699,7 @@ namespace OuterWildsRumble
         
         public GameObject BrittleHollow;
         public GameObject HollowsLantern;
+        public GameObject LanternMeteor;
         
         public GameObject GiantsDeep;
         public GameObject OrbitalProbeCannon;

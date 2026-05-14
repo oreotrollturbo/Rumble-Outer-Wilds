@@ -67,6 +67,7 @@ public class SolarSystem : MonoBehaviour
             Main.solarSystem.OrbitalProbeCannon.GetComponent<OrbitalProbeCannon>().Restart();
 
         Main.solarSystem.BrittleHollow.GetComponent<BrittleHollow>().SolarSystemRestart();
+        Main.solarSystem.HollowsLantern.GetComponent<HollowsLantern>().SolarSystemRestart();
         Main.solarSystem.OrbitalProbeCannon.GetComponent<OrbitalProbeCannon>().StartFiringSequence();
     }
 }

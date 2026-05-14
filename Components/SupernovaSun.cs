@@ -198,8 +198,6 @@ public class SupernovaSun : MonoBehaviour
     // ── Fixed update ──────────────────────────────────────────────────────────
     void FixedUpdate()
     {
-        if (sunMaterial == null) return;
-
         if (DoTimeLoop)
         {
             if ((OwSystemSettings.SunDoTimeLoopInMatches.Value && !Main.isInMatch) ||

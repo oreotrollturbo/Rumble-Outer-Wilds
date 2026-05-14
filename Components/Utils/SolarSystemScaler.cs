@@ -94,6 +94,16 @@ namespace OuterWildsRumble
                 bh.spitYRange       = BaseSpitYRange       * scale;
                 bh.suckStopDistance = BaseSuckStopDistance * scale;
             }
+            
+            // ── Hollow's Lantern meteor physics ───────────────────────────────────
+            var hl = sys.HollowsLantern?.GetComponent<HollowsLantern>();
+            if (hl != null)
+            {
+                hl.meteorDriftSpeed    = OwSystemSettings.HollowsLanternMeteorDriftSpeed.Value    * scale;
+                hl.meteorPullSpeed     = OwSystemSettings.HollowsLanternMeteorPullSpeed.Value     * scale;
+                hl.meteorPullRadius    = OwSystemSettings.HollowsLanternMeteorPullRadius.Value    * scale;
+                hl.meteorDestroyRadius = OwSystemSettings.HollowsLanternMeteorDestroyRadius.Value * scale;
+            }
 
             // ── Orbital probe speed ───────────────────────────────────────────
             var probe = sys.OrbitalProbe?.GetComponent<OrbitalProbe>();

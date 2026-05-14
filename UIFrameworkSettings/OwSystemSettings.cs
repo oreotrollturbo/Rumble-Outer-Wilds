@@ -4,6 +4,7 @@ using MelonLoader.Preferences;
 using OuterWildsRumble.Components;
 using RumbleModdingAPI.RMAPI;
 using UIFramework;
+using UnityEngine;
 
 namespace OuterWildsRumble.UIFrameworkSettings
 {
@@ -126,7 +127,6 @@ namespace OuterWildsRumble.UIFrameworkSettings
         public static MelonPreferences_Entry<float> BrittleHollowBreakIntervalMax;
         public static MelonPreferences_Entry<float> BrittleHollowSuckSpeed;
         public static MelonPreferences_Entry<float> BrittleHollowDriftSpeed;
-        public static MelonPreferences_Entry<float> BrittleHollowDriftMaxRadius;
 
         // =========================================================================
         // HOLLOW'S LANTERN
@@ -135,6 +135,17 @@ namespace OuterWildsRumble.UIFrameworkSettings
         public static MelonPreferences_Entry<float> HollowsLanternOrbitDistance;
         public static MelonPreferences_Entry<float> HollowsLanternOrbitSpeed;
         public static MelonPreferences_Entry<float> HollowsLanternSpinSpeed;
+        
+        public static MelonPreferences_Entry<float> HollowsLanternLavaStartScale;
+        public static MelonPreferences_Entry<float> HollowsLanternTargetLavaScale;
+        public static MelonPreferences_Entry<float> HollowsLanternLavaShrinkDuration;
+        public static MelonPreferences_Entry<float> HollowsLanternMeteorSpawnMin;
+        public static MelonPreferences_Entry<float> HollowsLanternMeteorSpawnMax;
+        public static MelonPreferences_Entry<float> HollowsLanternMeteorSpawnMaxEnd;
+        public static MelonPreferences_Entry<float> HollowsLanternMeteorDriftSpeed;    // pre-scale
+        public static MelonPreferences_Entry<float> HollowsLanternMeteorPullSpeed;     // pre-scale
+        public static MelonPreferences_Entry<float> HollowsLanternMeteorPullRadius;    // pre-scale
+        public static MelonPreferences_Entry<float> HollowsLanternMeteorDestroyRadius; // pre-scale
 
         // =========================================================================
         // GIANT'S DEEP
@@ -247,7 +258,7 @@ namespace OuterWildsRumble.UIFrameworkSettings
                 globalCat, sunCat, sunStationCat, hourglassCat, timberHearthCat,
                 attlerockCat, brittleHollowCat, hollowsLanternCat, giantsDeepCat,
                 probeCannonCat, orbitalProbeCat, quantumMoonCat, darkBrambleCat,
-                whiteHoleCat, whiteHoleStationCat, interloperCat, playerShipCat
+                whiteHoleCat, whiteHoleStationCat, interloperCat, playerShipCat,signalScopeCat
             };
             foreach (var cat in allCategories)
                 cat.SetFilePath(configPath);
@@ -475,12 +486,7 @@ namespace OuterWildsRumble.UIFrameworkSettings
                 "BrittleHollow_DriftSpeed", 0.09f /30f,
                 "Drift Speed",
                 "Units per second chunks drift near the white hole");
-            BrittleHollowDriftMaxRadius = brittleHollowCat.CreateEntry(
-                "BrittleHollow_DriftMaxRadius", 9f,
-                "Drift Max Radius",
-                "How far chunks can drift from the white hole before being pulled back");
 
-            // Hollow's Lantern
             HollowsLanternEnabled = hollowsLanternCat.CreateEntry(
                 "HollowsLantern_Enabled", true,
                 "Enabled", "Toggle Hollow's Lantern");
@@ -494,6 +500,36 @@ namespace OuterWildsRumble.UIFrameworkSettings
             HollowsLanternSpinSpeed = hollowsLanternCat.CreateEntry(
                 "HollowsLantern_SpinSpeed", 30f,
                 "Spin Speed", "Self-rotation degrees per second");
+            HollowsLanternLavaStartScale = hollowsLanternCat.CreateEntry(
+                "HollowsLantern_LavaStartScale", 89f,
+                "Lava Start Scale", "Uniform local scale of the lava sphere at the beginning");
+            HollowsLanternTargetLavaScale = hollowsLanternCat.CreateEntry(
+                "HollowsLantern_TargetLavaScale", 84f,
+                "Lava Target Scale", "Uniform local scale the lava shrinks to over the shrink duration");
+            HollowsLanternLavaShrinkDuration = hollowsLanternCat.CreateEntry(
+                "HollowsLantern_LavaShrinkDuration", 60f * 19,
+                "Lava Shrink Duration (s)", "Seconds for the lava to shrink from start to target scale");
+            HollowsLanternMeteorSpawnMin = hollowsLanternCat.CreateEntry(
+                "HollowsLantern_MeteorSpawnMin", 6f,
+                "Meteor Spawn Min (s)", "Minimum seconds between meteor launches");
+            HollowsLanternMeteorSpawnMax = hollowsLanternCat.CreateEntry(
+                "HollowsLantern_MeteorSpawnMax", 40f,
+                "Meteor Spawn Max (s)", "Starting maximum seconds between meteor launches");
+            HollowsLanternMeteorSpawnMaxEnd = hollowsLanternCat.CreateEntry(
+                "HollowsLantern_MeteorSpawnMaxEnd", 20f,
+                "Meteor Spawn Max End (s)", "Maximum spawn interval at end of shrink duration (ramp target)");
+            HollowsLanternMeteorDriftSpeed = hollowsLanternCat.CreateEntry(
+                "HollowsLantern_MeteorDriftSpeed", 0.7f / 30f,
+                "Meteor Drift Speed", "Pre-scale speed while meteor drifts randomly (multiplied by scale at runtime)");
+            HollowsLanternMeteorPullSpeed = hollowsLanternCat.CreateEntry(
+                "HollowsLantern_MeteorPullSpeed", 1.4f / 30f,
+                "Meteor Pull Speed", "Pre-scale speed when meteor homes toward Brittle Hollow centre");
+            HollowsLanternMeteorPullRadius = hollowsLanternCat.CreateEntry(
+                "HollowsLantern_MeteorPullRadius", 40f / 30f,
+                "Meteor Pull Radius", "Pre-scale distance at which homing kicks in");
+            HollowsLanternMeteorDestroyRadius = hollowsLanternCat.CreateEntry(
+                "HollowsLantern_MeteorDestroyRadius", 0.03f / 30f,
+                "Meteor Destroy Radius", "Pre-scale distance at which a meteor is destroyed on arrival");
 
             // Giant's Deep
             GiantsDeepEnabled = giantsDeepCat.CreateEntry(
@@ -777,6 +813,18 @@ namespace OuterWildsRumble.UIFrameworkSettings
                     orb.orbitDistance = HollowsLanternOrbitDistance.Value;
                     orb.orbitSpeed    = HollowsLanternOrbitSpeed.Value;
                     orb.spinSpeed     = HollowsLanternSpinSpeed.Value;
+                }
+                var hl = sys.HollowsLantern.GetComponent<HollowsLantern>();
+                if (hl != null)
+                {
+                    // Lava — local scales, no world-scale multiplication needed
+                    hl.lavaStartScale        = Vector3.one * HollowsLanternLavaStartScale.Value;
+                    hl.targetLavaScale       = Vector3.one * HollowsLanternTargetLavaScale.Value;
+                    hl.lavaShrinkDuration    = HollowsLanternLavaShrinkDuration.Value;
+
+                    hl.meteorSpawnIntervalMin    = HollowsLanternMeteorSpawnMin.Value;
+                    hl.meteorSpawnIntervalMax    = HollowsLanternMeteorSpawnMax.Value;
+                    hl.meteorSpawnIntervalMaxEnd = HollowsLanternMeteorSpawnMaxEnd.Value;
                 }
             }
 

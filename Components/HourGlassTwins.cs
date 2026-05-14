@@ -116,14 +116,16 @@ public class HourGlassTwins : MonoBehaviour
     {
         // Use rotation alone to flip the funnel — no z-scale manipulation needed.
         // Combining a negative-Z scale with a 180° rotation would double-flip and cancel out.
-        if (flowingToEmber)
-        {
-            sandFunnel.transform.localRotation = defaultFunnelRotation;
-        }
-        else
-        {
-            sandFunnel.transform.localRotation = defaultFunnelRotation * Quaternion.Euler(180f, 0f, 0f);
-        }
+        // if (flowingToEmber)
+        // {
+        //     sandFunnel.transform.localRotation = defaultFunnelRotation;
+        // }
+        // else
+        // {
+        //     sandFunnel.transform.localRotation = defaultFunnelRotation * Quaternion.Euler(180f, 0f, 0f);
+        // }
+        
+        sandFunnel.transform.localScale = new Vector3(0,0,-1f);
     }
 
     private void SetSandScales(float progress)
