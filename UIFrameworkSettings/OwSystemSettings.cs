@@ -106,6 +106,7 @@ namespace OuterWildsRumble.UIFrameworkSettings
         public static MelonPreferences_Entry<float> TimberHearthOrbitDistance;
         public static MelonPreferences_Entry<float> TimberHearthOrbitSpeed;
         public static MelonPreferences_Entry<float> TimberHearthSpinSpeed;
+        public static MelonPreferences_Entry<bool> TimberHearthHarmonica;
 
         // =========================================================================
         // ATTLEROCK
@@ -437,6 +438,9 @@ namespace OuterWildsRumble.UIFrameworkSettings
             TimberHearthSpinSpeed = timberHearthCat.CreateEntry(
                 "TimberHearth_SpinSpeed", 7.5f,
                 "Spin Speed", "Self-rotation degrees per second");
+            TimberHearthHarmonica = timberHearthCat.CreateEntry(
+                "TimberHearth_Harmonica", true,
+                "Harmonica Music", "But.... I thought he was gone....");
 
             // Attlerock
             AttlerockEnabled = attlerockCat.CreateEntry(
@@ -765,11 +769,16 @@ namespace OuterWildsRumble.UIFrameworkSettings
             {
                 sys.TimberHearth.SetActive(TimberHearthEnabled.Value);
                 var orb = sys.TimberHearth.GetComponent<Orbiter>();
+                var mus = sys.TimberHearth.GetComponent<MusicEmitter>();
                 if (orb != null)
                 {
                     orb.orbitDistance = TimberHearthOrbitDistance.Value;
                     orb.orbitSpeed    = TimberHearthOrbitSpeed.Value;
                     orb.spinSpeed     = TimberHearthSpinSpeed.Value;
+                }
+                if (mus != null)
+                {
+                    mus.isEnabled = TimberHearthEnabled.Value;
                 }
             }
 
@@ -934,7 +943,6 @@ namespace OuterWildsRumble.UIFrameworkSettings
             {
                 sys.TapeRecorder.SetActive(TapeRecorderToggle.Value);
             }
-            
             
             SolarSystemScaler.Apply(SolarSystemScale.Value);
         }

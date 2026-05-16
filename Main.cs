@@ -100,10 +100,10 @@ namespace OuterWildsRumble
             //defaultAtmosphereProfile.hideFlags = HideFlags.DontUnloadUnusedAsset;
             //opticalDepth.hideFlags = HideFlags.DontUnloadUnusedAsset;
             
-            //ScriptableObject.CreateInstance<TestRenderFeature>().hideFlags = HideFlags.DontUnloadUnusedAsset; //TODO
+            //ScriptableObject.CreateInstance<TestRenderFeature>().hideFlags = HideFlags.DontUnloadUnusedAsset;
             
             //AtmosphereSetup.InjectAtmosphereFeatureAtRuntime(atmosphereShader);
-            //AtmosphereSetup.AddAtmosphereFeatureAtRuntime();TODO
+            //AtmosphereSetup.AddAtmosphereFeatureAtRuntime();
             //AtmosphereSetup.Test();
             //AtmospherePassManager.Init(atmosphereShader);
             
@@ -402,6 +402,10 @@ namespace OuterWildsRumble
                 
                 MusicEmitter emitter4 = solarSystem.DarkBramble.AddComponent<MusicEmitter>();
                 emitter4.musicFileName = "OW_TravelerTheme_harmonica.wav";
+                
+                MusicEmitter emitter6 = solarSystem.TimberHearth.AddComponent<MusicEmitter>();
+                emitter6.musicFileName = "OW_TravelerTheme_harmonica.wav";
+                emitter6.detectionAngle *= 0.6f;
                 
                 MusicEmitter emitter5 = solarSystem.QuantumMoon.AddComponent<MusicEmitter>();
                 emitter5.musicFileName = "OW_TravelerTheme_piano.wav";
