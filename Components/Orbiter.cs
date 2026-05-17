@@ -21,8 +21,12 @@ public class Orbiter : MonoBehaviour
 
     public bool randomisePos = true;
     public bool spinEnabled = true;
+    
+    public bool disableOrbit = false;
+    
+    
 
-    private float _currentOrbitAngle = 0;
+    public float _currentOrbitAngle = 0;
     private float _currentSpinAngle = 0;
 
     public Orbiter(IntPtr ptr) : base(ptr) { }
@@ -40,6 +44,7 @@ public class Orbiter : MonoBehaviour
 
     void FixedUpdate()
     {
+        if (disableOrbit) return;
         if (orbitParent)
         {
             float dt = Time.fixedDeltaTime;
