@@ -34,15 +34,32 @@ public class SolarSystem : MonoBehaviour
         SetRelativeTo(planet != null ? planet.transform : null);
 
     private Vector3 _anchorTargetPos;
+    private Orbiter _anchorOrbiter;
+    private Quaternion _baseRotation;
+    private float _initialSpinAngle;
 
     public void SetRelativeTo(Transform planet)
     {
+        if (_anchorOrbiter != null)
+        {
+            _anchorOrbiter.customRotation = null; // restore TH's normal spin visuals
+            _anchorOrbiter = null;
+        }
+
         relativeToPlanet = planet;
 
         if (planet != null)
         {
-            _anchorTargetPos = planet.position;
-            MelonLogger.Msg($"[SolarSystem] Anchored to '{planet.name}' at {_anchorTargetPos}");
+            _anchorTargetPos  = planet.position;
+            _anchorOrbiter    = planet.GetComponent<Orbiter>();
+            _baseRotation     = transform.rotation;
+            _initialSpinAngle = _anchorOrbiter != null ? _anchorOrbiter._currentSpinAngle : 0f;
+
+            if (_anchorOrbiter != null)
+                // Freeze TH's visual rotation but let _currentSpinAngle keep ticking
+                _anchorOrbiter.customRotation = planet.rotation;
+
+            MelonLogger.Msg($"[SolarSystem] Anchored to '{planet.name}'");
         }
         else
         {
@@ -50,21 +67,28 @@ public class SolarSystem : MonoBehaviour
         }
     }
 
-// FixedUpdate matches Orbiter's phase — no LateUpdate
     void FixedUpdate()
     {
-        if (relativeToPlanet == null) return;
-
         Vector3 drift = _anchorTargetPos - relativeToPlanet.position;
         transform.position += drift;
-        // Rotation is intentionally untouched — TimberHearth's rotation
-        // already derives from SolarSystem.rotation via its Orbiter,
-        // so copying it back would create a feedback loop.
+
+        // _currentSpinAngle still ticks (spinEnabled untouched), driving SolarSystem rotation
+        // but TH's own transform.rotation is frozen via customRotation
+        if (_anchorOrbiter != null)
+        {
+            float spinDelta = _anchorOrbiter._currentSpinAngle - _initialSpinAngle;
+            transform.rotation = _baseRotation * Quaternion.AngleAxis(spinDelta, _anchorOrbiter.spinAxis);
+        }
     }
 
     public void SceneLoaded(string mapName)
     {
-        relativeToPlanet = null;
+        if (_anchorOrbiter != null)
+        {
+            //_anchorOrbiter.customRotation = null;
+            //_anchorOrbiter = null;
+        }
+        //relativeToPlanet = null;
 
         switch (mapName)
         {
@@ -74,6 +98,10 @@ public class SolarSystem : MonoBehaviour
                     OwSystemSettings.SolarSystemGymY.Value,
                     OwSystemSettings.SolarSystemGymZ.Value);
                 transform.rotation = Quaternion.Euler(0, 0, 0);
+                
+                GameObject.Find("SCENE").transform.GetChild(4).gameObject.SetActive(false);
+                GameObject.Find("SCENE").transform.GetChild(3).gameObject.SetActive(false);
+                
                 break;
 
             case "Map0":
@@ -82,6 +110,9 @@ public class SolarSystem : MonoBehaviour
                     OwSystemSettings.SolarSystemRingY.Value,
                     OwSystemSettings.SolarSystemRingZ.Value);
                 transform.rotation = Quaternion.Euler(0, 0, 0);
+                
+                GameObject.Find("Scene").transform.GetChild(0).gameObject.SetActive(false);
+                GameObject.Find("Scene").transform.GetChild(2).gameObject.SetActive(false);
                 break;
 
             case "Map1":
@@ -98,6 +129,9 @@ public class SolarSystem : MonoBehaviour
                     OwSystemSettings.SolarSystemParkY.Value,
                     OwSystemSettings.SolarSystemParkZ.Value);
                 transform.rotation = Quaternion.Euler(0, 124.1311f, 0);
+                
+                GameObject.Find("SCENE").transform.GetChild(0).gameObject.SetActive(false);
+                GameObject.Find("SCENE").transform.GetChild(3).gameObject.SetActive(false);
                 break;
         }
     }
@@ -113,5 +147,10 @@ public class SolarSystem : MonoBehaviour
         
         SetRelativeTo(Main.solarSystem.TimberHearth);
         Main.solarSystem.TimberHearth.GetComponent<Orbiter>().disableOrbit = false;
+    }
+
+    void Scale(float scale)
+    {
+        SolarSystemScaler.Apply(scale);
     }
 }

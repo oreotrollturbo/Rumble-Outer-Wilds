@@ -27,7 +27,7 @@ public class Orbiter : MonoBehaviour
     
 
     public float _currentOrbitAngle = 0;
-    private float _currentSpinAngle = 0;
+    public float _currentSpinAngle = 0;
 
     public Orbiter(IntPtr ptr) : base(ptr) { }
 
