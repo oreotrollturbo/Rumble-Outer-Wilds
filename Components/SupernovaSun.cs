@@ -200,8 +200,8 @@ public class SupernovaSun : MonoBehaviour
     {
         if (DoTimeLoop)
         {
-            if ((OwSystemSettings.SunDoTimeLoopInMatches.Value && !Main.isInMatch) ||
-                !OwSystemSettings.SunDoTimeLoopInMatches.Value)
+            if ((!OwSystemSettings.SunDoTimeLoopInMatches.Value && !Main.isInMatch) ||
+                OwSystemSettings.SunDoTimeLoopInMatches.Value)
             {
                 phaseTimer += Time.deltaTime;
             }
