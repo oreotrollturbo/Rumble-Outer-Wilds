@@ -292,7 +292,7 @@ namespace OuterWildsRumble.UIFrameworkSettings
                 "OW_SolarSystemScale", 67f,
                 "Solar System Scale", "The scale of the solar system ! UNSTABLE USE AT YOUR OWN RISK");
 
-            // Realistic Mode
+            // Realistic Mode 
             RealisticMode = realisticCat.CreateEntry(
                 "Realistic_Enabled", false,
                 "Realistic Mode",
