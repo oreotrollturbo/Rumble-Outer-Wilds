@@ -198,23 +198,32 @@ public class SupernovaSun : MonoBehaviour
     // ── Fixed update ──────────────────────────────────────────────────────────
     void FixedUpdate()
     {
-        if (DoTimeLoop)
+        // 1. Determine if the time loop should actively progress right now
+        bool isTimeLoopActive = DoTimeLoop && 
+                                (OwSystemSettings.SunDoTimeLoopInMatches.Value || !Main.isInMatch);
+
+        if (isTimeLoopActive)
         {
-            if ((!OwSystemSettings.SunDoTimeLoopInMatches.Value && !Main.isInMatch) ||
-                OwSystemSettings.SunDoTimeLoopInMatches.Value)
-            {
-                phaseTimer += Time.deltaTime;
-            }
+            phaseTimer += Time.deltaTime;
         }
         else
         {
+            // 2. Time loop is inactive. Handle freezing logic.
             phaseTimer = 0f;
+
             if (OwSystemSettings.SunStayRed.Value)
             {
                 currentPhase = Phase.RedFullWait;
-                transparentSunGO.SetActive(false);
+                if (transparentSunGO != null) 
+                    transparentSunGO.SetActive(false);
             }
-                
+            else 
+            {
+                // If we shouldn't stay red and time loop is off, 
+                // explicitly force it back to the beginning of Red phase safely,
+                // or handle a custom 'Paused' state if that was your intention.
+                currentPhase = Phase.Red; 
+            }
         }
 
         switch (currentPhase)

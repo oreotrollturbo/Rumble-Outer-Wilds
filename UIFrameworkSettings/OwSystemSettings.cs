@@ -13,8 +13,9 @@ namespace OuterWildsRumble.UIFrameworkSettings
         // ── Paths ─────────────────────────────────────────────────────────────────
         private const string UserDataPath = "UserData/OuterWildsRumble/";
         private const string ConfigFile = "settings.cfg";
-        
+
         private static MelonPreferences_Category globalCat;
+        private static MelonPreferences_Category realisticCat;
         private static MelonPreferences_Category sunCat;
         private static MelonPreferences_Category sunStationCat;
         private static MelonPreferences_Category hourglassCat;
@@ -40,41 +41,47 @@ namespace OuterWildsRumble.UIFrameworkSettings
         public static MelonPreferences_Entry<bool> ShaderReplacement;
         public static MelonPreferences_Entry<bool> OnlySunLighting;
         public static MelonPreferences_Entry<float> SolarSystemScale;
-        
+
         public static MelonPreferences_Entry<float> SolarSystemGymX;
         public static MelonPreferences_Entry<float> SolarSystemGymY;
         public static MelonPreferences_Entry<float> SolarSystemGymZ;
-        
+
         public static MelonPreferences_Entry<float> SolarSystemRingX;
         public static MelonPreferences_Entry<float> SolarSystemRingY;
         public static MelonPreferences_Entry<float> SolarSystemRingZ;
-        
+
         public static MelonPreferences_Entry<float> SolarSystemPitX;
         public static MelonPreferences_Entry<float> SolarSystemPitY;
         public static MelonPreferences_Entry<float> SolarSystemPitZ;
-        
+
         public static MelonPreferences_Entry<float> SolarSystemParkX;
         public static MelonPreferences_Entry<float> SolarSystemParkY;
         public static MelonPreferences_Entry<float> SolarSystemParkZ;
-        
+
         public static MelonPreferences_Entry<bool> TapeRecorderToggle;
+
+        // =========================================================================
+        // REALISTIC MODE
+        // =========================================================================
+        public static MelonPreferences_Entry<bool> RealisticMode;
+        public static MelonPreferences_Entry<float> RealisticSpeedMultiplier;
 
         // =========================================================================
         // SUN
         // =========================================================================
-        public static MelonPreferences_Entry<bool>  SunEnabled;
-        public static MelonPreferences_Entry<bool>  SunKeepLight;
-        public static MelonPreferences_Entry<bool>  SunDoTimeLoop;
-        public static MelonPreferences_Entry<bool>  SunDoTimeLoopInMatches;
-        public static MelonPreferences_Entry<bool>  SunStayRed;
-        public static MelonPreferences_Entry<bool>  SunResetAfterSupernovaEnd;
-        
-        public static MelonPreferences_Entry<float>  SunEndTimesMusicVolume;
-        public static MelonPreferences_Entry<float>  SunCollapseVolume;
-        public static MelonPreferences_Entry<float>  SunExplodeVolume;
-        public static MelonPreferences_Entry<float>  SunSupernovaWallVolume;
-        
-        public static MelonPreferences_Entry<int>   SunSecondsToFullRed;
+        public static MelonPreferences_Entry<bool> SunEnabled;
+        public static MelonPreferences_Entry<bool> SunKeepLight;
+        public static MelonPreferences_Entry<bool> SunDoTimeLoop;
+        public static MelonPreferences_Entry<bool> SunDoTimeLoopInMatches;
+        public static MelonPreferences_Entry<bool> SunStayRed;
+        public static MelonPreferences_Entry<bool> SunResetAfterSupernovaEnd;
+
+        public static MelonPreferences_Entry<float> SunEndTimesMusicVolume;
+        public static MelonPreferences_Entry<float> SunCollapseVolume;
+        public static MelonPreferences_Entry<float> SunExplodeVolume;
+        public static MelonPreferences_Entry<float> SunSupernovaWallVolume;
+
+        public static MelonPreferences_Entry<int> SunSecondsToFullRed;
         public static MelonPreferences_Entry<float> SunWaitAfterRed;
         public static MelonPreferences_Entry<float> SunExpansionSpeed;
         public static MelonPreferences_Entry<float> SunCollapseDuration;
@@ -83,7 +90,7 @@ namespace OuterWildsRumble.UIFrameworkSettings
         // =========================================================================
         // SUN STATION
         // =========================================================================
-        public static MelonPreferences_Entry<bool>  SunStationEnabled;
+        public static MelonPreferences_Entry<bool> SunStationEnabled;
         public static MelonPreferences_Entry<float> SunStationOrbitDistance;
         public static MelonPreferences_Entry<float> SunStationOrbitSpeed;
         public static MelonPreferences_Entry<float> SunStationSpinSpeed;
@@ -91,18 +98,18 @@ namespace OuterWildsRumble.UIFrameworkSettings
         // =========================================================================
         // HOURGLASS TWINS
         // =========================================================================
-        public static MelonPreferences_Entry<bool>  HourGlassTwinsEnabled;
+        public static MelonPreferences_Entry<bool> HourGlassTwinsEnabled;
         public static MelonPreferences_Entry<float> HourGlassTwinsOrbitDistance;
         public static MelonPreferences_Entry<float> HourGlassTwinsOrbitSpeed;
         public static MelonPreferences_Entry<float> HourGlassTwinsSpinSpeed;
         public static MelonPreferences_Entry<float> HourGlassTwinsTransferDuration;
         public static MelonPreferences_Entry<float> HourGlassTwinsWaitDuration;
-        public static MelonPreferences_Entry<bool>  HourGlassTwinsRandomSandStage;
+        public static MelonPreferences_Entry<bool> HourGlassTwinsRandomSandStage;
 
         // =========================================================================
         // TIMBER HEARTH
         // =========================================================================
-        public static MelonPreferences_Entry<bool>  TimberHearthEnabled;
+        public static MelonPreferences_Entry<bool> TimberHearthEnabled;
         public static MelonPreferences_Entry<float> TimberHearthOrbitDistance;
         public static MelonPreferences_Entry<float> TimberHearthOrbitSpeed;
         public static MelonPreferences_Entry<float> TimberHearthSpinSpeed;
@@ -111,7 +118,7 @@ namespace OuterWildsRumble.UIFrameworkSettings
         // =========================================================================
         // ATTLEROCK
         // =========================================================================
-        public static MelonPreferences_Entry<bool>  AttlerockEnabled;
+        public static MelonPreferences_Entry<bool> AttlerockEnabled;
         public static MelonPreferences_Entry<float> AttlerockOrbitDistance;
         public static MelonPreferences_Entry<float> AttlerockOrbitSpeed;
         public static MelonPreferences_Entry<float> AttlerockSpinSpeed;
@@ -119,7 +126,7 @@ namespace OuterWildsRumble.UIFrameworkSettings
         // =========================================================================
         // BRITTLE HOLLOW
         // =========================================================================
-        public static MelonPreferences_Entry<bool>  BrittleHollowEnabled;
+        public static MelonPreferences_Entry<bool> BrittleHollowEnabled;
         public static MelonPreferences_Entry<float> BrittleHollowOrbitDistance;
         public static MelonPreferences_Entry<float> BrittleHollowOrbitSpeed;
         public static MelonPreferences_Entry<float> BrittleHollowSpinSpeed;
@@ -132,26 +139,26 @@ namespace OuterWildsRumble.UIFrameworkSettings
         // =========================================================================
         // HOLLOW'S LANTERN
         // =========================================================================
-        public static MelonPreferences_Entry<bool>  HollowsLanternEnabled;
+        public static MelonPreferences_Entry<bool> HollowsLanternEnabled;
         public static MelonPreferences_Entry<float> HollowsLanternOrbitDistance;
         public static MelonPreferences_Entry<float> HollowsLanternOrbitSpeed;
         public static MelonPreferences_Entry<float> HollowsLanternSpinSpeed;
-        
+
         public static MelonPreferences_Entry<float> HollowsLanternLavaStartScale;
         public static MelonPreferences_Entry<float> HollowsLanternTargetLavaScale;
         public static MelonPreferences_Entry<float> HollowsLanternLavaShrinkDuration;
         public static MelonPreferences_Entry<float> HollowsLanternMeteorSpawnMin;
         public static MelonPreferences_Entry<float> HollowsLanternMeteorSpawnMax;
         public static MelonPreferences_Entry<float> HollowsLanternMeteorSpawnMaxEnd;
-        public static MelonPreferences_Entry<float> HollowsLanternMeteorDriftSpeed;    // pre-scale
-        public static MelonPreferences_Entry<float> HollowsLanternMeteorPullSpeed;     // pre-scale
-        public static MelonPreferences_Entry<float> HollowsLanternMeteorPullRadius;    // pre-scale
+        public static MelonPreferences_Entry<float> HollowsLanternMeteorDriftSpeed; // pre-scale
+        public static MelonPreferences_Entry<float> HollowsLanternMeteorPullSpeed; // pre-scale
+        public static MelonPreferences_Entry<float> HollowsLanternMeteorPullRadius; // pre-scale
         public static MelonPreferences_Entry<float> HollowsLanternMeteorDestroyRadius; // pre-scale
 
         // =========================================================================
         // GIANT'S DEEP
         // =========================================================================
-        public static MelonPreferences_Entry<bool>  GiantsDeepEnabled;
+        public static MelonPreferences_Entry<bool> GiantsDeepEnabled;
         public static MelonPreferences_Entry<float> GiantsDeepOrbitDistance;
         public static MelonPreferences_Entry<float> GiantsDeepOrbitSpeed;
         public static MelonPreferences_Entry<float> GiantsDeepSpinSpeed;
@@ -159,7 +166,7 @@ namespace OuterWildsRumble.UIFrameworkSettings
         // =========================================================================
         // ORBITAL PROBE CANNON
         // =========================================================================
-        public static MelonPreferences_Entry<bool>  OrbitalProbeCannonEnabled;
+        public static MelonPreferences_Entry<bool> OrbitalProbeCannonEnabled;
         public static MelonPreferences_Entry<float> OrbitalProbeCannonOrbitDistance;
         public static MelonPreferences_Entry<float> OrbitalProbeCannonOrbitSpeed;
         public static MelonPreferences_Entry<float> OrbitalProbeCannonSpinSpeed;
@@ -171,13 +178,13 @@ namespace OuterWildsRumble.UIFrameworkSettings
         // =========================================================================
         // ORBITAL PROBE
         // =========================================================================
-        public static MelonPreferences_Entry<bool>  OrbitalProbeEnabled;
+        public static MelonPreferences_Entry<bool> OrbitalProbeEnabled;
         public static MelonPreferences_Entry<float> OrbitalProbeSpeed;
 
         // =========================================================================
         // QUANTUM MOON
         // =========================================================================
-        public static MelonPreferences_Entry<bool>  QuantumMoonEnabled;
+        public static MelonPreferences_Entry<bool> QuantumMoonEnabled;
         public static MelonPreferences_Entry<float> QuantumMoonOrbitDistance;
         public static MelonPreferences_Entry<float> QuantumMoonOrbitSpeed;
         public static MelonPreferences_Entry<float> QuantumMoonSpinSpeed;
@@ -186,7 +193,7 @@ namespace OuterWildsRumble.UIFrameworkSettings
         // =========================================================================
         // DARK BRAMBLE
         // =========================================================================
-        public static MelonPreferences_Entry<bool>  DarkBrambleEnabled;
+        public static MelonPreferences_Entry<bool> DarkBrambleEnabled;
         public static MelonPreferences_Entry<float> DarkBrambleOrbitDistance;
         public static MelonPreferences_Entry<float> DarkBrambleOrbitSpeed;
 
@@ -203,7 +210,7 @@ namespace OuterWildsRumble.UIFrameworkSettings
         // =========================================================================
         // INTERLOPER
         // =========================================================================
-        public static MelonPreferences_Entry<bool>  InterloperEnabled;
+        public static MelonPreferences_Entry<bool> InterloperEnabled;
         public static MelonPreferences_Entry<float> InterloperSemiMinorAxis;
         public static MelonPreferences_Entry<float> InterloperOrbitSpeed;
         public static MelonPreferences_Entry<float> InterloperSpeedIntensity;
@@ -212,18 +219,20 @@ namespace OuterWildsRumble.UIFrameworkSettings
         // PLAYER SHIP
         // =========================================================================
         public static MelonPreferences_Entry<bool> PlayerShipEnabled;
-        
-        
+
+
         // =========================================================================
         // SIGNAL SCOPE
         // =========================================================================
         public static MelonPreferences_Entry<bool> SignalScopeEnabled;
         public static MelonPreferences_Entry<bool> SignalScopePlayMusic;
         public static MelonPreferences_Entry<bool> SignalScopeGrabDuringMatches;
-        
+
         public static MelonPreferences_Entry<float> SignalScopeZoomIncrement;
         public static MelonPreferences_Entry<float> SignalScopeMaxZoom;
+
         public static MelonPreferences_Entry<float> SignalScopeMinZoom;
+
         // =========================================================================
         // SETUP
         // =========================================================================
@@ -235,31 +244,33 @@ namespace OuterWildsRumble.UIFrameworkSettings
             string configPath = Path.Combine(UserDataPath, ConfigFile);
 
             // ── Create categories ────────────────────────────────────────────────
-            globalCat          = MelonPreferences.CreateCategory("OWR_General",        "General");
-            sunCat             = MelonPreferences.CreateCategory("OWR_Sun",           "Sun");
-            sunStationCat      = MelonPreferences.CreateCategory("OWR_SunStation",    "Sun Station");
-            hourglassCat       = MelonPreferences.CreateCategory("OWR_Hourglass",     "Hourglass Twins");
-            timberHearthCat    = MelonPreferences.CreateCategory("OWR_TimberHearth",  "Timber Hearth");
-            attlerockCat       = MelonPreferences.CreateCategory("OWR_Attlerock",     "Attlerock");
-            brittleHollowCat   = MelonPreferences.CreateCategory("OWR_BrittleHollow", "Brittle Hollow");
-            hollowsLanternCat  = MelonPreferences.CreateCategory("OWR_HollowsLantern","Hollow's Lantern");
-            giantsDeepCat      = MelonPreferences.CreateCategory("OWR_GiantsDeep",    "Giant's Deep");
-            probeCannonCat     = MelonPreferences.CreateCategory("OWR_ProbeCannon",   "Probe Cannon");
-            orbitalProbeCat    = MelonPreferences.CreateCategory("OWR_OrbitalProbe",  "Orbital Probe");
-            quantumMoonCat     = MelonPreferences.CreateCategory("OWR_QuantumMoon",   "Quantum Moon");
-            darkBrambleCat     = MelonPreferences.CreateCategory("OWR_DarkBramble",   "Dark Bramble");
-            whiteHoleCat       = MelonPreferences.CreateCategory("OWR_WhiteHole",     "White Hole");
-            whiteHoleStationCat= MelonPreferences.CreateCategory("OWR_WhiteHoleStation","White Hole Station");
-            interloperCat      = MelonPreferences.CreateCategory("OWR_Interloper",    "Interloper");
-            playerShipCat      = MelonPreferences.CreateCategory("OWR_PlayerShip",    "Player Ship");
-            signalScopeCat      = MelonPreferences.CreateCategory("OWR_SignalScope",    "SignalScope");
+            globalCat = MelonPreferences.CreateCategory("OWR_General", "General");
+            realisticCat = MelonPreferences.CreateCategory("OWR_Realistic", "Realistic Mode");
+            sunCat = MelonPreferences.CreateCategory("OWR_Sun", "Sun");
+            sunStationCat = MelonPreferences.CreateCategory("OWR_SunStation", "Sun Station");
+            hourglassCat = MelonPreferences.CreateCategory("OWR_Hourglass", "Hourglass Twins");
+            timberHearthCat = MelonPreferences.CreateCategory("OWR_TimberHearth", "Timber Hearth");
+            attlerockCat = MelonPreferences.CreateCategory("OWR_Attlerock", "Attlerock");
+            brittleHollowCat = MelonPreferences.CreateCategory("OWR_BrittleHollow", "Brittle Hollow");
+            hollowsLanternCat = MelonPreferences.CreateCategory("OWR_HollowsLantern", "Hollow's Lantern");
+            giantsDeepCat = MelonPreferences.CreateCategory("OWR_GiantsDeep", "Giant's Deep");
+            probeCannonCat = MelonPreferences.CreateCategory("OWR_ProbeCannon", "Probe Cannon");
+            orbitalProbeCat = MelonPreferences.CreateCategory("OWR_OrbitalProbe", "Orbital Probe");
+            quantumMoonCat = MelonPreferences.CreateCategory("OWR_QuantumMoon", "Quantum Moon");
+            darkBrambleCat = MelonPreferences.CreateCategory("OWR_DarkBramble", "Dark Bramble");
+            whiteHoleCat = MelonPreferences.CreateCategory("OWR_WhiteHole", "White Hole");
+            whiteHoleStationCat = MelonPreferences.CreateCategory("OWR_WhiteHoleStation", "White Hole Station");
+            interloperCat = MelonPreferences.CreateCategory("OWR_Interloper", "Interloper");
+            playerShipCat = MelonPreferences.CreateCategory("OWR_PlayerShip", "Player Ship");
+            signalScopeCat = MelonPreferences.CreateCategory("OWR_SignalScope", "SignalScope");
 
             // Make all categories write to the same config file
-            var allCategories = new[] {
-                globalCat, sunCat, sunStationCat, hourglassCat, timberHearthCat,
+            var allCategories = new[]
+            {
+                globalCat, realisticCat, sunCat, sunStationCat, hourglassCat, timberHearthCat,
                 attlerockCat, brittleHollowCat, hollowsLanternCat, giantsDeepCat,
                 probeCannonCat, orbitalProbeCat, quantumMoonCat, darkBrambleCat,
-                whiteHoleCat, whiteHoleStationCat, interloperCat, playerShipCat,signalScopeCat
+                whiteHoleCat, whiteHoleStationCat, interloperCat, playerShipCat, signalScopeCat
             };
             foreach (var cat in allCategories)
                 cat.SetFilePath(configPath);
@@ -275,12 +286,24 @@ namespace OuterWildsRumble.UIFrameworkSettings
                 "Enable Shader Replacement", "Replaces the games shaders to allow lighting from other light sources");
             OnlySunLighting = globalCat.CreateEntry(
                 "OW_OnlySunLighting", false,
-                "Only sun lighting", "Removes the built-in light source of the scene leaving the sun to be the only thing lighting everything up");
+                "Only sun lighting",
+                "Removes the built-in light source of the scene leaving the sun to be the only thing lighting everything up");
             SolarSystemScale = globalCat.CreateEntry(
-                "OW_SolarSystemScale", 30f,
+                "OW_SolarSystemScale", 67f,
                 "Solar System Scale", "The scale of the solar system ! UNSTABLE USE AT YOUR OWN RISK");
-            
-            
+
+            // Realistic Mode
+            RealisticMode = realisticCat.CreateEntry(
+                "Realistic_Enabled", false,
+                "Realistic Mode",
+                "Positions the solar system at the scene origin and applies the speed multiplier to all orbit/spin speeds");
+
+            RealisticSpeedMultiplier = realisticCat.CreateEntry(
+                "Realistic_SpeedMultiplier", 0.8f,
+                "Speed Multiplier",
+                "Global multiplier applied to all orbit and spin speeds when Realistic Mode is enabled (default 0.1 = 10% of normal speed)");
+
+
             SolarSystemGymX = globalCat.CreateEntry(
                 "OW_SolarSystemGymX", 2.28f,
                 "Solar System Gym X", "The X position (in-game coordinates) of the solar system in the gym");
@@ -290,7 +313,7 @@ namespace OuterWildsRumble.UIFrameworkSettings
             SolarSystemGymZ = globalCat.CreateEntry(
                 "OW_SolarSystemGymZ", -306f,
                 "Solar System Gym Z", "The Z position (in-game coordinates) of the solar system in the gym");
-            
+
             SolarSystemRingX = globalCat.CreateEntry(
                 "OW_SolarSystemRingX", 325.45f,
                 "Solar System Ring X", "The X position (in-game coordinates) of the solar system in the ring");
@@ -300,7 +323,7 @@ namespace OuterWildsRumble.UIFrameworkSettings
             SolarSystemRingZ = globalCat.CreateEntry(
                 "OW_SolarSystemRingZ", 240.54f,
                 "Solar System Ring Z", "The Z position (in-game coordinates) of the solar system in the ring");
-            
+
             SolarSystemPitX = globalCat.CreateEntry(
                 "OW_SolarSystemPitX", 0f,
                 "Solar System Pit X", "The X position (in-game coordinates) of the solar system in the pit");
@@ -310,7 +333,7 @@ namespace OuterWildsRumble.UIFrameworkSettings
             SolarSystemPitZ = globalCat.CreateEntry(
                 "OW_SolarSystemPitZ", 0f,
                 "Solar System Pit Z", "The Z position (in-game coordinates) of the solar system in the pit");
-            
+
             SolarSystemParkX = globalCat.CreateEntry(
                 "OW_SolarSystemParkX", 373.32f,
                 "Solar System Park X", "The X position (in-game coordinates) of the solar system in the park");
@@ -323,8 +346,9 @@ namespace OuterWildsRumble.UIFrameworkSettings
 
             TapeRecorderToggle = globalCat.CreateEntry(
                 "OW_Strange_Toggle", false,
-                "Dolyl ht P", "WARNING contains spoilers for the base game ending. Are you willing to find and investigate?");
-            
+                "Dolyl ht P",
+                "WARNING contains spoilers for the base game ending. Are you willing to find and investigate?");
+
             // Sun
             SunEnabled = sunCat.CreateEntry(
                 "Sun_Enabled", true,
@@ -338,29 +362,34 @@ namespace OuterWildsRumble.UIFrameworkSettings
             SunStayRed = sunCat.CreateEntry(
                 "Sun_StayRed", false,
                 "Stay Red", "Makes the sun stay red if the time loop is disabled");
-            
+
             SunDoTimeLoopInMatches = sunCat.CreateEntry(
                 "Sun_TimeLoopInMatches", true,
-                "Do sun time loop in matches", "Let the sun change stages during matches, (disable this to stop supernovas in matches)");
-            
+                "Do sun time loop in matches",
+                "Let the sun change stages during matches, (disable this to stop supernovas in matches)");
+
             SunResetAfterSupernovaEnd = sunCat.CreateEntry(
                 "Sun_ResetInstantly", false,
                 "Instant Reset", "Resets the solar system right after the supernova finishes");
-            
+
             SunEndTimesMusicVolume = sunCat.CreateEntry(
                 "Sun_EndTimesVolume", 0.2f,
-                "End Times Volume", "The volume of the end times music from 1 to 0.00 . To disable the music just set it to 0");
+                "End Times Volume",
+                "The volume of the end times music from 1 to 0.00 . To disable the music just set it to 0");
             SunCollapseVolume = sunCat.CreateEntry(
                 "Sun_CollapseVolume", 1f,
-                "Sun Collapsing Volume", "The volume of the end times music from 1 to 0.00 . To disable the music just set it to 0");
+                "Sun Collapsing Volume",
+                "The volume of the end times music from 1 to 0.00 . To disable the music just set it to 0");
             SunExplodeVolume = sunCat.CreateEntry(
                 "Sun_ExplodeVolume", 1f,
-                "Sun Exploding Volume", "The volume of the sun's explosion from 1 to 0.00 . To disable the music just set it to 0");
+                "Sun Exploding Volume",
+                "The volume of the sun's explosion from 1 to 0.00 . To disable the music just set it to 0");
             SunSupernovaWallVolume = sunCat.CreateEntry(
                 "Sun_SuperNovaWallVolume", 1f,
-                "Supernova Wall Volume", "The volume of the sun's supernova wall (the wind rushing n stuff) from 1 to 0.00 . To disable the music just set it to 0");
-            
-            
+                "Supernova Wall Volume",
+                "The volume of the sun's supernova wall (the wind rushing n stuff) from 1 to 0.00 . To disable the music just set it to 0");
+
+
             SunSecondsToFullRed = sunCat.CreateEntry(
                 "Sun_SecondsToFullRed", 60 * 22,
                 "Seconds to Full Red",
@@ -391,10 +420,10 @@ namespace OuterWildsRumble.UIFrameworkSettings
                 "Orbit Distance",
                 "Pre-scale orbit distance from the Sun (multiplied by 30 at runtime)");
             SunStationOrbitSpeed = sunStationCat.CreateEntry(
-                "SunStation_OrbitSpeed", 16f,
+                "SunStation_OrbitSpeed", 32f,
                 "Orbit Speed", "Degrees per second around the Sun");
             SunStationSpinSpeed = sunStationCat.CreateEntry(
-                "SunStation_SpinSpeed", 16f,
+                "SunStation_SpinSpeed", 32f,
                 "Spin Speed", "Self-rotation degrees per second");
 
             // Hourglass Twins
@@ -409,7 +438,7 @@ namespace OuterWildsRumble.UIFrameworkSettings
                 "HourGlassTwins_OrbitSpeed", 2.27f,
                 "Orbit Speed", "Degrees per second around the Sun");
             HourGlassTwinsSpinSpeed = hourglassCat.CreateEntry(
-                "HourGlassTwins_SpinSpeed", 20.5f,
+                "HourGlassTwins_SpinSpeed", 10.5f,
                 "Spin Speed", "Self-rotation degrees per second");
             HourGlassTwinsTransferDuration = hourglassCat.CreateEntry(
                 "HourGlassTwins_TransferDuration", 3.4f,
@@ -483,11 +512,11 @@ namespace OuterWildsRumble.UIFrameworkSettings
                 "Break Interval Max (s)",
                 "Maximum seconds between chunk break events");
             BrittleHollowSuckSpeed = brittleHollowCat.CreateEntry(
-                "BrittleHollow_SuckSpeed", 1f /30f,
+                "BrittleHollow_SuckSpeed", 1f / 30f,
                 "Suck Speed",
                 "Units per second chunks move toward the black hole");
             BrittleHollowDriftSpeed = brittleHollowCat.CreateEntry(
-                "BrittleHollow_DriftSpeed", 0.09f /30f,
+                "BrittleHollow_DriftSpeed", 0.09f / 30f,
                 "Drift Speed",
                 "Units per second chunks drift near the white hole");
 
@@ -585,7 +614,7 @@ namespace OuterWildsRumble.UIFrameworkSettings
                 "OrbitalProbe_Enabled", true,
                 "Enabled", "Toggle the Orbital Probe");
             OrbitalProbeSpeed = orbitalProbeCat.CreateEntry(
-                "OrbitalProbe_Speed", 40f,
+                "OrbitalProbe_Speed", 20f,
                 "Launch Speed",
                 "How fast the probe will go once fired");
 
@@ -605,7 +634,8 @@ namespace OuterWildsRumble.UIFrameworkSettings
                 "Spin Speed", "Self-rotation degrees per second");
             QuantumMoonPlayMusic = quantumMoonCat.CreateEntry(
                 "QuantumMoon_PlayMusic", false,
-                "Play Music", "Toggles the mysterious music coming from the quantum moon. WARNING only enable if you've finished the base game");
+                "Play Music",
+                "Toggles the mysterious music coming from the quantum moon. WARNING only enable if you've finished the base game");
 
             // Dark Bramble
             DarkBrambleEnabled = darkBrambleCat.CreateEntry(
@@ -650,35 +680,36 @@ namespace OuterWildsRumble.UIFrameworkSettings
             PlayerShipEnabled = playerShipCat.CreateEntry(
                 "PlayerShip_Enabled", true,
                 "Enabled", "Toggle the Hearthian spaceship model");
-            
+
             // SignalScope
             SignalScopeEnabled = signalScopeCat.CreateEntry(
                 "SignalScope_Enabled", true,
                 "Enabled", "Toggle the SignalScope");
-            
+
             SignalScopePlayMusic = signalScopeCat.CreateEntry(
                 "SignalScope_Music_Enabled", true,
                 "Play music", "Toggle the SignalScope playing music when you point it at planets");
-            
+
             SignalScopeGrabDuringMatches = signalScopeCat.CreateEntry(
                 "SignalScope_Grabbing_During_Matches", true,
-                "Grabbable During Matches", "Weather the signalscope can be grabbed during a match (once the match ends it can be grabbed)");
-            
+                "Grabbable During Matches",
+                "Weather the signalscope can be grabbed during a match (once the match ends it can be grabbed)");
+
             SignalScopeZoomIncrement = signalScopeCat.CreateEntry(
                 "SignalScope_Zoom_Increment", 4.6f,
                 "Zoom Increment", "By how much the signalscope will zoom every button press (its an FOV slider)");
-            
+
             SignalScopeMinZoom = signalScopeCat.CreateEntry(
                 "SignalScope_Min_Zoom", 120f,
                 "Minimum Zoom", "The minimum zoom the signalscope can reach (camera FOV)");
-            
+
             SignalScopeMaxZoom = signalScopeCat.CreateEntry(
                 "SignalScope_Max_Zoom", 1.5f,
                 "Maximum Zoom", "The maximum zoom the signalscope can reach (camera FOV)");
 
             // ── Register all categories with UIFramework ─────────────────────────
             var uiHandle = UI.Register((MelonBase)modInstance,
-                globalCat, sunCat, sunStationCat, hourglassCat,
+                globalCat, realisticCat, sunCat, sunStationCat, hourglassCat,
                 timberHearthCat, attlerockCat, brittleHollowCat,
                 hollowsLanternCat, giantsDeepCat, probeCannonCat,
                 orbitalProbeCat, quantumMoonCat, darkBrambleCat,
@@ -703,6 +734,7 @@ namespace OuterWildsRumble.UIFrameworkSettings
         public static void ApplyToSolarSystem()
         {
             var sys = Main.solarSystem;
+            float speedMult = RealisticMode.Value ? RealisticSpeedMultiplier.Value : 1f;
 
             sys.Root.SetActive(EnabledSolarSystem.Value);
             sys.Root.GetComponent<SolarSystem>().SceneLoaded(Calls.Scene.GetSceneName());
@@ -712,7 +744,7 @@ namespace OuterWildsRumble.UIFrameworkSettings
                 if (SunKeepLight.Value)
                 {
                     sys.Sun.SetActive(true);
-                    sys.Sun.transform.GetChild(0).gameObject.SetActive(SunEnabled.Value);
+                    sys.Sun.transform.GetChild(0).gameObject.SetActive(false);
                     sys.Sun.transform.GetChild(1).gameObject.SetActive(SunEnabled.Value);
                 }
                 else
@@ -721,16 +753,16 @@ namespace OuterWildsRumble.UIFrameworkSettings
                     sys.Sun.transform.GetChild(0).gameObject.SetActive(false);
                     sys.Sun.transform.GetChild(1).gameObject.SetActive(true);
                 }
-                
+
                 var sn = sys.Sun.GetComponent<SupernovaSun>();
                 if (sn != null)
                 {
-                    sn.secondsToFullRed              = SunSecondsToFullRed.Value;
-                    sn.waitAfterRed                  = SunWaitAfterRed.Value;
+                    sn.secondsToFullRed = SunSecondsToFullRed.Value;
+                    sn.waitAfterRed = SunWaitAfterRed.Value;
                     sn.expansionSpeedWorldUnitsPerSec = SunExpansionSpeed.Value;
-                    sn.collapseDuration              = SunCollapseDuration.Value;
-                    sn.explosionDuration             = SunExplosionDuration.Value;
-                    sn.DoTimeLoop                    = SunDoTimeLoop.Value;
+                    sn.collapseDuration = SunCollapseDuration.Value;
+                    sn.explosionDuration = SunExplosionDuration.Value;
+                    sn.DoTimeLoop = SunDoTimeLoop.Value;
                 }
             }
 
@@ -741,8 +773,8 @@ namespace OuterWildsRumble.UIFrameworkSettings
                 if (orb != null)
                 {
                     orb.orbitDistance = SunStationOrbitDistance.Value;
-                    orb.orbitSpeed    = SunStationOrbitSpeed.Value;
-                    orb.spinSpeed     = SunStationSpinSpeed.Value;
+                    orb.orbitSpeed = SunStationOrbitSpeed.Value / 3f * speedMult;
+                    orb.spinSpeed = SunStationSpinSpeed.Value / 3f * speedMult;
                 }
             }
 
@@ -753,15 +785,16 @@ namespace OuterWildsRumble.UIFrameworkSettings
                 if (orb != null)
                 {
                     orb.orbitDistance = HourGlassTwinsOrbitDistance.Value;
-                    orb.orbitSpeed    = HourGlassTwinsOrbitSpeed.Value;
-                    orb.spinSpeed     = HourGlassTwinsSpinSpeed.Value;
+                    orb.orbitSpeed = HourGlassTwinsOrbitSpeed.Value / 10f * speedMult;
+                    orb.spinSpeed = HourGlassTwinsSpinSpeed.Value / 10f * speedMult;
                 }
+
                 var hgt = sys.HourGlassTwins.GetComponent<HourGlassTwins>();
                 if (hgt != null)
                 {
                     hgt.transferDurationRevs = HourGlassTwinsTransferDuration.Value;
-                    hgt.waitDurationRevs     = HourGlassTwinsWaitDuration.Value;
-                    hgt.randomSandStage      = HourGlassTwinsRandomSandStage.Value;
+                    hgt.waitDurationRevs = HourGlassTwinsWaitDuration.Value;
+                    hgt.randomSandStage = HourGlassTwinsRandomSandStage.Value;
                 }
             }
 
@@ -773,9 +806,10 @@ namespace OuterWildsRumble.UIFrameworkSettings
                 if (orb != null)
                 {
                     orb.orbitDistance = TimberHearthOrbitDistance.Value;
-                    orb.orbitSpeed    = TimberHearthOrbitSpeed.Value;
-                    orb.spinSpeed     = TimberHearthSpinSpeed.Value;
+                    orb.orbitSpeed = TimberHearthOrbitSpeed.Value / 10f * speedMult;
+                    orb.spinSpeed = TimberHearthSpinSpeed.Value / 10f * speedMult;
                 }
+
                 if (mus != null)
                 {
                     mus.isEnabled = TimberHearthEnabled.Value;
@@ -789,8 +823,8 @@ namespace OuterWildsRumble.UIFrameworkSettings
                 if (orb != null)
                 {
                     orb.orbitDistance = AttlerockOrbitDistance.Value;
-                    orb.orbitSpeed    = AttlerockOrbitSpeed.Value;
-                    orb.spinSpeed     = AttlerockSpinSpeed.Value;
+                    orb.orbitSpeed = AttlerockOrbitSpeed.Value / 10f * speedMult;
+                    orb.spinSpeed = AttlerockSpinSpeed.Value / 10f * speedMult;
                 }
             }
 
@@ -801,13 +835,14 @@ namespace OuterWildsRumble.UIFrameworkSettings
                 if (orb != null)
                 {
                     orb.orbitDistance = BrittleHollowOrbitDistance.Value;
-                    orb.orbitSpeed    = BrittleHollowOrbitSpeed.Value;
-                    orb.spinSpeed     = BrittleHollowSpinSpeed.Value;
+                    orb.orbitSpeed = BrittleHollowOrbitSpeed.Value / 10f * speedMult;
+                    orb.spinSpeed = BrittleHollowSpinSpeed.Value / 10f * speedMult;
                 }
+
                 var bh = sys.BrittleHollow.GetComponent<BrittleHollow>();
                 if (bh != null)
                 {
-                    bh.breakApart       = BrittleHollowBreakAppart.Value;
+                    bh.breakApart = BrittleHollowBreakAppart.Value;
                     bh.breakIntervalMin = BrittleHollowBreakIntervalMin.Value;
                     bh.breakIntervalMax = BrittleHollowBreakIntervalMax.Value;
                 }
@@ -820,19 +855,18 @@ namespace OuterWildsRumble.UIFrameworkSettings
                 if (orb != null)
                 {
                     orb.orbitDistance = HollowsLanternOrbitDistance.Value;
-                    orb.orbitSpeed    = HollowsLanternOrbitSpeed.Value;
-                    orb.spinSpeed     = HollowsLanternSpinSpeed.Value;
+                    orb.orbitSpeed = HollowsLanternOrbitSpeed.Value / 10f * speedMult;
+                    orb.spinSpeed = HollowsLanternSpinSpeed.Value / 10f * speedMult;
                 }
+
                 var hl = sys.HollowsLantern.GetComponent<HollowsLantern>();
                 if (hl != null)
                 {
-                    // Lava — local scales, no world-scale multiplication needed
-                    hl.lavaStartScale        = Vector3.one * HollowsLanternLavaStartScale.Value;
-                    hl.targetLavaScale       = Vector3.one * HollowsLanternTargetLavaScale.Value;
-                    hl.lavaShrinkDuration    = HollowsLanternLavaShrinkDuration.Value;
-
-                    hl.meteorSpawnIntervalMin    = HollowsLanternMeteorSpawnMin.Value;
-                    hl.meteorSpawnIntervalMax    = HollowsLanternMeteorSpawnMax.Value;
+                    hl.lavaStartScale = Vector3.one * HollowsLanternLavaStartScale.Value;
+                    hl.targetLavaScale = Vector3.one * HollowsLanternTargetLavaScale.Value;
+                    hl.lavaShrinkDuration = HollowsLanternLavaShrinkDuration.Value;
+                    hl.meteorSpawnIntervalMin = HollowsLanternMeteorSpawnMin.Value;
+                    hl.meteorSpawnIntervalMax = HollowsLanternMeteorSpawnMax.Value;
                     hl.meteorSpawnIntervalMaxEnd = HollowsLanternMeteorSpawnMaxEnd.Value;
                 }
             }
@@ -844,8 +878,8 @@ namespace OuterWildsRumble.UIFrameworkSettings
                 if (orb != null)
                 {
                     orb.orbitDistance = GiantsDeepOrbitDistance.Value;
-                    orb.orbitSpeed    = GiantsDeepOrbitSpeed.Value;
-                    orb.spinSpeed     = GiantsDeepSpinSpeed.Value;
+                    orb.orbitSpeed = GiantsDeepOrbitSpeed.Value / 10f * speedMult;
+                    orb.spinSpeed = GiantsDeepSpinSpeed.Value / 10f * speedMult;
                 }
             }
 
@@ -856,15 +890,16 @@ namespace OuterWildsRumble.UIFrameworkSettings
                 if (orb != null)
                 {
                     orb.orbitDistance = OrbitalProbeCannonOrbitDistance.Value;
-                    orb.orbitSpeed    = OrbitalProbeCannonOrbitSpeed.Value;
-                    orb.spinSpeed     = OrbitalProbeCannonSpinSpeed.Value;
+                    orb.orbitSpeed = OrbitalProbeCannonOrbitSpeed.Value / 10f * speedMult;
+                    orb.spinSpeed = OrbitalProbeCannonSpinSpeed.Value / 10f * speedMult;
                 }
+
                 var cannon = sys.OrbitalProbeCannon.GetComponent<OrbitalProbeCannon>();
                 if (cannon != null)
                 {
-                    cannon.fireProbe       = OrbitalProbeCannonFire.Value;
-                    cannon.timeToAim       = OrbitalProbeCannonTimeToAim.Value;
-                    cannon.explosionTime   = OrbitalProbeCannonExplosionTime.Value;
+                    cannon.fireProbe = OrbitalProbeCannonFire.Value;
+                    cannon.timeToAim = OrbitalProbeCannonTimeToAim.Value;
+                    cannon.explosionTime = OrbitalProbeCannonExplosionTime.Value;
                     cannon.breakupDuration = OrbitalProbeCannonBreakupDuration.Value;
                 }
             }
@@ -874,7 +909,7 @@ namespace OuterWildsRumble.UIFrameworkSettings
                 sys.OrbitalProbe.SetActive(OrbitalProbeEnabled.Value);
                 var probe = sys.OrbitalProbe.GetComponent<OrbitalProbe>();
                 if (probe != null)
-                    probe.probeSpeed = OrbitalProbeSpeed.Value;
+                    probe.probeSpeed = OrbitalProbeSpeed.Value / 10f * speedMult;
             }
 
             if (sys.QuantumMoon != null)
@@ -884,9 +919,10 @@ namespace OuterWildsRumble.UIFrameworkSettings
                 if (orb != null)
                 {
                     orb.orbitDistance = QuantumMoonOrbitDistance.Value;
-                    orb.orbitSpeed    = QuantumMoonOrbitSpeed.Value;
-                    orb.spinSpeed     = QuantumMoonSpinSpeed.Value;
+                    orb.orbitSpeed = QuantumMoonOrbitSpeed.Value / 10f * speedMult;
+                    orb.spinSpeed = QuantumMoonSpinSpeed.Value / 10f * speedMult;
                 }
+
                 var mus = sys.QuantumMoon.GetComponent<MusicEmitter>();
                 if (mus != null)
                 {
@@ -901,7 +937,7 @@ namespace OuterWildsRumble.UIFrameworkSettings
                 if (orb != null)
                 {
                     orb.orbitDistance = DarkBrambleOrbitDistance.Value;
-                    orb.orbitSpeed    = DarkBrambleOrbitSpeed.Value;
+                    orb.orbitSpeed = DarkBrambleOrbitSpeed.Value / 10f * speedMult;
                 }
             }
 
@@ -917,9 +953,9 @@ namespace OuterWildsRumble.UIFrameworkSettings
                 var ell = sys.Interloper.GetComponent<EllipticalOrbiter>();
                 if (ell != null)
                 {
-                    ell.semiMinorAxis  = InterloperSemiMinorAxis.Value;
-                    ell.orbitSpeed     = InterloperOrbitSpeed.Value;
-                    ell.speedIntensity = InterloperSpeedIntensity.Value;
+                    ell.semiMinorAxis = InterloperSemiMinorAxis.Value;
+                    ell.orbitSpeed = InterloperOrbitSpeed.Value / 10f * speedMult;
+                    ell.speedIntensity = InterloperSpeedIntensity.Value / 10f * speedMult;
                 }
             }
 
@@ -933,7 +969,6 @@ namespace OuterWildsRumble.UIFrameworkSettings
                 var scope = sys.SignalScope.GetComponent<SignalScope>();
                 scope.playMusic = SignalScopePlayMusic.Value;
                 scope.grabDuringMatches = SignalScopeGrabDuringMatches.Value;
-                
                 scope.minZoom = SignalScopeMinZoom.Value;
                 scope.maxZoom = SignalScopeMaxZoom.Value;
                 scope.zoomIncrement = SignalScopeZoomIncrement.Value;
@@ -943,7 +978,7 @@ namespace OuterWildsRumble.UIFrameworkSettings
             {
                 sys.TapeRecorder.SetActive(TapeRecorderToggle.Value);
             }
-            
+
             SolarSystemScaler.Apply(SolarSystemScale.Value);
         }
     }

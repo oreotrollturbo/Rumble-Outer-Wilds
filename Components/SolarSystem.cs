@@ -13,8 +13,11 @@ public class SolarSystem : MonoBehaviour
     private Vector3 _anchorFixedPosition;
     private Quaternion _anchorFixedRotation;
     private Quaternion _lastAnchorRotation;
-    private Vector3 _worldOffset;       // SolarSystem position relative to planet (world-space, set once)
-    private Quaternion _rotOffset;      // SolarSystem rotation relative to planet (set once)
+    private Vector3 _worldOffset;
+    private Quaternion _rotOffset;
+    
+    private Quaternion _tiltRotation  = Quaternion.identity;  // what you set in SceneLoaded — never changes
+    private Quaternion _orbitalOffset = Quaternion.identity;  // accumulated orbital motion — changes every frame
     public SolarSystem(IntPtr ptr) : base(ptr) {}
 
     public void Start()
@@ -25,41 +28,71 @@ public class SolarSystem : MonoBehaviour
             OwSystemSettings.SolarSystemGymX.Value,
             OwSystemSettings.SolarSystemGymY.Value,
             OwSystemSettings.SolarSystemGymZ.Value);
-        transform.rotation = Quaternion.Euler(0, 0, 0);
+        transform.rotation = Quaternion.Euler(0, 0, 90);
     }
-
-    
 
     public void SetRelativeTo(GameObject planet) =>
         SetRelativeTo(planet != null ? planet.transform : null);
 
-    private Vector3 _anchorTargetPos;
     private Orbiter _anchorOrbiter;
-    private Quaternion _baseRotation;
+    private EllipticalOrbiter _anchorEllipticalOrbiter;
     private float _initialSpinAngle;
+    private float _lastSpinAngle;
+    private Quaternion _lastEllipticalRotation;           
 
     public void SetRelativeTo(Transform planet)
     {
+        _tiltRotation  = transform.rotation;
+        _orbitalOffset = Quaternion.identity;
+        // 1. Re-enable OLD anchor children first
+        if (relativeToPlanet != null)
+        {
+            for (int i = 0; i < relativeToPlanet.childCount; i++)
+            {
+                Transform child = relativeToPlanet.GetChild(i);
+                if (child != null)
+                    child.gameObject.SetActive(true);
+            }
+        }
+
         if (_anchorOrbiter != null)
         {
-            _anchorOrbiter.customRotation = null; // restore TH's normal spin visuals
+            _anchorOrbiter.customRotation = null;
             _anchorOrbiter = null;
         }
+        _anchorEllipticalOrbiter = null;
 
         relativeToPlanet = planet;
 
         if (planet != null)
         {
-            _anchorTargetPos  = planet.position;
-            _anchorOrbiter    = planet.GetComponent<Orbiter>();
-            _baseRotation     = transform.rotation;
+            // 2. Disable NEW anchor children after
+            for (int i = 0; i < planet.childCount; i++)
+            {
+                Transform child = planet.GetChild(i);
+                if (child != null)
+                {
+                    MelonLogger.Msg("Got child disabling");
+                    child.gameObject.SetActive(false);
+                }
+            }
+
+            _anchorOrbiter           = planet.GetComponent<Orbiter>();
+            _anchorEllipticalOrbiter = planet.GetComponent<EllipticalOrbiter>();
+
             _initialSpinAngle = _anchorOrbiter != null ? _anchorOrbiter._currentSpinAngle : 0f;
+            _lastSpinAngle    = _initialSpinAngle;
+
+            if (_anchorEllipticalOrbiter != null)
+                _lastEllipticalRotation = planet.rotation;
+
+            Vector3 offsetToOrigin = Vector3.zero - planet.position;
+            transform.position += offsetToOrigin;
 
             if (_anchorOrbiter != null)
-                // Freeze TH's visual rotation but let _currentSpinAngle keep ticking
                 _anchorOrbiter.customRotation = planet.rotation;
 
-            MelonLogger.Msg($"[SolarSystem] Anchored to '{planet.name}'");
+            MelonLogger.Msg($"[SolarSystem] Anchored '{planet.name}' to world origin (0,0,0).");
         }
         else
         {
@@ -69,70 +102,106 @@ public class SolarSystem : MonoBehaviour
 
     void FixedUpdate()
     {
-        Vector3 drift = _anchorTargetPos - relativeToPlanet.position;
-        transform.position += drift;
+        if (relativeToPlanet == null) return;
 
-        // _currentSpinAngle still ticks (spinEnabled untouched), driving SolarSystem rotation
-        // but TH's own transform.rotation is frozen via customRotation
         if (_anchorOrbiter != null)
         {
-            float spinDelta = _anchorOrbiter._currentSpinAngle - _initialSpinAngle;
-            transform.rotation = _baseRotation * Quaternion.AngleAxis(spinDelta, _anchorOrbiter.spinAxis);
+            float currentSpinAngle = _anchorOrbiter._currentSpinAngle;
+            float deltaAngle       = currentSpinAngle - _lastSpinAngle;
+            _lastSpinAngle         = currentSpinAngle;
+
+            
+            Quaternion deltaRotation = Quaternion.AngleAxis(deltaAngle, _tiltRotation * Vector3.up);
+            _orbitalOffset     = deltaRotation * _orbitalOffset;
+            transform.position = deltaRotation * transform.position;
+            transform.rotation = _orbitalOffset * _tiltRotation;
         }
+        else if (_anchorEllipticalOrbiter != null)
+        {
+            Quaternion currentRot    = relativeToPlanet.rotation;
+            Quaternion deltaRotation = currentRot * Quaternion.Inverse(_lastEllipticalRotation);
+            _lastEllipticalRotation  = currentRot;
+
+            _orbitalOffset     = deltaRotation * _orbitalOffset;
+            transform.position = deltaRotation * transform.position;
+            transform.rotation = _orbitalOffset * _tiltRotation;
+        }
+
+        transform.position += Vector3.zero - relativeToPlanet.position;
     }
 
     public void SceneLoaded(string mapName)
     {
-        if (_anchorOrbiter != null)
+        if (!OwSystemSettings.RealisticMode.Value)
         {
-            //_anchorOrbiter.customRotation = null;
-            //_anchorOrbiter = null;
+            switch (mapName)
+            {
+                case "Gym":
+                    transform.position = new Vector3(
+                        OwSystemSettings.SolarSystemGymX.Value,
+                        OwSystemSettings.SolarSystemGymY.Value,
+                        OwSystemSettings.SolarSystemGymZ.Value);
+                    transform.rotation = Quaternion.Euler(0, 0, 0);
+                    break;
+
+                case "Map0":
+                    transform.position = new Vector3(
+                        OwSystemSettings.SolarSystemRingX.Value,
+                        OwSystemSettings.SolarSystemRingY.Value,
+                        OwSystemSettings.SolarSystemRingZ.Value);
+                    transform.rotation = Quaternion.Euler(0, 0, 0);
+                    break;
+
+                case "Map1":
+                    transform.position = new Vector3(
+                        OwSystemSettings.SolarSystemPitX.Value,
+                        OwSystemSettings.SolarSystemPitY.Value,
+                        OwSystemSettings.SolarSystemPitZ.Value);
+                    transform.rotation = Quaternion.Euler(0, 0, 0);
+                    break;
+
+                case "Park":
+                    transform.position = new Vector3(
+                        OwSystemSettings.SolarSystemParkX.Value,
+                        OwSystemSettings.SolarSystemParkY.Value,
+                        OwSystemSettings.SolarSystemParkZ.Value);
+                    transform.rotation = Quaternion.Euler(0, 124.1311f, 0);
+                    break;
+            }
         }
-        //relativeToPlanet = null;
-
-        switch (mapName)
+        else
         {
-            case "Gym":
-                transform.position = new Vector3(
-                    OwSystemSettings.SolarSystemGymX.Value,
-                    OwSystemSettings.SolarSystemGymY.Value,
-                    OwSystemSettings.SolarSystemGymZ.Value);
-                transform.rotation = Quaternion.Euler(0, 0, 0);
-                
-                GameObject.Find("SCENE").transform.GetChild(4).gameObject.SetActive(false);
-                GameObject.Find("SCENE").transform.GetChild(3).gameObject.SetActive(false);
-                
-                break;
+            transform.position = Vector3.zero;
+            
 
-            case "Map0":
-                transform.position = new Vector3(
-                    OwSystemSettings.SolarSystemRingX.Value,
-                    OwSystemSettings.SolarSystemRingY.Value,
-                    OwSystemSettings.SolarSystemRingZ.Value);
-                transform.rotation = Quaternion.Euler(0, 0, 0);
-                
-                GameObject.Find("Scene").transform.GetChild(0).gameObject.SetActive(false);
-                GameObject.Find("Scene").transform.GetChild(2).gameObject.SetActive(false);
-                break;
+            switch (mapName)
+            {
+                case "Gym":
+                    transform.rotation = Quaternion.Euler(45, 0, 0);
+                    SetRelativeTo(Main.solarSystem.TimberHearth);
+                    GameObject.Find("SCENE").transform.GetChild(4).gameObject.SetActive(false);
+                    GameObject.Find("SCENE").transform.GetChild(3).gameObject.SetActive(false);
+                    break;
 
-            case "Map1":
-                transform.position = new Vector3(
-                    OwSystemSettings.SolarSystemPitX.Value,
-                    OwSystemSettings.SolarSystemPitY.Value,
-                    OwSystemSettings.SolarSystemPitZ.Value);
-                transform.rotation = Quaternion.Euler(0, 0, 0);
-                break;
+                case "Map0":
+                    transform.rotation = Quaternion.Euler(0, 0, 0);
+                    SetRelativeTo(Main.solarSystem.HourGlassTwins);
+                    GameObject.Find("Scene").transform.GetChild(0).gameObject.SetActive(false);
+                    GameObject.Find("Scene").transform.GetChild(2).gameObject.SetActive(false);
+                    break;
 
-            case "Park":
-                transform.position = new Vector3(
-                    OwSystemSettings.SolarSystemParkX.Value,
-                    OwSystemSettings.SolarSystemParkY.Value,
-                    OwSystemSettings.SolarSystemParkZ.Value);
-                transform.rotation = Quaternion.Euler(0, 124.1311f, 0);
-                
-                GameObject.Find("SCENE").transform.GetChild(0).gameObject.SetActive(false);
-                GameObject.Find("SCENE").transform.GetChild(3).gameObject.SetActive(false);
-                break;
+                case "Map1":
+                    transform.rotation = Quaternion.Euler(0, 90, 0);
+                    SetRelativeTo(Main.solarSystem.BrittleHollow);
+                    break;
+
+                case "Park":
+                    transform.rotation = Quaternion.Euler(0, 0, 0);
+                    SetRelativeTo(Main.solarSystem.Interloper);
+                    GameObject.Find("SCENE").transform.GetChild(0).gameObject.SetActive(false);
+                    GameObject.Find("SCENE").transform.GetChild(3).gameObject.SetActive(false);
+                    break;
+            }
         }
     }
 
@@ -144,9 +213,11 @@ public class SolarSystem : MonoBehaviour
         Main.solarSystem.BrittleHollow.GetComponent<BrittleHollow>().SolarSystemRestart();
         Main.solarSystem.HollowsLantern.GetComponent<HollowsLantern>().SolarSystemRestart();
         Main.solarSystem.OrbitalProbeCannon.GetComponent<OrbitalProbeCannon>().StartFiringSequence();
-        
-        SetRelativeTo(Main.solarSystem.TimberHearth);
-        Main.solarSystem.TimberHearth.GetComponent<Orbiter>().disableOrbit = false;
+
+        if (OwSystemSettings.RealisticMode.Value)
+        {
+            SetRelativeTo(Main.solarSystem.TimberHearth);
+        }
     }
 
     void Scale(float scale)
