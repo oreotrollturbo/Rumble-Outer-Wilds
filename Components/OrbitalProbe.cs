@@ -13,7 +13,7 @@ public class OrbitalProbe : MonoBehaviour
 {
     public OrbitalProbe(IntPtr ptr) : base(ptr) {}
 
-    public float probeSpeed = 30f;
+    public float probeSpeed = 60f;
 
     private Quaternion rotOffset = Quaternion.Euler(0, 0, 90f);
 
@@ -60,7 +60,7 @@ public class OrbitalProbe : MonoBehaviour
     public void StartLaunch()
     {
         probeHalo.gameObject.SetActive(true);
-        launchDirection = cannonTransform.right; //NOT .forward
+        launchDirection = cannonTransform.right;
         isLaunched = true;
     }
 

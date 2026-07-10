@@ -39,6 +39,8 @@ namespace OuterWildsRumble.UIFrameworkSettings
         // =========================================================================
         public static MelonPreferences_Entry<bool> EnabledSolarSystem;
         public static MelonPreferences_Entry<bool> ShaderReplacement;
+        public static MelonPreferences_Entry<float> ViewDistance;
+        public static MelonPreferences_Entry<bool> RealisticStars;
         public static MelonPreferences_Entry<bool> OnlySunLighting;
         public static MelonPreferences_Entry<float> SolarSystemScale;
 
@@ -284,10 +286,17 @@ namespace OuterWildsRumble.UIFrameworkSettings
             ShaderReplacement = globalCat.CreateEntry(
                 "OW_Shader_Replacement", true,
                 "Enable Shader Replacement", "Replaces the games shaders to allow lighting from other light sources");
+            ViewDistance = globalCat.CreateEntry(
+                "OW_View_Distance", 1500f,
+                "Player View Distance", "How far you can see! You will need this if you scale your solar system over 50~");
             OnlySunLighting = globalCat.CreateEntry(
                 "OW_OnlySunLighting", false,
                 "Only sun lighting",
                 "Removes the built-in light source of the scene leaving the sun to be the only thing lighting everything up");
+            RealisticStars = globalCat.CreateEntry(
+                "OW_RealisticStars", false,
+                "Realistic stars",
+                "Adds the correct outer wilds stars. NOTE: You must use rumble dark mode and replace the skybox with a fully black one for this!!!");
             SolarSystemScale = globalCat.CreateEntry(
                 "OW_SolarSystemScale", 67f,
                 "Solar System Scale", "The scale of the solar system ! UNSTABLE USE AT YOUR OWN RISK");
@@ -738,6 +747,8 @@ namespace OuterWildsRumble.UIFrameworkSettings
 
             sys.Root.SetActive(EnabledSolarSystem.Value);
             sys.Root.GetComponent<SolarSystem>().SceneLoaded(Calls.Scene.GetSceneName());
+            
+            sys.StarBackground.SetActive(RealisticStars.Value);
 
             if (sys.Sun != null)
             {

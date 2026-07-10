@@ -1,5 +1,4 @@
-﻿using System;
-using MelonLoader;
+﻿using MelonLoader;
 using UnityEngine;
 using OuterWildsRumble.UIFrameworkSettings;
 using RumbleModdingAPI.RMAPI;
@@ -38,6 +37,7 @@ public class SolarSystem : MonoBehaviour
     private EllipticalOrbiter _anchorEllipticalOrbiter;
     private float _initialSpinAngle;
     private float _lastSpinAngle;
+    private float _lastOrbitAngle; // Added to track orbital progress alongside spin
     private Quaternion _lastEllipticalRotation;           
 
     public void SetRelativeTo(Transform planet)
@@ -82,6 +82,7 @@ public class SolarSystem : MonoBehaviour
 
             _initialSpinAngle = _anchorOrbiter != null ? _anchorOrbiter._currentSpinAngle : 0f;
             _lastSpinAngle    = _initialSpinAngle;
+            _lastOrbitAngle   = _anchorOrbiter != null ? _anchorOrbiter._currentOrbitAngle : 0f; // Initialized here
 
             if (_anchorEllipticalOrbiter != null)
                 _lastEllipticalRotation = planet.rotation;
@@ -106,11 +107,14 @@ public class SolarSystem : MonoBehaviour
 
         if (_anchorOrbiter != null)
         {
-            float currentSpinAngle = _anchorOrbiter._currentSpinAngle;
-            float deltaAngle       = currentSpinAngle - _lastSpinAngle;
-            _lastSpinAngle         = currentSpinAngle;
+            float currentSpinAngle  = _anchorOrbiter._currentSpinAngle;
+            float currentOrbitAngle = _anchorOrbiter._currentOrbitAngle;
 
-            
+            // Combine both deltas to account for zero-spin bodies like Dark Bramble
+            float deltaAngle = (currentSpinAngle - _lastSpinAngle) + (currentOrbitAngle - _lastOrbitAngle);
+            _lastSpinAngle   = currentSpinAngle;
+            _lastOrbitAngle  = currentOrbitAngle;
+
             Quaternion deltaRotation = Quaternion.AngleAxis(deltaAngle, _tiltRotation * Vector3.up);
             _orbitalOffset     = deltaRotation * _orbitalOffset;
             transform.position = deltaRotation * transform.position;
@@ -132,6 +136,11 @@ public class SolarSystem : MonoBehaviour
 
     public void SceneLoaded(string mapName)
     {
+        Calls.Players.GetLocalPlayer().Controller.gameObject.transform.GetChild(2).GetChild(0).GetChild(0).gameObject.GetComponent<Camera>().farClipPlane
+            = OwSystemSettings.ViewDistance.Value;
+        
+        Main.solarSystem.StarBackground.transform.localScale = Vector3.one * (OwSystemSettings.ViewDistance.Value * StarBackground.ScaleToCamDistance);
+        
         if (!OwSystemSettings.RealisticMode.Value)
         {
             switch (mapName)
@@ -177,7 +186,7 @@ public class SolarSystem : MonoBehaviour
             switch (mapName)
             {
                 case "Gym":
-                    transform.rotation = Quaternion.Euler(45, 0, 0);
+                    transform.rotation = Quaternion.Euler(90, 0, 0);
                     SetRelativeTo(Main.solarSystem.TimberHearth);
                     GameObject.Find("SCENE").transform.GetChild(4).gameObject.SetActive(false);
                     GameObject.Find("SCENE").transform.GetChild(3).gameObject.SetActive(false);
@@ -197,7 +206,7 @@ public class SolarSystem : MonoBehaviour
 
                 case "Park":
                     transform.rotation = Quaternion.Euler(0, 0, 0);
-                    SetRelativeTo(Main.solarSystem.Interloper);
+                    SetRelativeTo(Main.solarSystem.DarkBramble);
                     GameObject.Find("SCENE").transform.GetChild(0).gameObject.SetActive(false);
                     GameObject.Find("SCENE").transform.GetChild(3).gameObject.SetActive(false);
                     break;

@@ -14,10 +14,10 @@ public class HollowsLantern : MonoBehaviour
 
     // ── Lava ────────────────────────────────────────────────────────────────
     private Transform lavaTransform;
-    public Vector3 lavaStartScale         = new Vector3(89f, 89f, 89f);
-    public Vector3 targetLavaScale        = new Vector3(84f, 84f, 84f);
-    public float   lavaShrinkDuration     = 60f * 19;
-    private float  lavaElapsed            = 0f;
+    public Vector3 lavaStartScale     = new Vector3(89f, 89f, 89f);
+    public Vector3 targetLavaScale    = new Vector3(84f, 84f, 84f);
+    public float   lavaShrinkDuration = 60f * 19;
+    private float  lavaElapsed        = 0f;
 
     // ── Volcanos / meteors ───────────────────────────────────────────────────
     private Transform  volcanosTransform;
@@ -28,23 +28,34 @@ public class HollowsLantern : MonoBehaviour
     public float meteorSpawnIntervalMin    = 6f;
     public float meteorSpawnIntervalMax    = 40f;
     public float meteorSpawnIntervalMaxEnd = 20f;
-    public float meteorDriftSpeed          = 0.7f;
-    public float meteorPullSpeed           = 1.4f;
-    public float meteorPullRadius          = 40f;
-    public float meteorDestroyRadius       = 0.03f;
+    public float meteorDriftSpeed          = 0.7f;   // speed during free-drift phase
+    public float meteorPullSpeed           = 1.4f;   // speed once pull phase begins
+    public float meteorDestroyRadius       = 0.02f;
+
+    // ── Free-drift phase ─────────────────────────────────────────────────────
+    // Each meteor drifts aimlessly for a random duration, then switches to pull.
+    public float meteorFreeTimeMin         = 2f;    // min seconds before pull starts
+    public float meteorFreeTimeMax         = 50f;   // max seconds before pull starts
+    // Target float shell: Lantern's own orbital distance from BrittleHollow, ±this
+    public float meteorOrbitRadiusVariance = 15f;
+    // Spring strength pulling the meteor back toward its target shell radius.
+    // Keep small — drift should dominate within the band (crossover ~9 units at defaults).
+    public float meteorRadialCorrection    = 0.08f;
+    // How often each meteor picks a brand-new random direction (aimless wandering)
+    public float meteorDirChangeMin        = 1.5f;
+    public float meteorDirChangeMax        = 5f;
 
     // ── Survivor / white-hole drift ──────────────────────────────────────────
-    // Chance (0–1) that a meteor survives impact and drifts from the white hole
     public float survivorChance      = 0.15f;
-    public float survivorSpitRange   = 0.9f;   // matches BrittleHollow.spitYRange
-    public float survivorSpitSpeed   = 0.1f;   // matches BrittleHollow.spitSpeed
-    public float survivorDriftSpeed  = 0.09f;  // matches BrittleHollow.driftSpeed
-    public float survivorDriftRadius = 9f;     // matches BrittleHollow.driftMaxRadius
+    public float survivorSpitRange   = 0.9f;
+    public float survivorSpitSpeed   = 0.1f;
+    public float survivorDriftSpeed  = 0.09f;
+    public float survivorDriftRadius = 9f;
 
     // ── Internal state ───────────────────────────────────────────────────────
-    private bool             _cancelled         = false;
-    private List<object>     _activeCoroutines  = new();
-    private List<GameObject> _survivingMeteors  = new();   // meteors drifting near white hole
+    private bool             _cancelled        = false;
+    private List<object>     _activeCoroutines = new();
+    private List<GameObject> _survivingMeteors = new();
 
     // ────────────────────────────────────────────────────────────────────────
 
@@ -79,7 +90,6 @@ public class HollowsLantern : MonoBehaviour
         }
         _activeCoroutines.Clear();
 
-        // Destroy any meteors still drifting near the white hole
         foreach (var meteor in _survivingMeteors)
         {
             if (meteor != null)
@@ -87,11 +97,9 @@ public class HollowsLantern : MonoBehaviour
         }
         _survivingMeteors.Clear();
 
-        // Refresh white-hole reference in case the scene reloaded
         if (Main.solarSystem.WhiteHole != null)
             whiteHoleTransform = Main.solarSystem.WhiteHole.transform;
 
-        // Reset lava
         lavaElapsed = 0f;
         lavaTransform.localScale = lavaStartScale;
 
@@ -142,51 +150,93 @@ public class HollowsLantern : MonoBehaviour
         int childCount = volcanosTransform.childCount;
         if (childCount == 0) return;
 
-        Transform launchPoint = volcanosTransform.GetChild(Random.Range(0, childCount));
-
-        GameObject meteor = GameObject.Instantiate(meteorPrefab,
-                                                   launchPoint.position,
-                                                   launchPoint.rotation);
+        Transform  launchPoint = volcanosTransform.GetChild(Random.Range(0, childCount));
+        GameObject meteor      = GameObject.Instantiate(meteorPrefab,
+                                                        launchPoint.position,
+                                                        launchPoint.rotation);
 
         meteor.transform.SetParent(brittleHollowTransform, worldPositionStays: true);
 
-        Vector3 driftDir = Random.onUnitSphere;
-        StartTracked(DriveMeteor(meteor, driftDir));
+        StartTracked(DriveMeteor(meteor, Random.onUnitSphere));
     }
 
     // ── Per-meteor movement ──────────────────────────────────────────────────
     private IEnumerator DriveMeteor(GameObject meteor, Vector3 driftDir)
     {
+        if (meteor == null || brittleHollowTransform == null) yield break;
+
+        // Each meteor gets its own target shell radius: Lantern's orbital distance ± variance.
+        // Computed once at spawn so it stays consistent even if the Lantern moves later.
+        Vector3 hollowCenter = brittleHollowTransform.TransformPoint(Vector3.zero);
+        float   baseRadius   = Vector3.Distance(transform.position, hollowCenter);
+        float   targetRadius = Mathf.Max(5f,
+            baseRadius + Random.Range(-meteorOrbitRadiusVariance, meteorOrbitRadiusVariance));
+
+        // Each meteor decides independently when it will get pulled in.
+        float freeTime   = Random.Range(meteorFreeTimeMin, meteorFreeTimeMax);
+        float elapsed    = 0f;
+
+        // Direction-change bookkeeping (free-drift phase only).
+        float dirTimer   = Random.Range(meteorDirChangeMin, meteorDirChangeMax);
+        float dirElapsed = 0f;
+
         while (meteor != null && !_cancelled)
         {
-            Vector3 hollowCenter = brittleHollowTransform.TransformPoint(Vector3.zero);
-            float   distToCenter = Vector3.Distance(meteor.transform.position, hollowCenter);
+            float dt     = Time.deltaTime;
+            hollowCenter = brittleHollowTransform.TransformPoint(Vector3.zero);
+            elapsed     += dt;
+            dirElapsed  += dt;
 
-            if (distToCenter <= meteorDestroyRadius)
+            if (elapsed < freeTime)
             {
-                // Small chance: survive and drift from the white hole instead
-                if (whiteHoleTransform != null && Random.value < survivorChance)
+                // ── Free-drift phase ───────────────────────────────────────
+                //
+                // Roll a wholly random new direction every so often.
+                // Random.onUnitSphere is not tangential, so there is no
+                // systematic circulation — just messy wandering.
+                if (dirElapsed >= dirTimer)
                 {
-                    // Detach from BrittleHollow before handing off
-                    meteor.transform.SetParent(null, worldPositionStays: true);
-                    _survivingMeteors.Add(meteor);
-                    StartTracked(SurvivorMeteorRoutine(meteor));
+                    driftDir   = Random.onUnitSphere;
+                    dirTimer   = Random.Range(meteorDirChangeMin, meteorDirChangeMax);
+                    dirElapsed = 0f;
                 }
-                else
-                {
-                    GameObject.Destroy(meteor);
-                }
-                yield break;
-            }
 
-            if (distToCenter <= meteorPullRadius)
-            {
-                Vector3 toCenter = (hollowCenter - meteor.transform.position).normalized;
-                meteor.transform.position += toCenter * (meteorPullSpeed * Time.deltaTime);
+                meteor.transform.position += driftDir * (meteorDriftSpeed * dt);
+
+                // Soft radial spring: gently nudges the meteor back toward its
+                // target shell. The spring is intentionally weak — at default
+                // values, drift beats it within ~9 units of the shell, so the
+                // meteor wanders freely through the band rather than tracking it.
+                //   correction/s = radialError × meteorRadialCorrection
+                //   drift/s      = meteorDriftSpeed (0.7)
+                //   crossover    = 0.7 / 0.08 ≈ 9 units
+                float   dist        = Vector3.Distance(meteor.transform.position, hollowCenter);
+                Vector3 fromCenter  = (meteor.transform.position - hollowCenter).normalized;
+                float   radialError = dist - targetRadius;
+                meteor.transform.position -= fromCenter * (radialError * meteorRadialCorrection * dt);
             }
             else
             {
-                meteor.transform.position += driftDir * (meteorDriftSpeed * Time.deltaTime);
+                // ── Pull phase ─────────────────────────────────────────────
+                float dist = Vector3.Distance(meteor.transform.position, hollowCenter);
+
+                if (dist <= meteorDestroyRadius)
+                {
+                    if (whiteHoleTransform != null && Random.value < survivorChance)
+                    {
+                        meteor.transform.SetParent(null, worldPositionStays: true);
+                        _survivingMeteors.Add(meteor);
+                        StartTracked(SurvivorMeteorRoutine(meteor));
+                    }
+                    else
+                    {
+                        GameObject.Destroy(meteor);
+                    }
+                    yield break;
+                }
+
+                Vector3 toCenter = (hollowCenter - meteor.transform.position).normalized;
+                meteor.transform.position += toCenter * (meteorPullSpeed * dt);
             }
 
             yield return null;
@@ -198,10 +248,8 @@ public class HollowsLantern : MonoBehaviour
     {
         if (meteor == null || whiteHoleTransform == null) yield break;
 
-        // Teleport to the white hole
         meteor.transform.position = whiteHoleTransform.position;
 
-        // Spit toward a random nearby offset (mirrors BrittleHollow.BreakPiece)
         Vector3 targetOffset = new Vector3(
             Random.Range(-survivorSpitRange, survivorSpitRange),
             Random.Range(-survivorSpitRange, survivorSpitRange),
@@ -219,10 +267,9 @@ public class HollowsLantern : MonoBehaviour
 
         if (meteor == null || _cancelled) yield break;
 
-        // Drift around the white hole (mirrors BrittleHollow.DriftPiece)
-        Vector3 driftDir  = Random.onUnitSphere;
-        float   dirTimer  = Random.Range(3f, 6f);
-        float   elapsed   = 0f;
+        Vector3 driftDir = Random.onUnitSphere;
+        float   dirTimer = Random.Range(3f, 6f);
+        float   elapsed  = 0f;
 
         while (meteor != null && whiteHoleTransform != null && !_cancelled)
         {
@@ -231,7 +278,6 @@ public class HollowsLantern : MonoBehaviour
 
             meteor.transform.position += driftDir * (survivorDriftSpeed * dt);
 
-            // Soft leash: nudge back if it strays too far
             Vector3 toWhiteHole = whiteHoleTransform.position - meteor.transform.position;
             if (toWhiteHole.magnitude > survivorDriftRadius)
                 meteor.transform.position += toWhiteHole.normalized * (survivorDriftSpeed * dt * 2f);
@@ -245,7 +291,5 @@ public class HollowsLantern : MonoBehaviour
 
             yield return null;
         }
-
-        // Coroutine ended due to cancellation or null refs; the Destroy is handled by SolarSystemRestart
     }
 }

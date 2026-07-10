@@ -486,6 +486,9 @@ public class SupernovaSun : MonoBehaviour
         AudioManager.PlaySoundIfFileExists(
             Path.Combine(Main.folderPath, supernovaExplosionSoundName),
             OwSystemSettings.SunExplodeVolume.Value, false);
+
+        yield return new WaitForSeconds(2.8f);
+        
         wallClip = AudioManager.PlaySoundIfFileExists(
             Path.Combine(Main.folderPath, supernovaWallSoundName),
             OwSystemSettings.SunSupernovaWallVolume.Value, true);

@@ -166,7 +166,14 @@ internal static class BrittleHollowCoroutines
             yield break;
         }
 
-        piece.SetParent(null, worldPositionStays: true);
+        // FIX: parent to the solar system root rather than null (world space).
+        // When SceneLoaded repositions the root (settings change, sun loop toggle, etc.)
+        // the piece travels with the root, so it stays near the black/white hole
+        // instead of being stranded at the system's old world-space coordinates.
+        // The black hole is also in the root hierarchy (via BrittleHollow), so
+        // distance calculations remain stable across repositions.
+        Transform systemRoot = bh.transform.parent;
+        piece.SetParent(systemRoot, worldPositionStays: true);
 
         while (piece != null && bh.blackHole != null &&
                Vector3.Distance(piece.position, bh.blackHole.position) > bh.suckStopDistance)
@@ -185,7 +192,9 @@ internal static class BrittleHollowCoroutines
         if (bh.cancelled) yield break;
         if (piece == null || bh.whiteHole == null) yield break;
 
-        piece.SetParent(null, worldPositionStays: true);
+        // No SetParent call needed here — piece is already under systemRoot.
+        // The previous code's second SetParent(null) was redundant since nothing
+        // re-parents the piece between the two calls.
         piece.position = bh.whiteHole.position;
 
         Vector3 targetOffset = new Vector3(
@@ -213,6 +222,11 @@ internal static class BrittleHollowCoroutines
     private static IEnumerator DriftPiece(BrittleHollow bh, Transform piece)
     {
         if (piece == null) yield break;
+
+        // Safety guard: ensure the piece is still under the system root before drifting.
+        Transform systemRoot = bh.transform.parent;
+        if (systemRoot != null && piece.parent != systemRoot)
+            piece.SetParent(systemRoot, worldPositionStays: true);
 
         Vector3 driftDir = Random.onUnitSphere;
         float   dirTimer = Random.Range(3f, 6f);

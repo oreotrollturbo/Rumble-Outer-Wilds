@@ -225,6 +225,7 @@ namespace OuterWildsRumble
             SetupOrbitals();
             SetupPlayerShip();
             SetupTapeRecorder();
+            SetupStarBackground();
             
             if (solarSystem.Sun != null) solarSystem.Sun.transform.SetParent(solarSystem.Root.transform, true);
             if (solarSystem.SunStation != null) solarSystem.SunStation.transform.SetParent(solarSystem.Root.transform, true);
@@ -311,6 +312,7 @@ namespace OuterWildsRumble
 
             solarSystem.PlayerShip         = LoadAndSpawn("HearthianSpaceShip");
             solarSystem.TapeRecorder         = LoadAndSpawn("ow_recorderGO");
+            solarSystem.StarBackground         = LoadAndSpawn("StarsOW");
 
             // Prefab cache: instances die with the player belt, so re-instantiate in SceneLoaded
             prefabSignalScope = outerWildsBundle.LoadAsset<GameObject>("SignalscopeGO");
@@ -597,7 +599,8 @@ namespace OuterWildsRumble
 
                 if (solarSystem.OrbitalProbe != null)
                 {
-                    solarSystem.OrbitalProbe.transform.localScale = Vector3.one * 0.001f;
+                    solarSystem.OrbitalProbe.transform.localScale = Vector3.one * (0.00003333333f * OwSystemSettings.SolarSystemScale.Value);
+                    solarSystem.OrbitalProbe.transform.SetParent(solarSystem.Sun.transform, true);
                     solarSystem.OrbitalProbe.AddComponent<OrbitalProbe>();
                 }
             }
@@ -686,6 +689,11 @@ namespace OuterWildsRumble
 
             solarSystem.TapeRecorder.SetActive(OwSystemSettings.TapeRecorderToggle.Value);
         }
+        
+        void SetupStarBackground()
+        {
+            solarSystem.StarBackground.AddComponent<StarBackground>();
+        }
     }
     
     
@@ -720,6 +728,7 @@ namespace OuterWildsRumble
         public GameObject PlayerShip;
         public GameObject SignalScope;
         public GameObject TapeRecorder;
+        public GameObject StarBackground;
 
         public Material BlackHoleMaterial;
         public Material WhiteHoleMaterial;
