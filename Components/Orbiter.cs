@@ -1,5 +1,6 @@
 ﻿using System;
 using MelonLoader;
+using OuterWildsRumble.UIFrameworkSettings;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -19,7 +20,7 @@ public class Orbiter : MonoBehaviour
     public Vector3 spinAxis = Vector3.up;
     public float spinSpeed = 30f;
 
-    public bool randomisePos = true;
+    public bool randomisePos = !OwSystemSettings.RealisticMode.Value;
     public bool spinEnabled = true;
     
     public bool disableOrbit = false;

@@ -103,7 +103,6 @@ public static class SolarSystemScaler
 
         // ── Orbital probe  ───────────────────────────────────────────
         var probe = sys.OrbitalProbe?.GetComponent<OrbitalProbe>();
-        probe.probeSpeed = OwSystemSettings.OrbitalProbeSpeed.Value * scale;
 
         // ── Music emitter detection radius ────────────────────────────────
         foreach (var mus in sys.Root.GetComponentsInChildren<MusicEmitter>())

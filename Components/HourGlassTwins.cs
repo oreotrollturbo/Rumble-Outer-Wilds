@@ -10,7 +10,7 @@ public class HourGlassTwins : MonoBehaviour
     // --- Configuration ---
     public float transferDurationRevs = 3.4f; // How many orbits the transfer takes
     public float waitDurationRevs = 0.4f;     // How many orbits to wait between transfers
-    public bool randomSandStage = true;       // Start in a random sand stage
+    public static bool randomSandStage = true;       // Start in a random sand stage
     public float planetRotationSpeed = 8f;   // Degrees per second for planet self-rotation
 
 

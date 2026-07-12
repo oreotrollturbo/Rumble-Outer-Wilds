@@ -14,7 +14,7 @@ namespace OuterWildsRumble.Components;
 [RegisterTypeInIl2Cpp]
 public class StarBackground : MonoBehaviour
 {
-    public const float ScaleToCamDistance = 6.25f; ////6.25 scale per 1 far clip plane unit 
+    public const float ScaleToCamDistance = 6f; ////6.25 scale per 1 far clip plane unit 
 
     public StarBackground(IntPtr ptr) : base(ptr)
     {
@@ -29,6 +29,8 @@ public class StarBackground : MonoBehaviour
         DontDestroyOnLoad(gameObject);
         Actions.onMapInitialized += SceneLoaded;
         headset = Calls.Players.GetLocalPlayer().Controller.transform.GetChild(2).GetChild(0).GetChild(0);
+        
+        GetComponent<Renderer>().material.renderQueue = 2900;
     }
 
     void Update()

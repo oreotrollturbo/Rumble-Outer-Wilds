@@ -140,6 +140,17 @@ namespace OuterWildsRumble
                     SetupSolarSystem();
                 }
                 GameObject.Find("Player Controller(Clone)").transform.GetChild(2).GetChild(0).GetChild(0).GetChild(1).gameObject.SetActive(false);
+                if (OwSystemSettings.RealisticMode.Value)
+                {
+                    GameObject.Find("SCENE VFX/SFX").SetActive(false);
+                }
+            }
+            else if (mapName == "Park")
+            {
+                if (OwSystemSettings.RealisticMode.Value)
+                {
+                    GameObject.Find("SCENE VFX/SFX").SetActive(false);
+                }
             }
 
             if (OwSystemSettings.SignalScopeEnabled.Value)
@@ -469,6 +480,12 @@ namespace OuterWildsRumble
             hourGlassTwins.orbitSpeed = 2.27f;          
             hourGlassTwins.spinSpeed = 20.5f;
             hourGlassTwins.orbitAxis = Vector3.up;
+            
+            if (OwSystemSettings.RealisticMode.Value)
+            {
+                hourGlassTwins._currentOrbitAngle = 310;
+                HourGlassTwins.randomSandStage = false;
+            }
 
             HourGlassTwins sandComponent = solarSystem.HourGlassTwins.AddComponent<HourGlassTwins>();
             //Keeping default settings
@@ -495,7 +512,6 @@ namespace OuterWildsRumble
             //atmosphere.profile = defaultAtmosphereProfile;
             //TODO harmonica
             
-            
             if (solarSystem.Attlerock != null)
             {
                 solarSystem.Attlerock.transform.localScale = Vector3.one * 0.05f;
@@ -509,6 +525,15 @@ namespace OuterWildsRumble
                 rockOrbit.spinSpeed = 15f;
                 rockOrbit.orbitAxis = new Vector3(0.1f, 1f, 0f).normalized;
                 rockOrbit.randomisePos = false;
+                
+                if (OwSystemSettings.RealisticMode.Value)
+                {
+                    heartOrbit._currentOrbitAngle = 255.4f;
+                    heartOrbit._currentSpinAngle = 316.4f;
+                    
+                    rockOrbit._currentOrbitAngle = 30.6f;
+                    rockOrbit._currentSpinAngle = 30.6f;
+                }
             }
         }
         
@@ -523,6 +548,11 @@ namespace OuterWildsRumble
             brittleHollowOrbit.orbitSpeed = 0.8f;            
             brittleHollowOrbit.spinSpeed = 7f;     
             brittleHollowOrbit.orbitAxis = Vector3.up;
+
+            if (OwSystemSettings.RealisticMode.Value)
+            {
+                brittleHollowOrbit._currentOrbitAngle = 94;
+            }
 
             solarSystem.BrittleHollow.AddComponent<BrittleHollow>();
 
@@ -578,7 +608,13 @@ namespace OuterWildsRumble
             giantsDeepOrbit.orbitDistance = 10.6f;           
             giantsDeepOrbit.orbitSpeed = 0.6f;             
             giantsDeepOrbit.spinSpeed = 0.2f;       
-            giantsDeepOrbit.orbitAxis = Vector3.up;       
+            giantsDeepOrbit.orbitAxis = Vector3.up;
+
+            if (OwSystemSettings.RealisticMode.Value)
+            {
+                giantsDeepOrbit.randomisePos = false;
+                giantsDeepOrbit._currentOrbitAngle = 184;
+            }
             
             if (solarSystem.OrbitalProbeCannon != null)
             {
@@ -593,6 +629,11 @@ namespace OuterWildsRumble
                 cannonOrbit.spinSpeed = 10f;
                 cannonOrbit.orbitAxis = Vector3.up;
                 cannonOrbit.randomisePos = false;
+
+                if (OwSystemSettings.RealisticMode.Value)
+                {
+                    cannonOrbit._currentOrbitAngle = 320;
+                }
                 
                 var probeCannon = solarSystem.OrbitalProbeCannon.AddComponent<OrbitalProbeCannon>();
                 probeCannon.orbiter = cannonOrbit;
@@ -618,6 +659,11 @@ namespace OuterWildsRumble
             darkBrambleOrbit.orbitSpeed = 0.38f;             
             darkBrambleOrbit.spinSpeed = 0f;       
             darkBrambleOrbit.orbitAxis = Vector3.up;
+
+            if (OwSystemSettings.RealisticMode.Value)
+            {
+                darkBrambleOrbit._currentOrbitAngle = 140;
+            }
         }
 
         void SetupWhiteHoleStation()

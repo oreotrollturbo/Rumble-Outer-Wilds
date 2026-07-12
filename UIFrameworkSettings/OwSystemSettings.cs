@@ -805,7 +805,7 @@ namespace OuterWildsRumble.UIFrameworkSettings
                 {
                     hgt.transferDurationRevs = HourGlassTwinsTransferDuration.Value;
                     hgt.waitDurationRevs = HourGlassTwinsWaitDuration.Value;
-                    hgt.randomSandStage = HourGlassTwinsRandomSandStage.Value;
+                    HourGlassTwins.randomSandStage = HourGlassTwinsRandomSandStage.Value;
                 }
             }
 
@@ -920,7 +920,7 @@ namespace OuterWildsRumble.UIFrameworkSettings
                 sys.OrbitalProbe.SetActive(OrbitalProbeEnabled.Value);
                 var probe = sys.OrbitalProbe.GetComponent<OrbitalProbe>();
                 if (probe != null)
-                    probe.probeSpeed = OrbitalProbeSpeed.Value / 10f * speedMult;
+                    probe.probeSpeed = OrbitalProbeSpeed.Value;
             }
 
             if (sys.QuantumMoon != null)
