@@ -27,7 +27,11 @@ public class SolarSystem : MonoBehaviour
             OwSystemSettings.SolarSystemGymX.Value,
             OwSystemSettings.SolarSystemGymY.Value,
             OwSystemSettings.SolarSystemGymZ.Value);
-        transform.rotation = Quaternion.Euler(0, 0, 90);
+        if (OwSystemSettings.RealisticMode.Value)
+        {
+            transform.rotation = Quaternion.Euler(0, 0, 90);
+        }
+        
     }
 
     public void SetRelativeTo(GameObject planet) =>
@@ -136,10 +140,6 @@ public class SolarSystem : MonoBehaviour
 
     public void SceneLoaded(string mapName)
     {
-        Calls.Players.GetLocalPlayer().Controller.gameObject.transform.GetChild(2).GetChild(0).GetChild(0).gameObject.GetComponent<Camera>().farClipPlane
-            = OwSystemSettings.ViewDistance.Value;
-        
-        Main.solarSystem.StarBackground.transform.localScale = Vector3.one * (OwSystemSettings.ViewDistance.Value * StarBackground.ScaleToCamDistance);
         
         if (!OwSystemSettings.RealisticMode.Value)
         {
@@ -182,7 +182,6 @@ public class SolarSystem : MonoBehaviour
         {
             transform.position = Vector3.zero;
             
-
             switch (mapName)
             {
                 case "Gym":
@@ -206,7 +205,7 @@ public class SolarSystem : MonoBehaviour
 
                 case "Park":
                     transform.rotation = Quaternion.Euler(0, 0, 0);
-                    SetRelativeTo(Main.solarSystem.DarkBramble);
+                    SetRelativeTo(Main.solarSystem.HearthianMapSatelite);
                     GameObject.Find("SCENE").transform.GetChild(0).gameObject.SetActive(false);
                     GameObject.Find("SCENE").transform.GetChild(3).gameObject.SetActive(false);
                     break;

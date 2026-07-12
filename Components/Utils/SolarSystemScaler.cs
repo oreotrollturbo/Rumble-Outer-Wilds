@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using MelonLoader;
 using OuterWildsRumble.Components;
 using OuterWildsRumble.UIFrameworkSettings;
 using UnityEngine;
@@ -26,6 +27,8 @@ public static class SolarSystemScaler
     private const float BaseSpitSpeed = 0.1f / 30f;
     private const float BaseSpitYRange = 0.9f / 30f;
     private const float BaseSuckStopDistance = 0.05f / 30f;
+    // add near the other Base* constants
+    private const float BaseHeaSateliteOrbitDistance = 1100f/65f;
 
     // ── Quantum moon orbit distances per possible parent (base, pre-scale) ─
     // Mirrors the dictionary built in Main.SetupQuantumMoon().
@@ -55,6 +58,8 @@ public static class SolarSystemScaler
         SetOrbiterDist(sys.OrbitalProbeCannon, OwSystemSettings.OrbitalProbeCannonOrbitDistance.Value, scale);
         SetOrbiterDist(sys.QuantumMoon, OwSystemSettings.QuantumMoonOrbitDistance.Value, scale);
         SetOrbiterDist(sys.DarkBramble, OwSystemSettings.DarkBrambleOrbitDistance.Value, scale);
+        // inside Apply(), alongside the other SetOrbiterDist calls
+        SetOrbiterDist(sys.HearthianMapSatelite, BaseHeaSateliteOrbitDistance, scale);
 
         // ── Elliptical orbiter (Interloper) ───────────────────────────────
         var ell = sys.Interloper?.GetComponent<EllipticalOrbiter>();
@@ -78,7 +83,7 @@ public static class SolarSystemScaler
         if (sn != null)
         {
             sn.interloperSwallowDistance = BaseInterloperSwallowDist * scale;
-            sn.extraDistance = BaseSupernovaExtraDist * scale;
+            sn.extraDistance = (float)BaseSupernovaExtraDist * scale;
         }
 
         // ── Brittle Hollow physics ────────────────────────────────────────

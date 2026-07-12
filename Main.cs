@@ -120,6 +120,9 @@ namespace OuterWildsRumble
 
         private void SceneLoaded(string mapName)
         {
+            Calls.Players.GetLocalPlayer().Controller.gameObject.transform.GetChild(2).GetChild(0).GetChild(0).gameObject.GetComponent<Camera>().farClipPlane
+                = OwSystemSettings.ViewDistance.Value;
+            
             if (OwSystemSettings.ShaderReplacement.Value)
             {
                 ReplaceAllShaders();
@@ -261,6 +264,8 @@ namespace OuterWildsRumble
                 
             if (solarSystem.Interloper != null) solarSystem.Interloper.transform.SetParent(solarSystem.Root.transform, true);
             
+            if (solarSystem.HearthianMapSatelite != null) solarSystem.HearthianMapSatelite.transform.SetParent(solarSystem.Root.transform, true);
+            
             //if (solarSystem.PlayerShip != null) solarSystem.PlayerShip.transform.SetParent(solarSystem.Root.transform, true);
             
             OwSystemSettings.ApplyToSolarSystem();
@@ -320,10 +325,11 @@ namespace OuterWildsRumble
             solarSystem.DarkBramble        = LoadAndSpawn("DarkBramble");
             solarSystem.WhiteHoleStation   = LoadAndSpawn("WhiteHoleStation");
             solarSystem.Interloper         = LoadAndSpawn("InterloperGameObject");
+            solarSystem.HearthianMapSatelite         = LoadAndSpawn("HearthianMapSatellite");
 
             solarSystem.PlayerShip         = LoadAndSpawn("HearthianSpaceShip");
             solarSystem.TapeRecorder         = LoadAndSpawn("ow_recorderGO");
-            solarSystem.StarBackground         = LoadAndSpawn("StarsOW");
+            solarSystem.StarBackground         = LoadAndSpawn("StarsOWPrefab");
 
             // Prefab cache: instances die with the player belt, so re-instantiate in SceneLoaded
             prefabSignalScope = outerWildsBundle.LoadAsset<GameObject>("SignalscopeGO");
@@ -398,6 +404,7 @@ namespace OuterWildsRumble
                 SetupDarkBramble();
                 SetupWhiteHoleStation();
                 SetupInterloper();
+                SetupHeaSatelite();
                 // must be called after "parent" planets
                 SetupQuantumMoon();
                 
@@ -423,6 +430,10 @@ namespace OuterWildsRumble
                 MusicEmitter emitter5 = solarSystem.QuantumMoon.AddComponent<MusicEmitter>();
                 emitter5.musicFileName = "OW_TravelerTheme_piano.wav";
                 
+                //MusicEmitter emitter7 = solarSystem.HearthianMapSatelite.transform.GetChild(1).GetChild(1).gameObject.AddComponent<MusicEmitter>();
+                MusicEmitter emitter7 = solarSystem.HearthianMapSatelite.AddComponent<MusicEmitter>();
+                emitter7.musicFileName = "OW_PR_ProbeInAirSound.wav";
+                emitter7.detectionAngle *= 0.9f;
                 
                 SupernovaSun sunScript = solarSystem.Sun.GetComponent<SupernovaSun>();
                 if (sunScript != null)
@@ -697,6 +708,25 @@ namespace OuterWildsRumble
             interloperOrbiter.speedIntensity = 1.1f;
             interloperOrbiter.spinAxis = Vector3.up;
         }
+
+        void SetupHeaSatelite()
+        {
+            solarSystem.HearthianMapSatelite.transform.rotation = Quaternion.Euler(0, 180f, 0);
+            var orbit = solarSystem.HearthianMapSatelite.AddComponent<Orbiter>();
+            orbit.randomisePos = false;
+            
+            solarSystem.HearthianMapSatelite.transform.localScale = Vector3.one * 0.0073f;
+            
+            orbit.orbitParent = solarSystem.Sun.transform;
+            orbit.orbitAxis = new Vector3(1f, 0, 0);
+            orbit.spinAxis = new Vector3(1f, 0, 0);
+            orbit.orbitDistance = 700f; //Dictated by the scaler and not this :(
+            
+            orbit.orbitSpeed = 0.09f;
+            orbit.spinSpeed = 0.09f;
+
+            var satelite = solarSystem.HearthianMapSatelite.AddComponent<HearthianMapSatelite>();
+        }
         
         
         void SetupQuantumMoon()
@@ -770,6 +800,8 @@ namespace OuterWildsRumble
         public GameObject WhiteHoleStation;
         
         public GameObject Interloper;
+
+        public GameObject HearthianMapSatelite;
 
         public GameObject PlayerShip;
         public GameObject SignalScope;

@@ -12,7 +12,7 @@ public class Orbiter : MonoBehaviour
     public Transform orbitParent;
     public float orbitDistance = 5f;
 
-    public Vector3 orbitAngles = Vector3.zero;
+    private Vector3 orbitAngles = Vector3.zero;
 
     public Vector3 orbitAxis = Vector3.up;
     public float orbitSpeed = 30f;
@@ -51,12 +51,9 @@ public class Orbiter : MonoBehaviour
             float dt = Time.fixedDeltaTime;
 
             _currentOrbitAngle += orbitSpeed * dt;
-            if (spinEnabled)
-                _currentSpinAngle += spinSpeed * dt;
-
             _currentOrbitAngle %= 360f;
-            _currentSpinAngle %= 360f;
 
+            // 1. Handle Positioning (Kept the same)
             Vector3 baseDir = Quaternion.Euler(orbitAngles) * Vector3.forward;
             Quaternion orbitRot = Quaternion.AngleAxis(_currentOrbitAngle, orbitAxis);
             Vector3 localOffsetDirection = orbitRot * baseDir;
@@ -64,6 +61,7 @@ public class Orbiter : MonoBehaviour
             Vector3 worldOffset = orbitParent.rotation * localOffsetDirection * orbitDistance;
             transform.position = orbitParent.position + worldOffset;
 
+            // 2. Handle Rotation
             if (spinEnabled)
             {
                 if (customRotation.HasValue)
@@ -72,9 +70,12 @@ public class Orbiter : MonoBehaviour
                 }
                 else
                 {
-                    Quaternion tiltRot = Quaternion.Euler(orbitAngles);
-                    Quaternion spinRot = Quaternion.AngleAxis(_currentSpinAngle, spinAxis);
-                    transform.rotation = orbitParent.rotation * tiltRot * spinRot;
+                    float deltaAngle = spinSpeed * dt;
+                    _currentSpinAngle = (_currentSpinAngle + deltaAngle) % 360f;
+                    
+                    Quaternion frameSpin = Quaternion.AngleAxis(deltaAngle, spinAxis);
+                    
+                    transform.rotation = transform.rotation * frameSpin;
                 }
             }
         }

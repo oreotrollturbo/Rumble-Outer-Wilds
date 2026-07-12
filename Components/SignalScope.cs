@@ -6,6 +6,7 @@ using MelonLoader;
 using UnityEngine;
 using Il2CppInterop.Runtime;
 using Il2CppRUMBLE.Players;
+using OuterWildsRumble.UIFrameworkSettings;
 using RumbleModdingAPI.RMAPI;
 
 namespace OuterWildsRumble.Components;
@@ -49,8 +50,12 @@ public class SignalScope : MonoBehaviour
     private Vector3 zoomOutButtonLocalPosition = new Vector3(0.01f, 0.05f, -0.015f);
     private Quaternion zoomOutButtonLocalRotation = Quaternion.Euler(90f, 180f, 0);
     
+    private Vector3 toggleCamButtonLocalPosition = new Vector3(0.056f, 0.057f, 0);
+    private Quaternion toggleCamButtonLocalRotation = Quaternion.Euler(19.2368f, 90f, 0);
+    
     private GameObject ZoomInButton;
     private GameObject ZoomOutButton;
+    private GameObject ToggleScreenButton;
 
     private bool hasSetUp;
     
@@ -66,26 +71,33 @@ public class SignalScope : MonoBehaviour
 
     public bool playMusic = true;
     public bool grabDuringMatches = true;
-    
+
+    // --- STATIC / NO-SIGNAL SOUND ---
+    // Fill this in once you have the file path — same folderPath convention as the other clips.
+    public string staticSoundFileName = "signalscope_static.wav";
+    public float staticVolume = 1f;
+    private AudioManager.ClipData staticClip;
+    // ---------------------------------
+
     private bool allMusicOff;
 
-    public SignalScope(IntPtr ptr) : base(ptr)
-    {
-    }
+    public SignalScope(IntPtr ptr) : base(ptr) {}
 
     void Start()
     {
         gameObject.name = "SignalScope";
        
-        Camera = gameObject.transform.GetChild(0).gameObject;
+        Camera = transform.GetChild(0).gameObject;
         startingZoom = Camera.GetComponent<Camera>().fieldOfView;
         currentFOV = Camera.GetComponent<Camera>().fieldOfView;
+        Camera.GetComponent<Camera>().farClipPlane = OwSystemSettings.ViewDistance.Value;
         Screen = gameObject.transform.GetChild(35).gameObject;
 
         MelonCoroutines.Start(FindPlayerAndSetup());
 
         SetupButtons();
         CacheMusicEmitters();
+        SetupStaticSound();
     }
 
     void CacheMusicEmitters()
@@ -111,6 +123,14 @@ public class SignalScope : MonoBehaviour
         }
     }
 
+    void SetupStaticSound()
+    {
+        // Added to the mixer silent immediately, same trick MusicEmitter uses —
+        // HandleMusicChange fades this in whenever no real signal is audible.
+        staticClip = AudioManager.PlaySoundIfFileExists(
+            Path.Combine(Main.folderPath, staticSoundFileName), 0f, true);
+    }
+
     void SetupButtons()
     {
         Action zoomInAction = () =>
@@ -124,6 +144,11 @@ public class SignalScope : MonoBehaviour
             currentFOV = Camera.GetComponent<Camera>().fieldOfView;
             Camera.GetComponent<Camera>().fieldOfView = Mathf.Clamp(currentFOV + zoomIncrement, maxZoom, minZoom);
         };
+
+        Action toggleScreenAction = () =>
+        {
+            Screen.SetActive(!Screen.activeSelf);
+        };
         
         ZoomInButton = Create.NewButton(zoomInAction);
         ZoomInButton.name = "ZoomInButton";
@@ -131,17 +156,24 @@ public class SignalScope : MonoBehaviour
         ZoomOutButton = Create.NewButton(zoomOutAction);
         ZoomOutButton.name = "ZoomOutButton";
         
+        ToggleScreenButton = Create.NewButton(toggleScreenAction);
+        ToggleScreenButton.name = "ToggleScreenButton";
+        
         ZoomInButton.transform.SetParent(transform, false);
         ZoomOutButton.transform.SetParent(transform, false);
+        ToggleScreenButton.transform.SetParent(transform, false);
         
         ZoomInButton.transform.localPosition = zoomInButtonLocalPosition;
         ZoomOutButton.transform.localPosition = zoomOutButtonLocalPosition;
+        ToggleScreenButton.transform.localPosition = toggleCamButtonLocalPosition;
 
         ZoomInButton.transform.localRotation = zoomInButtonLocalRotation;
         ZoomOutButton.transform.localRotation = zoomOutButtonLocalRotation;
+        ToggleScreenButton.transform.localRotation = toggleCamButtonLocalRotation; 
         
         ZoomInButton.transform.localScale = new Vector3(0.08f, 0.08f, 0.08f);
         ZoomOutButton.transform.localScale = new Vector3(0.08f, 0.08f, 0.08f);
+        ToggleScreenButton.transform.localScale = new Vector3(0.08f, 0.08f, 0.08f);
     }
 
     void FixedUpdate()
@@ -267,6 +299,8 @@ public class SignalScope : MonoBehaviour
             angleMultiplier = Mathf.Lerp(1f, zoomedOutAngleScale, t);
         }
 
+        float strongestSignal = 0f;
+
         foreach (KeyValuePair<GameObject, MusicEmitter> entry in musicEmitters)
         {
             GameObject body = entry.Key;
@@ -280,7 +314,23 @@ public class SignalScope : MonoBehaviour
 
             float strength = GetSignalStrengthForTarget(body, emitter.detectionAngle * angleMultiplier);
             emitter.SetVolume(strength);
+
+            if (strength > strongestSignal) strongestSignal = strength;
         }
+
+        UpdateStaticVolume(strongestSignal);
+    }
+
+    private void UpdateStaticVolume(float strongestSignal)
+    {
+        if (staticClip == null) return;
+        
+        if (!OwSystemSettings.SignalScopePlayStatic.Value) AudioManager.ChangeVolume(staticClip, 0);
+
+        // Static fills in whenever nothing else is audible, and fades out
+        // smoothly as the scope tunes into a real music emitter.
+        float target = staticVolume * (1f - strongestSignal);
+        AudioManager.ChangeVolume(staticClip, target);
     }
 
     private float GetSignalStrengthForTarget(GameObject target, float detectionAngle)
@@ -304,6 +354,9 @@ public class SignalScope : MonoBehaviour
         {
             emitter.SetVolume(0f);
         }
+
+        if (staticClip != null)
+            AudioManager.ChangeVolume(staticClip, 0f);
     }
 
     public void StopMusicEmitter(GameObject go)
@@ -313,5 +366,11 @@ public class SignalScope : MonoBehaviour
             emitter.SetVolume(0f);
         }
         musicEmitters.Remove(go);
+    }
+
+    void OnDestroy()
+    {
+        if (staticClip != null)
+            AudioManager.StopPlayback(staticClip);
     }
 }

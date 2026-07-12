@@ -23,16 +23,17 @@ public class SupernovaSun : MonoBehaviour
     public bool DoTimeLoop = true;
 
     private float wallRampRange = 0f;
+    private float wallExpansionSpeed = 0f;
     private AudioManager.ClipData wallClip;
 
-    public double extraDistance          = 25f;
+    public float extraDistance          = 25f;
     private float originalLightIntensity;
 
     // ── Player & expansion ────────────────────────────────────────────────────
     public Transform playerTransform;
     private bool hasReachedPlayer = false;
     private bool isFadingOut      = false;
-    public float expansionSpeedWorldUnitsPerSec = 24f;
+    public float supernovaDuration = 40f;
 
     // ── Required target ───────────────────────────────────────────────────────
     private struct RequiredTarget
@@ -172,8 +173,8 @@ public class SupernovaSun : MonoBehaviour
         // Required engulf target.
         requiredTarget = new RequiredTarget
         {
-            transform = Main.solarSystem.WhiteHole.transform,
-            radius    = CalculateWorldRadius(Main.solarSystem.WhiteHole.transform),
+            transform = Main.solarSystem.HearthianMapSatelite.transform,
+            radius    = CalculateWorldRadius(Main.solarSystem.HearthianMapSatelite.transform),
             engulfed  = false,
         };
 
@@ -288,8 +289,53 @@ public class SupernovaSun : MonoBehaviour
         if (haloMaterial != null) SunShaderUtils.ApplyHalo(haloMaterial, superHalo);
         sunLight.color = sunlightBlue;
 
+        if (isFadingOut) return;
+
         float currentRadius = sunRadiusPerUnitScale * transform.localScale.x;
         Vector3 sunPos      = transform.position;
+
+        // Tracks the single farthest not-yet-engulfed thing this frame, and whether
+        // everything (required target, player, every swallowable body) is done.
+        // supernovaDuration is the *total* time the wall should take to reach all of
+        // these, so growth must not stop the moment the required target alone is hit —
+        // that previously cut the sequence short and left far-away bodies un-swallowed.
+        double farthestRemaining = 0d;
+        bool   allEngulfed       = true;
+
+        // Required target.
+        if (requiredTarget.engulfed || !requiredTarget.transform.gameObject.activeSelf)
+        {
+            requiredTarget.engulfed = true;
+        }
+        else
+        {
+            float  dist   = Vector3.Distance(sunPos, requiredTarget.transform.position);
+            double needed = dist + requiredTarget.radius + extraDistance;
+            if (currentRadius >= needed)
+            {
+                requiredTarget.engulfed = true;
+            }
+            else
+            {
+                farthestRemaining = needed;
+                allEngulfed       = false;
+            }
+        }
+
+        // Player.
+        float distToPlayer = Vector3.Distance(sunPos, playerTransform.position);
+        if (!hasReachedPlayer)
+        {
+            if (currentRadius >= distToPlayer + extraDistance)
+            {
+                hasReachedPlayer = true;
+            }
+            else
+            {
+                farthestRemaining = Mathf.Max((float)farthestRemaining, distToPlayer + (float)extraDistance);
+                allEngulfed       = false;
+            }
+        }
 
         // Swallow bodies.
         for (int i = bodiesToSwallow.Count - 1; i >= 0; i--)
@@ -297,44 +343,23 @@ public class SupernovaSun : MonoBehaviour
             BodyToSwallow body = bodiesToSwallow[i];
             Transform     tr   = body.transform;
             if (!tr.gameObject.activeSelf) continue;
-            if (currentRadius >= Vector3.Distance(tr.position, sunPos) + body.radius + extraDistance)
+
+            float needed = Vector3.Distance(tr.position, sunPos) + body.radius + extraDistance;
+            if (currentRadius >= needed)
             {
                 tr.gameObject.SetActive(false);
                 Main.solarSystem.SignalScope.GetComponent<SignalScope>().StopMusicEmitter(tr.gameObject);
             }
-        }
-
-        if (isFadingOut) return;
-
-        double farthestRequired = 0d;
-
-        if (requiredTarget.engulfed || !requiredTarget.transform.gameObject.activeSelf)
-        {
-            requiredTarget.engulfed = true;
-        }
-        else
-        {
-            float dist   = Vector3.Distance(sunPos, requiredTarget.transform.position);
-            double needed = dist + requiredTarget.radius + extraDistance;
-            if (currentRadius >= needed)
-                requiredTarget.engulfed = true;
             else
-                farthestRequired = needed;
+            {
+                farthestRemaining = Mathf.Max((float)farthestRemaining, needed);
+                allEngulfed       = false;
+            }
         }
-
-        float distToPlayer = Vector3.Distance(sunPos, playerTransform.position);
-        if (!hasReachedPlayer)
-        {
-            if (currentRadius >= distToPlayer + extraDistance)
-                hasReachedPlayer = true;
-            else
-                farthestRequired = Mathf.Max((float)farthestRequired, distToPlayer + (float)extraDistance);
-        }
-        
 
         UpdateWallClipVolume();
 
-        if (requiredTarget.engulfed)
+        if (allEngulfed)
         {
             if (Main.solarSystem.DarkBramble.activeSelf)
                 Main.solarSystem.DarkBramble.SetActive(false);
@@ -343,11 +368,47 @@ public class SupernovaSun : MonoBehaviour
         else
         {
             float newWorldRadius = Mathf.Min(
-                currentRadius + expansionSpeedWorldUnitsPerSec * Time.deltaTime,
-                (float)farthestRequired);
+                currentRadius + wallExpansionSpeed * Time.deltaTime,
+                (float)farthestRemaining);
             float newScaleX = newWorldRadius / sunRadiusPerUnitScale;
             transform.localScale = new Vector3(newScaleX, newScaleX, newScaleX);
         }
+    }
+
+    /// <summary>
+    /// Finds the farthest thing the wall still needs to reach — the required target,
+    /// the player, and every swallowable body — and converts the remaining distance
+    /// into a constant units/second speed so the Wall phase takes exactly
+    /// `supernovaDuration` seconds to engulf everything, regardless of how spread out
+    /// the system is. Call this once, right as Phase.Wall begins.
+    /// </summary>
+    private float CalculateWallExpansionSpeed(float startRadius)
+    {
+        Vector3 sunPos = transform.position;
+        float   farthestDistanceNeeded = 0f;
+
+        if (!requiredTarget.engulfed && requiredTarget.transform.gameObject.activeSelf)
+        {
+            float needed = Vector3.Distance(sunPos, requiredTarget.transform.position)
+                            + requiredTarget.radius + (float)extraDistance;
+            farthestDistanceNeeded = Mathf.Max(farthestDistanceNeeded, needed);
+        }
+
+        if (!hasReachedPlayer && playerTransform != null)
+        {
+            float needed = Vector3.Distance(sunPos, playerTransform.position) + (float)extraDistance;
+            farthestDistanceNeeded = Mathf.Max(farthestDistanceNeeded, needed);
+        }
+
+        foreach (BodyToSwallow body in bodiesToSwallow)
+        {
+            if (body.transform == null || !body.transform.gameObject.activeSelf) continue;
+            float needed = Vector3.Distance(sunPos, body.transform.position) + body.radius + (float)extraDistance;
+            farthestDistanceNeeded = Mathf.Max(farthestDistanceNeeded, needed);
+        }
+
+        float distanceToCover = Mathf.Max(0f, farthestDistanceNeeded - startRadius);
+        return distanceToCover / Mathf.Max(supernovaDuration, 0.0001f);
     }
 
     // ── Volume helper ─────────────────────────────────────────────────────────
@@ -493,7 +554,13 @@ public class SupernovaSun : MonoBehaviour
             Path.Combine(Main.folderPath, supernovaWallSoundName),
             OwSystemSettings.SunSupernovaWallVolume.Value, true);
 
-        yield return new WaitForSeconds(explosionDuration);
+        // Previously this waited a *second* full explosionDuration on top of the 2.8s
+        // delay above, so the total time spent in Explosion was 2.8 + explosionDuration —
+        // but UpdateExplosionPhase's lerp (phaseTimer / explosionDuration) already hits
+        // t=1 at just explosionDuration. The sun sat frozen at its final explosion state
+        // for the extra 2.8s before Wall phase kicked in. Waiting only the remainder
+        // makes the visual finish exactly when the phase changes.
+        yield return new WaitForSeconds(Mathf.Max(0f, explosionDuration - 2.8f));
 
         // Force the final explosion state to avoid any flash at the Wall boundary.
         SunShaderUtils.ApplyCore(sunMaterial, superCore);
@@ -507,6 +574,7 @@ public class SupernovaSun : MonoBehaviour
         float currentRadius = sunRadiusPerUnitScale * transform.localScale.x;
         wallRampRange = Mathf.Max(
             Vector3.Distance(transform.position, playerTransform.position) - currentRadius, 1f);
+        wallExpansionSpeed = CalculateWallExpansionSpeed(currentRadius);
     }
 
     private IEnumerator FadeOutAndDisable()
