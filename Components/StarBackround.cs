@@ -30,7 +30,6 @@ public class StarBackground : MonoBehaviour
 
         RescaleToFarClip();
 
-        transform.position = Vector3.zero;
         DontDestroyOnLoad(gameObject);
         Actions.onMapInitialized += SceneLoaded;
 
@@ -40,9 +39,24 @@ public class StarBackground : MonoBehaviour
 
     public void RescaleToFarClip()
     {
+        // Make sure we're parented to the solar system root before doing any
+        // scale/position math relative to it.
+        if (Main.solarSystem.Root != null && transform.parent != Main.solarSystem.Root.transform)
+        {
+            transform.SetParent(Main.solarSystem.Root.transform, true);
+        }
+
         float farClip = OwSystemSettings.ViewDistance.Value; // whatever the game actually uses
         float targetRadius = farClip * FarPlaneSafetyMargin;
-        transform.localScale = Vector3.one * (targetRadius / meshBoundsRadius);
+        float desiredWorldScale = targetRadius / meshBoundsRadius;
+
+        // Local values are only correct in world space if we correct for the
+        // parent's scale - important since this sits under Root, which is
+        // scaled down to build the solar system at model scale.
+        float parentScale = transform.parent != null ? transform.parent.lossyScale.x : 1f;
+
+        transform.localScale = Vector3.one * (desiredWorldScale / parentScale);
+        transform.localPosition = Vector3.zero; // centered on parent, not world origin
     }
 
     private void SceneLoaded(string mapName)

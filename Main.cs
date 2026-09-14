@@ -62,7 +62,10 @@ namespace OuterWildsRumble
             
             Actions.onMapInitialized += SceneLoaded;
             
-            Actions.onMapInitialized += (string val) => isInMatch = false;
+            Actions.onMapInitialized += (string val) =>
+            {
+                isInMatch = val == "Map0" || val == "Map1";
+            };
             Actions.onMatchStarted += () => isInMatch = true;
             Actions.onMatchEnded += () => isInMatch = false;
             
@@ -489,7 +492,7 @@ namespace OuterWildsRumble
             hourGlassTwins.orbitParent = solarSystem.Sun.transform;  
             hourGlassTwins.orbitDistance = 3.88f;           
             hourGlassTwins.orbitSpeed = 2.27f;          
-            hourGlassTwins.spinSpeed = 20.5f;
+            hourGlassTwins.spinSpeed = 12.5f;
             hourGlassTwins.orbitAxis = Vector3.up;
             
             if (OwSystemSettings.RealisticMode.Value)
@@ -769,6 +772,7 @@ namespace OuterWildsRumble
         void SetupStarBackground()
         {
             solarSystem.StarBackground.AddComponent<StarBackground>();
+            solarSystem.StarBackground.transform.SetParent(solarSystem.Root.transform,true);
         }
     }
     

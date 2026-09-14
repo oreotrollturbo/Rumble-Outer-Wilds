@@ -310,7 +310,7 @@ namespace OuterWildsRumble.UIFrameworkSettings
                 "Positions the solar system at the scene origin and applies the speed multiplier to all orbit/spin speeds");
 
             RealisticSpeedMultiplier = realisticCat.CreateEntry(
-                "Realistic_SpeedMultiplier", 0.8f,
+                "Realistic_SpeedMultiplier", 1f,
                 "Speed Multiplier",
                 "Global multiplier applied to all orbit and spin speeds when Realistic Mode is enabled (default 0.1 = 10% of normal speed)");
 
@@ -431,10 +431,10 @@ namespace OuterWildsRumble.UIFrameworkSettings
                 "Orbit Distance",
                 "Pre-scale orbit distance from the Sun (multiplied by 30 at runtime)");
             SunStationOrbitSpeed = sunStationCat.CreateEntry(
-                "SunStation_OrbitSpeed", 32f,
+                "SunStation_OrbitSpeed", 10.2857f,
                 "Orbit Speed", "Degrees per second around the Sun");
             SunStationSpinSpeed = sunStationCat.CreateEntry(
-                "SunStation_SpinSpeed", 32f,
+                "SunStation_SpinSpeed", SunStationOrbitSpeed.Value,
                 "Spin Speed", "Self-rotation degrees per second");
 
             // Hourglass Twins
@@ -446,10 +446,10 @@ namespace OuterWildsRumble.UIFrameworkSettings
                 "Orbit Distance",
                 "Pre-scale orbit distance from the Sun");
             HourGlassTwinsOrbitSpeed = hourglassCat.CreateEntry(
-                "HourGlassTwins_OrbitSpeed", 2.27f,
+                "HourGlassTwins_OrbitSpeed", 3.2727f,
                 "Orbit Speed", "Degrees per second around the Sun");
-            HourGlassTwinsSpinSpeed = hourglassCat.CreateEntry(
-                "HourGlassTwins_SpinSpeed", 10.5f,
+            HourGlassTwinsSpinSpeed = hourglassCat.CreateEntry( //TODO check
+                "HourGlassTwins_SpinSpeed", 6.5455f,
                 "Spin Speed", "Self-rotation degrees per second");
             HourGlassTwinsTransferDuration = hourglassCat.CreateEntry(
                 "HourGlassTwins_TransferDuration", 3.4f,
@@ -473,7 +473,7 @@ namespace OuterWildsRumble.UIFrameworkSettings
                 "Orbit Distance",
                 "Pre-scale orbit distance from the Sun");
             TimberHearthOrbitSpeed = timberHearthCat.CreateEntry(
-                "TimberHearth_OrbitSpeed", 1.0f,
+                "TimberHearth_OrbitSpeed", 1.44f,
                 "Orbit Speed", "Degrees per second around the Sun");
             TimberHearthSpinSpeed = timberHearthCat.CreateEntry(
                 "TimberHearth_SpinSpeed", 7.5f,
@@ -491,10 +491,10 @@ namespace OuterWildsRumble.UIFrameworkSettings
                 "Orbit Distance",
                 "Pre-scale orbit distance from Timber Hearth");
             AttlerockOrbitSpeed = attlerockCat.CreateEntry(
-                "Attlerock_OrbitSpeed", 15f,
+                "Attlerock_OrbitSpeed", 3.4286f,
                 "Orbit Speed", "Degrees per second around Timber Hearth");
             AttlerockSpinSpeed = attlerockCat.CreateEntry(
-                "Attlerock_SpinSpeed", 15f,
+                "Attlerock_SpinSpeed", AttlerockOrbitSpeed.Value,
                 "Spin Speed", "Self-rotation degrees per second");
 
             // Brittle Hollow
@@ -506,7 +506,7 @@ namespace OuterWildsRumble.UIFrameworkSettings
                 "Orbit Distance",
                 "Pre-scale orbit distance from the Sun");
             BrittleHollowOrbitSpeed = brittleHollowCat.CreateEntry(
-                "BrittleHollow_OrbitSpeed", 0.8f,
+                "BrittleHollow_OrbitSpeed", 0.9068f,
                 "Orbit Speed", "Degrees per second around the Sun");
             BrittleHollowSpinSpeed = brittleHollowCat.CreateEntry(
                 "BrittleHollow_SpinSpeed", 7.0f,
@@ -539,7 +539,7 @@ namespace OuterWildsRumble.UIFrameworkSettings
                 "Orbit Distance",
                 "Pre-scale orbit distance from Brittle Hollow");
             HollowsLanternOrbitSpeed = hollowsLanternCat.CreateEntry(
-                "HollowsLantern_OrbitSpeed", 20f,
+                "HollowsLantern_OrbitSpeed", 3.1304f,
                 "Orbit Speed", "Degrees per second around Brittle Hollow");
             HollowsLanternSpinSpeed = hollowsLanternCat.CreateEntry(
                 "HollowsLantern_SpinSpeed", 30f,
@@ -584,7 +584,7 @@ namespace OuterWildsRumble.UIFrameworkSettings
                 "Orbit Distance",
                 "Pre-scale orbit distance from the Sun");
             GiantsDeepOrbitSpeed = giantsDeepCat.CreateEntry(
-                "GiantsDeep_OrbitSpeed", 0.6f,
+                "GiantsDeep_OrbitSpeed", 0.5538f,
                 "Orbit Speed", "Degrees per second around the Sun");
             GiantsDeepSpinSpeed = giantsDeepCat.CreateEntry(
                 "GiantsDeep_SpinSpeed", 0.2f,
@@ -599,10 +599,10 @@ namespace OuterWildsRumble.UIFrameworkSettings
                 "Orbit Distance",
                 "Pre-scale orbit distance from Giant's Deep");
             OrbitalProbeCannonOrbitSpeed = probeCannonCat.CreateEntry(
-                "OrbitalProbeCannon_OrbitSpeed", 10f,
+                "OrbitalProbeCannon_OrbitSpeed", 7.2f,
                 "Orbit Speed", "Degrees per second around Giant's Deep");
             OrbitalProbeCannonSpinSpeed = probeCannonCat.CreateEntry(
-                "OrbitalProbeCannon_SpinSpeed", 10f,
+                "OrbitalProbeCannon_SpinSpeed", OrbitalProbeCannonOrbitSpeed.Value,
                 "Spin Speed", "Self-rotation degrees per second");
             OrbitalProbeCannonFire = probeCannonCat.CreateEntry(
                 "OrbitalProbeCannon_Fire", true,
@@ -638,7 +638,7 @@ namespace OuterWildsRumble.UIFrameworkSettings
                 "Orbit Distance",
                 "Pre-scale orbit distance from its current parent");
             QuantumMoonOrbitSpeed = quantumMoonCat.CreateEntry(
-                "QuantumMoon_OrbitSpeed", 2f,
+                "QuantumMoon_OrbitSpeed", 1.2f,
                 "Orbit Speed", "Degrees per second around parent");
             QuantumMoonSpinSpeed = quantumMoonCat.CreateEntry(
                 "QuantumMoon_SpinSpeed", 4f,
@@ -657,7 +657,7 @@ namespace OuterWildsRumble.UIFrameworkSettings
                 "Orbit Distance",
                 "Pre-scale orbit distance from the Sun");
             DarkBrambleOrbitSpeed = darkBrambleCat.CreateEntry(
-                "DarkBramble_OrbitSpeed", 0.38f,
+                "DarkBramble_OrbitSpeed", 0.4f,
                 "Orbit Speed", "Degrees per second around the Sun");
 
             // White Hole
@@ -679,7 +679,7 @@ namespace OuterWildsRumble.UIFrameworkSettings
                 "Semi-Minor Axis",
                 "Pre-scale width of the elliptical orbit");
             InterloperOrbitSpeed = interloperCat.CreateEntry(
-                "Interloper_OrbitSpeed", 11f,
+                "Interloper_OrbitSpeed", 0.75f,
                 "Orbit Speed",
                 "Base angular speed along the ellipse");
             InterloperSpeedIntensity = interloperCat.CreateEntry(
@@ -723,7 +723,7 @@ namespace OuterWildsRumble.UIFrameworkSettings
                 "Maximum Zoom", "The maximum zoom the signalscope can reach (camera FOV)");
 
             // ── Register all categories with UIFramework ─────────────────────────
-            var uiHandle = UI.Register((MelonBase)modInstance,
+            var uiHandle = UI.RegisterMelon(modInstance,
                 globalCat, realisticCat, sunCat, sunStationCat, hourglassCat,
                 timberHearthCat, attlerockCat, brittleHollowCat,
                 hollowsLanternCat, giantsDeepCat, probeCannonCat,

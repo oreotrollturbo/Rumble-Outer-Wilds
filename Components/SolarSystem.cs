@@ -187,8 +187,16 @@ public class SolarSystem : MonoBehaviour
                 case "Gym":
                     transform.rotation = Quaternion.Euler(90, 0, 0);
                     SetRelativeTo(Main.solarSystem.TimberHearth);
-                    GameObject.Find("SCENE").transform.GetChild(4).gameObject.SetActive(false);
-                    GameObject.Find("SCENE").transform.GetChild(3).gameObject.SetActive(false);
+                    var sceneObj = GameObject.Find("SCENE");
+                    if (sceneObj != null)
+                    {
+                        sceneObj.transform.GetChild(4).gameObject.SetActive(false);
+                        sceneObj.transform.GetChild(3).gameObject.SetActive(false);
+                    }
+                    else
+                    {
+                        MelonLogger.Warning("[SolarSystem] Could not find active 'SCENE' object — skipping child deactivation.");
+                    }
                     break;
 
                 case "Map0":
