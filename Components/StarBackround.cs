@@ -50,7 +50,7 @@ public class StarBackground : MonoBehaviour
         float parentScale = transform.parent != null ? transform.parent.lossyScale.x : 1f;
 
         transform.localScale = Vector3.one * (desiredWorldScale / parentScale);
-        transform.localPosition = Vector3.zero; //TODO maybe center on 0,0,0 instead of the sun silly !
+        transform.position = Vector3.zero;
     }
 
     private void SceneLoaded(string mapName)
