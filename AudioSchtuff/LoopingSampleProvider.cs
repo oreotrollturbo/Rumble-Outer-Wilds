@@ -21,18 +21,18 @@ public class LoopingSampleProvider : ISampleProvider
 
         while (totalSamplesRead < count)
         {
-            // Read from the source file
+            //Read from le file
             int samplesRead = _sourceStream.Read(buffer, offset + totalSamplesRead, count - totalSamplesRead);
             
-            if (samplesRead == 0) // We hit the end of the file
+            if (samplesRead == 0)
             {
                 if (IsLooping)
                 {
-                    _sourceStream.Position = 0; // Rewind to the start
+                    _sourceStream.Position = 0;
                 }
                 else
                 {
-                    break; // Stop providing data
+                    break;
                 }
             }
             totalSamplesRead += samplesRead;

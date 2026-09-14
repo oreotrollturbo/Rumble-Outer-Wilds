@@ -57,7 +57,7 @@ public class QuantumObject : MonoBehaviour
             Vector3 potentialPos = Vector3.zero;
             Quaternion potentialRot = Quaternion.identity;
 
-            // Create a list of keys to randomly select from
+            // possible positions
             List<Vector3> positions = new List<Vector3>(teleportPositions.Keys);
 
             while (attempts < 5 && !foundSafeSpot)

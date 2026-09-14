@@ -61,23 +61,20 @@ public class SignalScope : MonoBehaviour
     
     Dictionary<GameObject, MusicEmitter> musicEmitters = new Dictionary<GameObject, MusicEmitter>();
 
-    // --- VIRTUAL PARENTING VARIABLES ---
+    // "PARENTING" VARIABLES
     private Vector3 scopeVelocity = Vector3.zero;
     private Quaternion scopeSmoothedRot;
     
     public float scopePositionSmoothTime = 0.05f;
     public float scopeRotationSmoothing = 15f;
-    // ------------------------------------
 
     public bool playMusic = true;
     public bool grabDuringMatches = true;
 
-    // --- STATIC / NO-SIGNAL SOUND ---
-    // Fill this in once you have the file path — same folderPath convention as the other clips.
+   // statique
     public string staticSoundFileName = "signalscope_static.wav";
     public float staticVolume = 1f;
     private AudioManager.ClipData staticClip;
-    // ---------------------------------
 
     private bool allMusicOff;
 
@@ -125,8 +122,7 @@ public class SignalScope : MonoBehaviour
 
     void SetupStaticSound()
     {
-        // Added to the mixer silent immediately, same trick MusicEmitter uses —
-        // HandleMusicChange fades this in whenever no real signal is audible.
+        
         staticClip = AudioManager.PlaySoundIfFileExists(
             Path.Combine(Main.folderPath, staticSoundFileName), 0f, true);
     }
@@ -194,16 +190,16 @@ public class SignalScope : MonoBehaviour
         HandleMusicChange();
     }
 
-    // --- VIRTUAL PARENTING LOGIC ---
+    // "PARENTING" LOGIC
     void LateUpdate()
     {
         if (!hasSetUp || !isHolding) return;
-
-        // Compute where the scope ideally sits relative to the hand
+        
+        // ideal position
         Vector3 idealPos = rightHandTransform.TransformPoint(handLocalPosition);
         Quaternion idealRot = rightHandTransform.rotation * handLocalRotation;
 
-        // Smoothly drive the scope there — camera inherits this as a plain child
+        // transition to it
         transform.position = Vector3.SmoothDamp(
             transform.position, idealPos, ref scopeVelocity, scopePositionSmoothTime);
 
@@ -239,10 +235,9 @@ public class SignalScope : MonoBehaviour
 
     private void Grab()
     {
-        // Detach from belt but do NOT re-parent to the hand
         transform.SetParent(null);
 
-        // Snap to the correct position immediately so there's no slide-in on first grab
+        // Snap to the correct position
         Vector3 idealPos = rightHandTransform.TransformPoint(handLocalPosition);
         Quaternion idealRot = rightHandTransform.rotation * handLocalRotation;
         transform.position = idealPos;
@@ -286,16 +281,15 @@ public class SignalScope : MonoBehaviour
 
         allMusicOff = false;
 
-        // Compute zoom multiplier once — 1.0 at default FOV
         float angleMultiplier;
         if (currentFOV <= startingZoom)
         {
-            float t = Mathf.InverseLerp(startingZoom, maxZoom, currentFOV); // 0→1 as you zoom in
+            float t = Mathf.InverseLerp(startingZoom, maxZoom, currentFOV);
             angleMultiplier = Mathf.Lerp(1f, zoomedInAngleScale, t);
         }
         else
         {
-            float t = Mathf.InverseLerp(startingZoom, minZoom, currentFOV); // 0→1 as you zoom out
+            float t = Mathf.InverseLerp(startingZoom, minZoom, currentFOV);
             angleMultiplier = Mathf.Lerp(1f, zoomedOutAngleScale, t);
         }
 
@@ -327,8 +321,7 @@ public class SignalScope : MonoBehaviour
         
         if (!OwSystemSettings.SignalScopePlayStatic.Value) AudioManager.ChangeVolume(staticClip, 0);
 
-        // Static fills in whenever nothing else is audible, and fades out
-        // smoothly as the scope tunes into a real music emitter.
+        // Static whenever nothing else is audible
         float target = staticVolume * (1f - strongestSignal);
         AudioManager.ChangeVolume(staticClip, target);
     }

@@ -13,13 +13,13 @@ namespace OuterWildsRumble.Components;
 [RegisterTypeInIl2Cpp]
 public class SupernovaSun : MonoBehaviour
 {
-    // ── Sound names ───────────────────────────────────────────────────────────
+    // Sounds names
     private const string endTimesSoundName           = "OW_EndTimes.wav";
     private const string supernovaCollapseSoundName  = "Sun_supernova_collapse.wav";
     private const string supernovaExplosionSoundName = "Sun_supernova_explosion.wav";
     private const string supernovaWallSoundName      = "Sun_supernova_wall.wav";
 
-    // ── Settings ──────────────────────────────────────────────────────────────
+    //Settings
     public bool DoTimeLoop = true;
 
     private float wallRampRange = 0f;
@@ -29,13 +29,11 @@ public class SupernovaSun : MonoBehaviour
     public float extraDistance          = 25f;
     private float originalLightIntensity;
 
-    // ── Player & expansion ────────────────────────────────────────────────────
     public Transform playerTransform;
     private bool hasReachedPlayer = false;
     private bool isFadingOut      = false;
     public float supernovaDuration = 40f;
 
-    // ── Required target ───────────────────────────────────────────────────────
     private struct RequiredTarget
     {
         public Transform transform;
@@ -44,7 +42,6 @@ public class SupernovaSun : MonoBehaviour
     }
     private RequiredTarget requiredTarget;
 
-    // ── Timing & scale ────────────────────────────────────────────────────────
     public int   secondsToFullRed           = 60 * 22;
     public float waitAfterRed               = 60 + 32f;
     public float collapseDuration           = 9.5f;
@@ -54,14 +51,12 @@ public class SupernovaSun : MonoBehaviour
     public Vector3 redGrowthScale           = new(0.05f, 0.05f, 0.05f);
     public double interloperSwallowDistance  = 3.2978 / 30;
 
-    // ── Light & colour ────────────────────────────────────────────────────────
     public Light sunLight;
     public Color sunlightOriginal;
     public Color sunlightRed   = new(0.73f, 0.116f, 0);
     public Color sunlightWhite = Color.white;
     public Color sunlightBlue  = Color.cyan;
 
-    // ── Phase state ───────────────────────────────────────────────────────────
     public enum Phase { Red, RedFullWait, Collapse, Explosion, Wall, Done }
     public Phase currentPhase = Phase.Red;
     private float phaseTimer  = 0f;
@@ -77,32 +72,26 @@ public class SupernovaSun : MonoBehaviour
     private Material transSunMaterial;
     private Material transHaloMaterial;
 
-    // Active convenience pointers — redirected from opaque → transparent at
-    // the start of the Explosion phase.  All phase-update methods use these.
+    
     private Material sunMaterial;
     private Material haloMaterial;
 
-    // ── Shader setting snapshots ──────────────────────────────────────────────
     private SunShaderUtils.SunCoreSettings startCore, redCore, whiteCore, superCore;
     private SunShaderUtils.SunHaloSettings startHalo, redHalo, whiteHalo, superHalo;
 
     private Vector3 initialScale;
 
-    // ── Swallowing ────────────────────────────────────────────────────────────
     private struct BodyToSwallow { public Transform transform; public float radius; }
     private List<BodyToSwallow> bodiesToSwallow = new();
 
     private float sunBaseRadius;
     private float sunRadiusPerUnitScale;
 
-    // The corona object that shrinks away during Collapse (child 1 of opaque sun).
     private Transform opaqueCollapseObject;
 
-    // ─────────────────────────────────────────────────────────────────────────
 
     public SupernovaSun(IntPtr ptr) : base(ptr) { }
 
-    // ── Public API ────────────────────────────────────────────────────────────
     public void SetBodiesToSwallow(List<Transform> transforms)
     {
         bodiesToSwallow.Clear();
@@ -113,14 +102,14 @@ public class SupernovaSun : MonoBehaviour
         }
     }
 
-    // ── Unity lifecycle ───────────────────────────────────────────────────────
+    
     void Start()
     {
         // Locate both sun GameObjects from the root.
         transparentSunGO = transform.GetChild(0).gameObject;  // hidden until Explosion
         opaqueSunGO      = transform.GetChild(1).gameObject;  // visible during Red…Collapse
 
-        // Main renderers.
+        //main renderers.
         opaqueSunRenderer = opaqueSunGO.GetComponent<Renderer>();
         transSunRenderer  = transparentSunGO.GetComponent<Renderer>();
 
@@ -128,10 +117,7 @@ public class SupernovaSun : MonoBehaviour
 
         opaqueSunMaterial = opaqueSunRenderer.material;
         transSunMaterial  = transSunRenderer.material;
-
-        // Halo: GetComponentsInChildren returns renderers depth-first, so [0] is always the
-        // sun body itself and [1] is the halo — regardless of how deep the halo sits.
-        // includeInactive:true ensures the transparent sun (currently hidden) is fully queried.
+        
         Renderer[] opaqueRenderers = opaqueSunGO.GetComponentsInChildren<Renderer>(true);
         Renderer[] transRenderers  = transparentSunGO.GetComponentsInChildren<Renderer>(true);
 
@@ -141,8 +127,7 @@ public class SupernovaSun : MonoBehaviour
         MelonLogger.Msg($"[SupernovaSun] opaque renderers={opaqueRenderers.Length}  trans renderers={transRenderers.Length}");
         MelonLogger.Msg($"[SupernovaSun] opaqueHaloMaterial={opaqueHaloMaterial != null}  transHaloMaterial={transHaloMaterial != null}");
 
-        // Corona object (the ring that shrinks during Collapse): try named lookup first,
-        // fall back to child index 1 of the opaque sun.
+    
         opaqueCollapseObject = opaqueSunGO.transform.Find("Corona");
         if (opaqueCollapseObject == null && opaqueSunGO.transform.childCount > 1)
             opaqueCollapseObject = opaqueSunGO.transform.GetChild(1);
@@ -196,10 +181,8 @@ public class SupernovaSun : MonoBehaviour
         playerTransform = Calls.Players.GetLocalPlayer().Controller.PlayerVisuals.transform.GetChild(1);
     }
 
-    // ── Fixed update ──────────────────────────────────────────────────────────
     void FixedUpdate()
     {
-        // 1. Determine if the time loop should actively progress right now
         bool isTimeLoopActive = DoTimeLoop && 
                                 (OwSystemSettings.SunDoTimeLoopInMatches.Value || !Main.isInMatch);
 
@@ -209,7 +192,6 @@ public class SupernovaSun : MonoBehaviour
         }
         else
         {
-            // 2. Time loop is inactive. Handle freezing logic.
             phaseTimer = 0f;
 
             if (OwSystemSettings.SunStayRed.Value)
@@ -220,9 +202,6 @@ public class SupernovaSun : MonoBehaviour
             }
             else 
             {
-                // If we shouldn't stay red and time loop is off, 
-                // explicitly force it back to the beginning of Red phase safely,
-                // or handle a custom 'Paused' state if that was your intention.
                 currentPhase = Phase.Red; 
             }
         }
@@ -237,12 +216,11 @@ public class SupernovaSun : MonoBehaviour
         }
     }
 
-    // ── Phase updates ─────────────────────────────────────────────────────────
     private void UpdateRedPhase()
     {
         float t      = Mathf.Clamp01(phaseTimer / secondsToFullRed);
         float sizeT  = Mathf.SmoothStep(0f, 1f, t);
-        float colorT = Mathf.Pow(t, 3f);  // ease-in: stays orange longer
+        float colorT = Mathf.Pow(t, 3f);  
 
         transform.localScale = Vector3.Lerp(initialScale, initialScale + redGrowthScale, sizeT);
         SunShaderUtils.ApplyCore(sunMaterial, LerpCore(startCore, redCore, colorT));
@@ -293,13 +271,8 @@ public class SupernovaSun : MonoBehaviour
 
         float currentRadius = sunRadiusPerUnitScale * transform.localScale.x;
         Vector3 sunPos      = transform.position;
-
-        // Tracks the single farthest not-yet-engulfed thing this frame, and whether
-        // everything (required target, player, every swallowable body) is done.
-        // supernovaDuration is the *total* time the wall should take to reach all of
-        // these, so growth must not stop the moment the required target alone is hit —
-        // that previously cut the sequence short and left far-away bodies un-swallowed.
-        double farthestRemaining = 0d;
+        
+        double farthestRemaining = 0d; // so that evrything is swallowed and it isnt awkward 
         bool   allEngulfed       = true;
 
         // Required target.
@@ -322,7 +295,6 @@ public class SupernovaSun : MonoBehaviour
             }
         }
 
-        // Player.
         float distToPlayer = Vector3.Distance(sunPos, playerTransform.position);
         if (!hasReachedPlayer)
         {
@@ -337,7 +309,6 @@ public class SupernovaSun : MonoBehaviour
             }
         }
 
-        // Swallow bodies.
         for (int i = bodiesToSwallow.Count - 1; i >= 0; i--)
         {
             BodyToSwallow body = bodiesToSwallow[i];
@@ -381,6 +352,7 @@ public class SupernovaSun : MonoBehaviour
     /// into a constant units/second speed so the Wall phase takes exactly
     /// `supernovaDuration` seconds to engulf everything, regardless of how spread out
     /// the system is. Call this once, right as Phase.Wall begins.
+    /// PS. thx claude almost kms trying to do this alone :3
     /// </summary>
     private float CalculateWallExpansionSpeed(float startRadius)
     {
@@ -411,7 +383,6 @@ public class SupernovaSun : MonoBehaviour
         return distanceToCover / Mathf.Max(supernovaDuration, 0.0001f);
     }
 
-    // ── Volume helper ─────────────────────────────────────────────────────────
     private void UpdateWallClipVolume()
     {
         if (wallClip == null) return;
@@ -428,12 +399,10 @@ public class SupernovaSun : MonoBehaviour
         wallClip.Reader.Volume = volume;
     }
 
-    // ── Coroutines ────────────────────────────────────────────────────────────
     private IEnumerator InitializeAfterFrame()
     {
         yield return new WaitForEndOfFrame();
 
-        // Read shader defaults from the opaque sun — it is always available.
         if (opaqueSunMaterial != null)
         {
             startCore = SunShaderUtils.ReadCore(opaqueSunMaterial);
@@ -457,7 +426,6 @@ public class SupernovaSun : MonoBehaviour
             superCore.Color3    = Color.mediumBlue;
             superCore.Color4    = Color.deepSkyBlue;
 
-            // Pre-load start state into the transparent sun so it's ready when we swap.
             SunShaderUtils.ApplyCore(transSunMaterial, startCore);
         }
 

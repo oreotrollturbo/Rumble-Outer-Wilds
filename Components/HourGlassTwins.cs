@@ -7,7 +7,7 @@ namespace OuterWildsRumble.Components;
 [RegisterTypeInIl2Cpp]
 public class HourGlassTwins : MonoBehaviour
 {
-    // --- Configuration ---
+    // --- Configs ---
     public float transferDurationRevs = 3.4f; // How many orbits the transfer takes
     public float waitDurationRevs = 0.4f;     // How many orbits to wait between transfers
     public static bool randomSandStage = true;       // Start in a random sand stage
@@ -72,12 +72,11 @@ public class HourGlassTwins : MonoBehaviour
 
     private void FixedUpdate()
     {
-        // Rotate planets slowly on their local Y axis
         float planetDelta = planetRotationSpeed * Time.fixedDeltaTime;
         emberTwinPlanet.transform.Rotate(0f, planetDelta, 0f, Space.Self);
         ashTwinPlanet.transform.Rotate(0f, planetDelta, 0f, Space.Self);
 
-        // Calculate how much "revolution" happened this frame
+        // Calculate how much "revolution" this frame
         float deltaRevs = Mathf.Abs(twinsOrbiter.orbitSpeed * Time.fixedDeltaTime) / 360f;
         currentRevsCounter += deltaRevs;
 
@@ -96,8 +95,7 @@ public class HourGlassTwins : MonoBehaviour
         else if (currentState == State.Transferring)
         {
             float progress = Mathf.Clamp01(currentRevsCounter / transferDurationRevs);
-
-            // Animate Sand
+            
             SetSandScales(progress);
 
             sandFunnel.transform.localScale = activeScale;
@@ -107,15 +105,13 @@ public class HourGlassTwins : MonoBehaviour
                 // Transfer finished
                 currentRevsCounter = 0f;
                 currentState = State.WaitingForTransfer;
-                flowingToEmber = !flowingToEmber; // Flip direction for next time
+                flowingToEmber = !flowingToEmber; // Flip direction
             }
         }
     }
 
     private void UpdateFunnelOrientation()
     {
-        // Use rotation alone to flip the funnel — no z-scale manipulation needed.
-        // Combining a negative-Z scale with a 180° rotation would double-flip and cancel out.
         // if (flowingToEmber)
         // {
         //     sandFunnel.transform.localRotation = defaultFunnelRotation;

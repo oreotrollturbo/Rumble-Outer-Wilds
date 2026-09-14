@@ -17,7 +17,7 @@ public class OrbitalProbe : MonoBehaviour
 
     private Quaternion rotOffset = Quaternion.Euler(0, 0, 90f);
 
-    // Offset from the tip transform in its local space (tweak to sit inside barrel)
+    // Offset from the tip transform in its local space to sit in barril
     private Vector3 middleLocalOffset = new Vector3(-1.67f, 0, 0);
 
     private Transform probeHalo;
@@ -32,8 +32,8 @@ public class OrbitalProbe : MonoBehaviour
     {
         probeHalo = transform.GetChild(0);
         probeHalo.gameObject.SetActive(false);
-        // Grab the middle from the cannon's hierarchy:
-        // SolarSystem root -> OrbitalProbeCannon -> probeCannonRoot (child 0) -> tip (child 2)
+        
+        
         Transform cannonRoot = Main.solarSystem.OrbitalProbeCannon.transform;
         Transform probeCannonRoot = cannonRoot.GetChild(0);
         midTransform = probeCannonRoot.GetChild(1);
@@ -52,7 +52,8 @@ public class OrbitalProbe : MonoBehaviour
         }
         else
         {
-            // Fly forever in the launched direction
+            // Fly forever
+            // todo i think the rotation is wrong ?
             transform.position += launchDirection * probeSpeed * Time.fixedDeltaTime;
         }
     }

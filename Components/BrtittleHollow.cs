@@ -165,13 +165,7 @@ internal static class BrittleHollowCoroutines
             MelonLogger.Warning($"[BrittleHollow] BreakPiece aborted ({piece?.name}) — blackHole or whiteHole is null.");
             yield break;
         }
-
-        // FIX: parent to the solar system root rather than null (world space).
-        // When SceneLoaded repositions the root (settings change, sun loop toggle, etc.)
-        // the piece travels with the root, so it stays near the black/white hole
-        // instead of being stranded at the system's old world-space coordinates.
-        // The black hole is also in the root hierarchy (via BrittleHollow), so
-        // distance calculations remain stable across repositions.
+        
         Transform systemRoot = bh.transform.parent;
         piece.SetParent(systemRoot, worldPositionStays: true);
 
@@ -191,10 +185,7 @@ internal static class BrittleHollowCoroutines
 
         if (bh.cancelled) yield break;
         if (piece == null || bh.whiteHole == null) yield break;
-
-        // No SetParent call needed here — piece is already under systemRoot.
-        // The previous code's second SetParent(null) was redundant since nothing
-        // re-parents the piece between the two calls.
+        
         piece.position = bh.whiteHole.position;
 
         Vector3 targetOffset = new Vector3(

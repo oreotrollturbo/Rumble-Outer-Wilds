@@ -53,7 +53,7 @@ public class Orbiter : MonoBehaviour
             _currentOrbitAngle += orbitSpeed * dt;
             _currentOrbitAngle %= 360f;
 
-            // 1. Handle Positioning (Kept the same)
+            //Positioning
             Vector3 baseDir = Quaternion.Euler(orbitAngles) * Vector3.forward;
             Quaternion orbitRot = Quaternion.AngleAxis(_currentOrbitAngle, orbitAxis);
             Vector3 localOffsetDirection = orbitRot * baseDir;
@@ -61,7 +61,7 @@ public class Orbiter : MonoBehaviour
             Vector3 worldOffset = orbitParent.rotation * localOffsetDirection * orbitDistance;
             transform.position = orbitParent.position + worldOffset;
 
-            // 2. Handle Rotation
+            // Rotation
             if (spinEnabled)
             {
                 if (customRotation.HasValue)
@@ -80,8 +80,7 @@ public class Orbiter : MonoBehaviour
             }
         }
     }
-
-    // Returns the predicted world position at a given orbit angle
+    
     public Vector3 GetPositionAtAngle(float orbitAngle)
     {
         Vector3 baseDir = Quaternion.Euler(orbitAngles) * Vector3.forward;
@@ -91,7 +90,7 @@ public class Orbiter : MonoBehaviour
         return orbitParent.position + worldOffset;
     }
 
-    // Returns what _currentOrbitAngle will be after a given number of seconds
+    // what _currentOrbitAngle will be after a given number of seconds
     public float GetOrbitAngleAfter(float seconds)
     {
         return (_currentOrbitAngle + orbitSpeed * seconds) % 360f;

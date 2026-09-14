@@ -28,7 +28,6 @@ public class QuantumOrbiter : MonoBehaviour
 
     private void Start()
     {
-        // Lazy-create one shared anchor at world origin; survives scene loads
         if (_worldOriginAnchor == null)
         {
             var go = new GameObject("QuantumOrbiter_OriginAnchor");
@@ -87,9 +86,7 @@ public class QuantumOrbiter : MonoBehaviour
             {
                 int index  = (startIndex + i) % count;
                 var target = _cachedOrbitTargets[index];
-
-                // Parent is disabled (anchored to map origin by SolarSystem) —
-                // orbit world origin at double distance instead of skipping entirely.
+                
                 if (target.ParentTransform == null ||
                     !target.ParentTransform.gameObject.activeInHierarchy)
                 {

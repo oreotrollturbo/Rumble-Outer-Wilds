@@ -18,20 +18,18 @@ public class MusicEmitter : MonoBehaviour
     
     public float detectionAngle = 8f;
 
-    // --- Static sync state ---
+    // LE sync
     private static readonly List<MusicEmitter> pendingSync = new();
     private static bool syncCoroutineRunning = false;
 
     void Start()
     {
-        // Add to mixer immediately but fully silent — position doesn't matter yet
         clipData = AudioManager.PlaySoundIfFileExists(
             Path.Combine(Main.folderPath, musicFileName), 0f, true);
 
         if (clipData != null)
             pendingSync.Add(this);
-
-        // Only the first emitter to register kicks off the sync coroutine
+        
         if (!syncCoroutineRunning)
         {
             syncCoroutineRunning = true;
@@ -40,14 +38,13 @@ public class MusicEmitter : MonoBehaviour
     }
 
     /// <summary>
-    /// Waits one frame (so every emitter's Start() has fired), then resets
+    /// Waits one frame (so every emitters Start() has fired), then resets
     /// all readers to position 0 in the same update — perfect sync.
     /// </summary>
     private static IEnumerator SyncAllEmitters()
     {
-        yield return null; // let remaining Start() calls complete this frame
-
-        // Reset every reader to the very beginning simultaneously
+        yield return null;
+        
         foreach (MusicEmitter emitter in pendingSync)
         {
             if (emitter?.clipData?.Reader != null)
@@ -82,7 +79,7 @@ public class MusicEmitter : MonoBehaviour
 
     void OnDestroy()
     {
-        pendingSync.Remove(this); // safety: remove if destroyed before sync fires
+        pendingSync.Remove(this); //remove if destroyed before sync fires
         AudioManager.StopPlayback(clipData);
         clipData = null;
     }

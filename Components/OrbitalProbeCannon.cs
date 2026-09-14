@@ -51,7 +51,7 @@ public class OrbitalProbeCannon : MonoBehaviour
     private Quaternion targetRotation;
     public Orbiter orbiter;
 
-    // ── Initial-state snapshots (captured in Start, restored on Restart) ──────
+    // ── Initial-state 
     private Vector3 baseInitialLocalPosition;
     private Quaternion baseInitialLocalRotation;
     private Vector3 middleInitialLocalPosition;
@@ -60,7 +60,7 @@ public class OrbitalProbeCannon : MonoBehaviour
     private Quaternion tipInitialLocalRotation;
     private Quaternion cannonInitialWorldRotation;
 
-    // ── Active coroutine handles so we can kill them on Restart ──────────────
+    // ── Active coroutine handles
     private object firingCoroutine;
     private object explosionCoroutine;
 
@@ -79,8 +79,7 @@ public class OrbitalProbeCannon : MonoBehaviour
         explosionTransform.localScale    = new Vector3(0.01f, 0.01f, 0.01f);
         explosionTransform.localPosition = explosionLocalPosition;
         explosionTransform.gameObject.SetActive(false);
-
-        // Snapshot the as-spawned local transforms — these are the "ready to fire" positions
+        
         baseInitialLocalPosition   = baseTransform.localPosition;
         baseInitialLocalRotation   = baseTransform.localRotation;
         middleInitialLocalPosition = middleTransform.localPosition;
@@ -90,7 +89,6 @@ public class OrbitalProbeCannon : MonoBehaviour
         cannonInitialWorldRotation = transform.rotation;
     }
 
-    // ── Public entry points ──────────────────────────────────────────────────
 
     public void StartFiringSequence()
     {
@@ -139,11 +137,8 @@ public class OrbitalProbeCannon : MonoBehaviour
         // Reset the probe so it docks back in the barrel
         var probe = Main.solarSystem.OrbitalProbe?.GetComponent<OrbitalProbe>();
         if (probe != null) probe.Reinitialise();
-
-        // Kick off the next firing cycle
     }
-
-    // ── Private helpers ──────────────────────────────────────────────────────
+    
 
     private Quaternion GenerateSafeRotation(Vector3 fromPosition)
     {

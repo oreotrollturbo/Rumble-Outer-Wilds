@@ -91,10 +91,10 @@ public class QuantumTapeRecorder : MonoBehaviour
 
     private void PlayRecording()
     {
-        // Stop any currently playing audio and its end-of-playback timer
+        // Stop any currently playing audio and its end-of-playback
         StopCurrentPlayback();
 
-        // Determine which quantum state we're in
+        // see which quantum state its in
         QuantumState currentState = null;
         Vector3 currentPos = transform.position;
         foreach (var state in quantumStates)
@@ -119,7 +119,7 @@ public class QuantumTapeRecorder : MonoBehaviour
             return;
         }
 
-        // Start playback and store the clip
+        //Start playback
         activeClip = AudioManager.PlaySoundIfFileExists(audioPath);
         if (activeClip == null || activeClip.Reader == null)
         {
@@ -127,7 +127,7 @@ public class QuantumTapeRecorder : MonoBehaviour
             return;
         }
 
-        // Lock teleportation, start spinning
+        //Lock teleportation
         qObject.canTeleport = false;
         isSpinning = true;
         MelonLogger.Msg($"Playing quantum recording: {currentState.soundName}");
@@ -140,7 +140,7 @@ public class QuantumTapeRecorder : MonoBehaviour
     private IEnumerator WaitForAudioEnd(float seconds)
     {
         yield return new WaitForSeconds(seconds);
-        // Only re-enable teleportation if this same clip hasn't been stopped or replaced
+        
         qObject.canTeleport = true;
         isSpinning = false;
         activeClip = null;

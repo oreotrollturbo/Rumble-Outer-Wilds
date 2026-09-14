@@ -15,8 +15,8 @@ public class SolarSystem : MonoBehaviour
     private Vector3 _worldOffset;
     private Quaternion _rotOffset;
     
-    private Quaternion _tiltRotation  = Quaternion.identity;  // what you set in SceneLoaded — never changes
-    private Quaternion _orbitalOffset = Quaternion.identity;  // accumulated orbital motion — changes every frame
+    private Quaternion _tiltRotation  = Quaternion.identity; 
+    private Quaternion _orbitalOffset = Quaternion.identity; 
     public SolarSystem(IntPtr ptr) : base(ptr) {}
 
     public void Start()
@@ -41,14 +41,14 @@ public class SolarSystem : MonoBehaviour
     private EllipticalOrbiter _anchorEllipticalOrbiter;
     private float _initialSpinAngle;
     private float _lastSpinAngle;
-    private float _lastOrbitAngle; // Added to track orbital progress alongside spin
+    private float _lastOrbitAngle;
     private Quaternion _lastEllipticalRotation;           
 
     public void SetRelativeTo(Transform planet)
     {
         _tiltRotation  = transform.rotation;
         _orbitalOffset = Quaternion.identity;
-        // 1. Re-enable OLD anchor children first
+        
         if (relativeToPlanet != null)
         {
             for (int i = 0; i < relativeToPlanet.childCount; i++)
@@ -70,7 +70,7 @@ public class SolarSystem : MonoBehaviour
 
         if (planet != null)
         {
-            // 2. Disable NEW anchor children after
+            
             for (int i = 0; i < planet.childCount; i++)
             {
                 Transform child = planet.GetChild(i);
@@ -114,7 +114,7 @@ public class SolarSystem : MonoBehaviour
             float currentSpinAngle  = _anchorOrbiter._currentSpinAngle;
             float currentOrbitAngle = _anchorOrbiter._currentOrbitAngle;
 
-            // Combine both deltas to account for zero-spin bodies like Dark Bramble
+            
             float deltaAngle = (currentSpinAngle - _lastSpinAngle) + (currentOrbitAngle - _lastOrbitAngle);
             _lastSpinAngle   = currentSpinAngle;
             _lastOrbitAngle  = currentOrbitAngle;

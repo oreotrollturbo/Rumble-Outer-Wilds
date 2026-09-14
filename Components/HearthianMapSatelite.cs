@@ -30,7 +30,7 @@ public class HearthianMapSatelite : MonoBehaviour
         Renderer haloRenderer = halo.GetComponentInChildren<Renderer>(true);
         if (haloRenderer != null)
         {
-            haloMaterial = haloRenderer.material; // instance copy, safe to mutate per-object
+            haloMaterial = haloRenderer.material; // This messed up the cannons explosion :sob:
             haloMaterial.SetFloat("_Alpha", 0f);
         }
         else
@@ -41,7 +41,7 @@ public class HearthianMapSatelite : MonoBehaviour
         MelonCoroutines.Start(PulseLoop());
     }
 
-    // ── Pulse cycle: off → fade in → on → fade out → repeat ────────────────────
+    // On , fade out, off, fade in
     private IEnumerator PulseLoop()
     {
         if (haloMaterial == null) yield break;

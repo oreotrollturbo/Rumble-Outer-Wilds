@@ -10,7 +10,7 @@ public static class AudioManager
     private static WaveOutEvent globalWaveOut;
     private static MixingSampleProvider globalMixer;
 
-    // Store coroutine *tokens* instead of IEnumerators
+    // Store coroutine
     private static Dictionary<ClipData, object> fadeTokens = new Dictionary<ClipData, object>();
 
     public class ClipData
@@ -71,7 +71,7 @@ public static class AudioManager
             clipData.Reader.Volume = Mathf.Clamp01(volume);
     }
 
-    // --- Fade functions --- 
+    // LOOOOOWWWW TAPER FADEEE functions
     public static void FadeIn(ClipData clipData, float time, float minVolume = 0f, float maxVolume = 1f, bool stopOnEnd = false)
     {
         StartFade(clipData, minVolume, maxVolume, time, stopOnEnd);
@@ -86,7 +86,7 @@ public static class AudioManager
     {
         if (clipData == null) return;
 
-        // Cancel any existing fade on this clip
+        // Cancel any existing (low taper) fade on this clip
         if (fadeTokens.TryGetValue(clipData, out object existingToken))
         {
             MelonCoroutines.Stop(existingToken);
@@ -113,18 +113,18 @@ public static class AudioManager
 
         if (stopOnEnd)
         {
-            // Directly clean up without calling StopPlayback (avoids recursion)
+            //Directly clean up without calling StopPlayback (avoids recursion)
             if (clipData.MixerInput != null && globalMixer != null)
                 globalMixer.RemoveMixerInput(clipData.MixerInput);
             clipData.Reader?.Dispose();
 
-            // Remove our own token from the dictionary
+            //Remove our own token from the dictionary
             if (fadeTokens.ContainsKey(clipData))
                 fadeTokens.Remove(clipData);
         }
         else
         {
-            // Normal fade ended, remove the token
+            //Normal fade ended, remove the token
             if (fadeTokens.ContainsKey(clipData))
                 fadeTokens.Remove(clipData);
         }
@@ -134,7 +134,7 @@ public static class AudioManager
     {
         if (clipData == null) return;
 
-        // Cancel any active fade and remove its token
+        //Cancel any active (low taper) fade
         if (fadeTokens.TryGetValue(clipData, out object token))
         {
             MelonCoroutines.Stop(token);

@@ -38,7 +38,6 @@ public class EllipticalOrbiter : MonoBehaviour
     {
         if (focusA && focusB)
         {
-            // Geometric Setup
             Vector3 posA = focusA.position;
             Vector3 posB = focusB.position;
             Vector3 center = (posA + posB) * 0.5f;
@@ -48,23 +47,18 @@ public class EllipticalOrbiter : MonoBehaviour
             float b = semiMinorAxis; 
             float a = Mathf.Sqrt((c * c) + (b * b)); 
 
-            // Movement Logic (Kepler-ish approximation)
+            // Movement Logic (I have no idea what I'm doing)
             float distToSun = Vector3.Distance(transform.position, posA);
             float speedMult = Mathf.Pow(a / Mathf.Max(distToSun, 0.1f), speedIntensity);
 
             _currentAngle += orbitSpeed * speedMult * Time.fixedDeltaTime;
             float rad = _currentAngle * Mathf.Deg2Rad;
 
-            // 1. Position Calculation (Local 2D Plane)
             Vector3 localPos = new Vector3(-Mathf.Sin(rad) * b, 0, Mathf.Cos(rad) * a);
-
-            // 2. Rotation Logic (The Fix)
-            // If dirBetweenFoci is mostly zero (foci overlap), use the focus rotation directly.
-            // Otherwise, look at the other focus, but KEEP THE UP VECTOR ALIGNED with the Sun's up.
+            
             Quaternion orbitPlaneRotation;
             if (dirBetweenFoci.sqrMagnitude > 0.001f)
             {
-                // CRITICAL CHANGE: Pass focusA.up as the upward reference
                 orbitPlaneRotation = Quaternion.LookRotation(dirBetweenFoci, focusA.up);
             }
             else
@@ -74,13 +68,11 @@ public class EllipticalOrbiter : MonoBehaviour
 
             Vector3 nextPos = center + (orbitPlaneRotation * localPos);
             
-            // 3. Tangent Rotation Logic (Banking)
             Vector3 localVelocity = new Vector3(-Mathf.Cos(rad) * b, 0, -Mathf.Sin(rad) * a);
             Vector3 worldVelocityDirection = orbitPlaneRotation * localVelocity;
 
             if (worldVelocityDirection.sqrMagnitude > 0.001f)
             {
-                // Again, use the focus up vector to ensure we don't flip upside down relative to the system
                 transform.rotation = Quaternion.LookRotation(worldVelocityDirection, focusA.up);
             }
 
