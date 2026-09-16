@@ -1,4 +1,5 @@
-﻿using Il2CppInterop.Runtime.Injection;
+﻿using System.Collections;
+using Il2CppInterop.Runtime.Injection;
 using Il2CppTMPro;
 using MelonLoader;
 using MelonLoader.Utils;
@@ -146,18 +147,13 @@ namespace OuterWildsRumble
                     SetupSolarSystem();
                 }
                 GameObject.Find("Player Controller(Clone)").transform.GetChild(2).GetChild(0).GetChild(0).GetChild(1).gameObject.SetActive(false);
-                if (OwSystemSettings.RealisticMode.Value)
+
+                if (OwSystemSettings.RealisticMode.Value && OwSystemSettings.ViewDistance.Value > 500f)
                 {
-                    GameObject.Find("SCENE VFX/SFX").SetActive(false);
+                    MelonCoroutines.Start(FindUeCamAndFix());
                 }
             }
-            else if (mapName == "Park")
-            {
-                if (OwSystemSettings.RealisticMode.Value)
-                {
-                    GameObject.Find("SCENE VFX/SFX").SetActive(false);
-                }
-            }
+            
 
             if (OwSystemSettings.SignalScopeEnabled.Value)
             {
@@ -174,6 +170,26 @@ namespace OuterWildsRumble
             if (solarSystem.Sun.GetComponent<SupernovaSun>().currentPhase == SupernovaSun.Phase.Done && !OwSystemSettings.SunResetAfterSupernovaEnd.Value)
             {
                 solarSystem.Sun.GetComponent<SupernovaSun>().ResetAfterExplosion();
+            }
+        }
+
+        private IEnumerator FindUeCamAndFix()
+        {
+            float duration = 60f;
+            float interval = 0.5f;
+            float elapsed = 0f;
+
+            while (elapsed < duration)
+            {
+                yield return new WaitForSeconds(interval);
+                elapsed += interval;
+
+                GameObject ueCamObj = GameObject.Find("UE_Freecam");
+                if (ueCamObj != null && ueCamObj.TryGetComponent<Camera>(out Camera cam))
+                {
+                    cam.farClipPlane = OwSystemSettings.ViewDistance.Value * 1.5f;
+                    yield break;
+                }
             }
         }
 
@@ -490,7 +506,8 @@ namespace OuterWildsRumble
             Orbiter hourGlassTwins = solarSystem.HourGlassTwins.AddComponent<Orbiter>();
             
             hourGlassTwins.orbitParent = solarSystem.Sun.transform;  
-            hourGlassTwins.orbitDistance = 3.88f;           
+            //TODO legacy stuff need to remove from everywhere since its settings driven now  
+            hourGlassTwins.orbitDistance = 3.88f;         
             hourGlassTwins.orbitSpeed = 2.27f;          
             hourGlassTwins.spinSpeed = 12.5f;
             hourGlassTwins.orbitAxis = Vector3.up;

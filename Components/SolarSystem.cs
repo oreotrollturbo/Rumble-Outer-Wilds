@@ -187,6 +187,8 @@ public class SolarSystem : MonoBehaviour
                 case "Gym":
                     transform.rotation = Quaternion.Euler(90, 0, 0);
                     SetRelativeTo(Main.solarSystem.TimberHearth);
+                    GameObject.Find("SCENE VFX/SFX").SetActive(false);
+                    GameObject.Find("INTERACTABLES").transform.GetChild(6).GetChild(5).gameObject.SetActive(false);
                     var sceneObj = GameObject.Find("SCENE");
                     if (sceneObj != null)
                     {
@@ -202,8 +204,7 @@ public class SolarSystem : MonoBehaviour
                 case "Map0":
                     transform.rotation = Quaternion.Euler(0, 0, 0);
                     SetRelativeTo(Main.solarSystem.HourGlassTwins);
-                    GameObject.Find("Scene").transform.GetChild(0).gameObject.SetActive(false);
-                    GameObject.Find("Scene").transform.GetChild(2).gameObject.SetActive(false);
+                    GameObject.Find("Scene").transform.GetChild(1).gameObject.SetActive(false);
                     break;
 
                 case "Map1":
@@ -214,8 +215,9 @@ public class SolarSystem : MonoBehaviour
                 case "Park":
                     transform.rotation = Quaternion.Euler(0, 0, 0);
                     SetRelativeTo(Main.solarSystem.HearthianMapSatelite);
-                    GameObject.Find("SCENE").transform.GetChild(0).gameObject.SetActive(false);
+                    GameObject.Find("SCENE").transform.GetChild(2).gameObject.SetActive(false);
                     GameObject.Find("SCENE").transform.GetChild(3).gameObject.SetActive(false);
+                    GameObject.Find("SCENE VFX/SFX").SetActive(false);
                     break;
             }
         }

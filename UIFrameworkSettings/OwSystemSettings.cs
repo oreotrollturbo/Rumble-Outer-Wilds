@@ -104,6 +104,8 @@ namespace OuterWildsRumble.UIFrameworkSettings
         public static MelonPreferences_Entry<float> HourGlassTwinsOrbitDistance;
         public static MelonPreferences_Entry<float> HourGlassTwinsOrbitSpeed;
         public static MelonPreferences_Entry<float> HourGlassTwinsSpinSpeed;
+        public static MelonPreferences_Entry<float> HourGlassTwinsAshSpinSpeed;
+        public static MelonPreferences_Entry<float> HourGlassTwinsEmberSpinSpeed;
         public static MelonPreferences_Entry<float> HourGlassTwinsTransferDuration;
         public static MelonPreferences_Entry<float> HourGlassTwinsWaitDuration;
         public static MelonPreferences_Entry<bool> HourGlassTwinsRandomSandStage;
@@ -448,9 +450,15 @@ namespace OuterWildsRumble.UIFrameworkSettings
             HourGlassTwinsOrbitSpeed = hourglassCat.CreateEntry(
                 "HourGlassTwins_OrbitSpeed", 3.2727f,
                 "Orbit Speed", "Degrees per second around the Sun");
-            HourGlassTwinsSpinSpeed = hourglassCat.CreateEntry( //TODO check
+            HourGlassTwinsSpinSpeed = hourglassCat.CreateEntry(
                 "HourGlassTwins_SpinSpeed", 6.5455f,
                 "Spin Speed", "Self-rotation degrees per second");
+            HourGlassTwinsAshSpinSpeed = hourglassCat.CreateEntry(
+                "HourGlassTwins_AshSpinSpeed", 4.0111f,
+                "Ash Twin Spin Speed", "Self-rotation degrees per second for the Ash Twin");
+            HourGlassTwinsEmberSpinSpeed = hourglassCat.CreateEntry(
+                "HourGlassTwins_EmberSpinSpeed", 2.8649f,
+                "Ember Twin Spin Speed", "Self-rotation degrees per second for the Ember Twin");
             HourGlassTwinsTransferDuration = hourglassCat.CreateEntry(
                 "HourGlassTwins_TransferDuration", 3.4f,
                 "Transfer Duration (revs)",
@@ -476,7 +484,7 @@ namespace OuterWildsRumble.UIFrameworkSettings
                 "TimberHearth_OrbitSpeed", 1.44f,
                 "Orbit Speed", "Degrees per second around the Sun");
             TimberHearthSpinSpeed = timberHearthCat.CreateEntry(
-                "TimberHearth_SpinSpeed", 7.5f,
+                "TimberHearth_SpinSpeed", 0.5730f,
                 "Spin Speed", "Self-rotation degrees per second");
             TimberHearthHarmonica = timberHearthCat.CreateEntry(
                 "TimberHearth_Harmonica", true,
@@ -495,7 +503,7 @@ namespace OuterWildsRumble.UIFrameworkSettings
                 "Orbit Speed", "Degrees per second around Timber Hearth");
             AttlerockSpinSpeed = attlerockCat.CreateEntry(
                 "Attlerock_SpinSpeed", AttlerockOrbitSpeed.Value,
-                "Spin Speed", "Self-rotation degrees per second");
+                "Spin Speed", "Self-rotation degrees per second (should match orbit speed to be tidally locked)");
 
             // Brittle Hollow
             BrittleHollowEnabled = brittleHollowCat.CreateEntry(
@@ -509,7 +517,7 @@ namespace OuterWildsRumble.UIFrameworkSettings
                 "BrittleHollow_OrbitSpeed", 0.9068f,
                 "Orbit Speed", "Degrees per second around the Sun");
             BrittleHollowSpinSpeed = brittleHollowCat.CreateEntry(
-                "BrittleHollow_SpinSpeed", 7.0f,
+                "BrittleHollow_SpinSpeed", 1.1459f,
                 "Spin Speed", "Self-rotation degrees per second");
             BrittleHollowBreakAppart = brittleHollowCat.CreateEntry(
                 "BrittleHollow_BreakApart", true,
@@ -542,7 +550,7 @@ namespace OuterWildsRumble.UIFrameworkSettings
                 "HollowsLantern_OrbitSpeed", 3.1304f,
                 "Orbit Speed", "Degrees per second around Brittle Hollow");
             HollowsLanternSpinSpeed = hollowsLanternCat.CreateEntry(
-                "HollowsLantern_SpinSpeed", 30f,
+                "HollowsLantern_SpinSpeed", 11.4613f,
                 "Spin Speed", "Self-rotation degrees per second");
             HollowsLanternLavaStartScale = hollowsLanternCat.CreateEntry(
                 "HollowsLantern_LavaStartScale", 89f,
@@ -603,7 +611,7 @@ namespace OuterWildsRumble.UIFrameworkSettings
                 "Orbit Speed", "Degrees per second around Giant's Deep");
             OrbitalProbeCannonSpinSpeed = probeCannonCat.CreateEntry(
                 "OrbitalProbeCannon_SpinSpeed", OrbitalProbeCannonOrbitSpeed.Value,
-                "Spin Speed", "Self-rotation degrees per second");
+                "Spin Speed", "Self-rotation degrees per second (should match orbit speed to be tidally locked)");
             OrbitalProbeCannonFire = probeCannonCat.CreateEntry(
                 "OrbitalProbeCannon_Fire", true,
                 "Fire probe", "Weather the orbital probe cannon will fire the probe (and then break)");
@@ -825,6 +833,9 @@ namespace OuterWildsRumble.UIFrameworkSettings
                 {
                     hgt.transferDurationRevs = HourGlassTwinsTransferDuration.Value;
                     hgt.waitDurationRevs = HourGlassTwinsWaitDuration.Value;
+                    hgt.ashSpinSpeed = HourGlassTwinsAshSpinSpeed.Value;
+                    hgt.emberSpinSpeed = HourGlassTwinsEmberSpinSpeed.Value;
+                    
                     HourGlassTwins.randomSandStage = HourGlassTwinsRandomSandStage.Value;
                 }
             }

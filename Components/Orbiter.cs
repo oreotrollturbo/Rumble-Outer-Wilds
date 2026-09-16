@@ -15,10 +15,10 @@ public class Orbiter : MonoBehaviour
     private Vector3 orbitAngles = Vector3.zero;
 
     public Vector3 orbitAxis = Vector3.up;
-    public float orbitSpeed = 30f;
+    public float orbitSpeed = 30f; //degs per sec
 
     public Vector3 spinAxis = Vector3.up;
-    public float spinSpeed = 30f;
+    public float spinSpeed = 30f; //degs per sec
 
     public bool randomisePos = !OwSystemSettings.RealisticMode.Value;
     public bool spinEnabled = true;

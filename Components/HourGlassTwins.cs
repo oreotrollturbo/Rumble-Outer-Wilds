@@ -7,11 +7,13 @@ namespace OuterWildsRumble.Components;
 [RegisterTypeInIl2Cpp]
 public class HourGlassTwins : MonoBehaviour
 {
-    // --- Configs ---
+    // --- Configs --- //TODO change GRRR
     public float transferDurationRevs = 3.4f; // How many orbits the transfer takes
     public float waitDurationRevs = 0.4f;     // How many orbits to wait between transfers
+    
     public static bool randomSandStage = true;       // Start in a random sand stage
-    public float planetRotationSpeed = 8f;   // Degrees per second for planet self-rotation
+    public float ashSpinSpeed = 4.0111f;     // Degrees per second for Ash Twin self-rotation
+    public float emberSpinSpeed = 2.8649f;   // Degrees per second for Ember Twin self-rotation
 
 
     private readonly Vector3 ashEmptyScale = new Vector3(66, 66, 66);
@@ -72,9 +74,10 @@ public class HourGlassTwins : MonoBehaviour
 
     private void FixedUpdate()
     {
-        float planetDelta = planetRotationSpeed * Time.fixedDeltaTime;
-        emberTwinPlanet.transform.Rotate(0f, planetDelta, 0f, Space.Self);
-        ashTwinPlanet.transform.Rotate(0f, planetDelta, 0f, Space.Self);
+        float ashDelta = ashSpinSpeed * Time.fixedDeltaTime;
+        float emberDelta = emberSpinSpeed * Time.fixedDeltaTime;
+        emberTwinPlanet.transform.Rotate(0f, emberDelta, 0f, Space.Self);
+        ashTwinPlanet.transform.Rotate(0f, ashDelta, 0f, Space.Self);
 
         // Calculate how much "revolution" this frame
         float deltaRevs = Mathf.Abs(twinsOrbiter.orbitSpeed * Time.fixedDeltaTime) / 360f;
