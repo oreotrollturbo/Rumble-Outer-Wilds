@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using Il2CppInterop.Runtime.Injection;
+using Il2CppPhoton.Pun;
 using Il2CppTMPro;
 using MelonLoader;
 using MelonLoader.Utils;
@@ -28,7 +29,7 @@ namespace OuterWildsRumble
         public const string Company = "Rumble.LLC";
     }
 
-    public class Main : MelonMod
+    public class Main : Utilities.RumbleMod
     {
         public static SolarSystemData solarSystem;
         
@@ -53,6 +54,7 @@ namespace OuterWildsRumble
         
         public override void OnLateInitializeMelon()
         {
+            
             if (!Directory.Exists(folderPath))
             {
                 MelonLogger.Warning("File at " + folderPath + " does not exist");
@@ -245,6 +247,8 @@ namespace OuterWildsRumble
         void SetupSolarSystem()
         {
             solarSystem.Root = new GameObject("OuterWilds_System");
+            var pv = solarSystem.Root.AddComponent<PhotonView>();
+            pv.ViewID = 6767;
             solarSystem.Root.AddComponent<SolarSystem>();
             
             GameObject.DontDestroyOnLoad(solarSystem.Root);

@@ -23,7 +23,7 @@ public class EllipticalOrbiter : MonoBehaviour
     public float meltStartDistance = 8.66659f; 
     public float meltCompleteDistance = 3.2978f; 
 
-    private float _currentAngle;
+    public float _currentAngle; // TODO network
 
     public bool randomOrbitAngle = true;
 

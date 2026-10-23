@@ -35,6 +35,8 @@ public class BrittleHollow : MonoBehaviour
     private List<object> _activeCoroutines = new();
 
     public bool breakApart = true;
+    
+    // TODO network how many pieces are gone so the client can replicate it
 
     void Start()
     {

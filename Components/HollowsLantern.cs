@@ -11,6 +11,8 @@ namespace OuterWildsRumble.Components;
 public class HollowsLantern : MonoBehaviour
 {
     public HollowsLantern(IntPtr ptr) : base(ptr) { }
+    
+    //TODO network the ammount of meteors
 
     // ── Lava ────────────────────────────────────────────────────────────────
     private Transform lavaTransform;

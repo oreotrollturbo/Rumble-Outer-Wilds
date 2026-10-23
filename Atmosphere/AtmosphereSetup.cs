@@ -147,7 +147,7 @@ public static class AtmosphereSetup
             return;
         }
 
-        ScriptableRendererFeature baseFeature = features._items.First(); //TODO was null
+        ScriptableRendererFeature baseFeature = features._items.First();
 
         if (baseFeature == null)
         {

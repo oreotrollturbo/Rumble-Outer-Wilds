@@ -2,6 +2,7 @@
 using MelonLoader;
 using UnityEngine;
 using Il2CppInterop.Runtime;
+using UnityEngine.Playables;
 
 namespace OuterWildsRumble.Components;
 
@@ -85,6 +86,8 @@ public class QuantumObject : MonoBehaviour
 
     private bool IsPositionObserved(Vector3 targetPosition)
     {
+        if (Main.playerCam == null) return false;
+        
         Bounds futureBounds = new Bounds(targetPosition, _renderer.bounds.size);
         Plane[] planes = GeometryUtility.CalculateFrustumPlanes(Main.playerCam);
 

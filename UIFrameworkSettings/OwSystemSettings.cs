@@ -235,6 +235,14 @@ namespace OuterWildsRumble.UIFrameworkSettings
 
         public static MelonPreferences_Entry<float> SignalScopeZoomIncrement;
         public static MelonPreferences_Entry<float> SignalScopeMaxZoom;
+        
+        public static MelonPreferences_Entry<float> SignalScopeOffsetX;
+        public static MelonPreferences_Entry<float> SignalScopeOffsetY;
+        public static MelonPreferences_Entry<float> SignalScopeOffsetZ;
+        
+        public static MelonPreferences_Entry<float> SignalScopeRotationX;
+        public static MelonPreferences_Entry<float> SignalScopeRotationY;
+        public static MelonPreferences_Entry<float> SignalScopeRotationZ;
 
         public static MelonPreferences_Entry<float> SignalScopeMinZoom;
 
@@ -460,15 +468,15 @@ namespace OuterWildsRumble.UIFrameworkSettings
                 "HourGlassTwins_EmberSpinSpeed", 2.8649f,
                 "Ember Twin Spin Speed", "Self-rotation degrees per second for the Ember Twin");
             HourGlassTwinsTransferDuration = hourglassCat.CreateEntry(
-                "HourGlassTwins_TransferDuration", 3.4f,
-                "Transfer Duration (revs)",
-                "Number of orbits for the sand to fully transfer");
+                "HourGlassTwins_TransferDuration", 17 * 60f,
+                "Transfer Duration (seconds)",
+                "How long to fully transfer");
             HourGlassTwinsWaitDuration = hourglassCat.CreateEntry(
-                "HourGlassTwins_WaitDuration", 0.4f,
-                "Wait Duration (revs)",
-                "Number of orbits to wait between sand transfers");
+                "HourGlassTwins_WaitDuration", 5 * 60f,
+                "Wait Duration (seconds)",
+                "How long between sand transfers");
             HourGlassTwinsRandomSandStage = hourglassCat.CreateEntry(
-                "HourGlassTwins_RandomSandStage", true,
+                "HourGlassTwins_RandomSandStage", false,
                 "Random Start Stage",
                 "Start the sand transfer at a random point in the cycle");
 
@@ -729,6 +737,34 @@ namespace OuterWildsRumble.UIFrameworkSettings
             SignalScopeMaxZoom = signalScopeCat.CreateEntry(
                 "SignalScope_Max_Zoom", 1.5f,
                 "Maximum Zoom", "The maximum zoom the signalscope can reach (camera FOV)");
+            
+            
+            SignalScopeOffsetX = signalScopeCat.CreateEntry(
+                "SignalScope_Offset_X", 0.1f,
+                "X offset", "The offset of your signalscope from your hip");
+            
+            SignalScopeOffsetY = signalScopeCat.CreateEntry(
+                "SignalScope_Offset_Y", 0f,
+                "Y offset", "The offset of your signalscope from your hip");
+            
+            SignalScopeOffsetZ = signalScopeCat.CreateEntry(
+                "SignalScope_Offset_Z", -0.1f,
+                "Z offset", "The offset of your signalscope from your hip");
+            
+            
+            SignalScopeRotationX = signalScopeCat.CreateEntry(
+                "SignalScope_Rotation_X", 0f,
+                "Rotation X", "The roation of your signalscope when on your hip");
+            
+            SignalScopeRotationY = signalScopeCat.CreateEntry(
+                "SignalScope_Rotation_Y", 0f,
+                "Rotation Y", "The roation of your signalscope when on your hip");
+            
+            SignalScopeRotationZ = signalScopeCat.CreateEntry(
+                "SignalScope_Rotation_Z", 270f,
+                "Rotation Z", "The roation of your signalscope when on your hip");
+            
+            
 
             // ── Register all categories with UIFramework ─────────────────────────
             var uiHandle = UI.RegisterMelon(modInstance,
@@ -831,8 +867,8 @@ namespace OuterWildsRumble.UIFrameworkSettings
                 var hgt = sys.HourGlassTwins.GetComponent<HourGlassTwins>();
                 if (hgt != null)
                 {
-                    hgt.transferDurationRevs = HourGlassTwinsTransferDuration.Value;
-                    hgt.waitDurationRevs = HourGlassTwinsWaitDuration.Value;
+                    hgt.transferDurationSeconds = HourGlassTwinsTransferDuration.Value;
+                    hgt.waitDurationSeconds = HourGlassTwinsWaitDuration.Value;
                     hgt.ashSpinSpeed = HourGlassTwinsAshSpinSpeed.Value;
                     hgt.emberSpinSpeed = HourGlassTwinsEmberSpinSpeed.Value;
                     

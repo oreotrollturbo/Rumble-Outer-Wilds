@@ -64,6 +64,13 @@ public static class AudioManager
         globalMixer.AddMixerInput(clipData.MixerInput);
         return clipData;
     }
+    
+    public static ClipData PlaySoundWithFadeIn(string soundFilePath, float fadeTime, float targetVolume = 1f, bool loop = false)
+    {
+        var clip = PlaySoundIfFileExists(soundFilePath, 0f, loop);
+        FadeIn(clip, fadeTime, 0f, targetVolume);
+        return clip;
+    }
 
     public static void ChangeVolume(ClipData clipData, float volume)
     {

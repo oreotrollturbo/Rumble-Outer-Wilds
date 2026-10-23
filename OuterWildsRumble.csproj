@@ -22,8 +22,35 @@
             <HintPath>$(RumblePath)/MelonLoader/Il2CppAssemblies/Il2CppBucketheadEntertainment.Plugins.dll</HintPath>
             <Private>false</Private>
         </Reference>
+
+        <!-- Photon: use the Il2CppInterop proxy assemblies (these exist at runtime) -->
+        <Reference Include="Il2CppPhoton3Unity3D">
+            <HintPath>$(RumblePath)/MelonLoader/Il2CppAssemblies/Il2CppPhoton3Unity3D.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+        <Reference Include="Il2CppPhotonRealtime">
+            <HintPath>$(RumblePath)/MelonLoader/Il2CppAssemblies/Il2CppPhotonRealtime.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+        <Reference Include="Il2CppPhotonUnityNetworking">
+            <HintPath>$(RumblePath)/MelonLoader/Il2CppAssemblies/Il2CppPhotonUnityNetworking.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+        <Reference Include="Il2CppPhotonUnityNetworking.Utilities">
+            <HintPath>$(RumblePath)/MelonLoader/Il2CppAssemblies/Il2CppPhotonUnityNetworking.Utilities.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+        <Reference Include="Il2CppPhotonUtilities">
+            <HintPath>$(RumblePath)/MelonLoader/Il2CppAssemblies/Il2CppPhotonUtilities.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+
         <Reference Include="Il2CppRUMBLE.AssetStore.ModernUIPack">
             <HintPath>$(RumblePath)/MelonLoader/Il2CppAssemblies/Il2CppRUMBLE.AssetStore.ModernUIPack.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+        <Reference Include="Il2CppRUMBLE.Networking.Oculus">
+            <HintPath>$(RumblePath)/MelonLoader/Il2CppAssemblies/Il2CppRUMBLE.Networking.Oculus.dll</HintPath>
             <Private>false</Private>
         </Reference>
         <Reference Include="Il2CppRUMBLE.Plugins">
@@ -63,7 +90,8 @@
             <Private>false</Private>
         </Reference>
         <Reference Include="UIFramework">
-          <HintPath>O:\SteamLibrary\steamapps\common\RUMBLE\Mods\UIFramework.dll</HintPath>
+            <HintPath>$(RumblePath)/Mods/UIFramework.dll</HintPath>
+            <Private>false</Private>
         </Reference>
         <Reference Include="Unity.RenderPipelines.Core.Runtime">
             <HintPath>$(RumblePath)/MelonLoader/Il2CppAssemblies/Unity.RenderPipelines.Core.Runtime.dll</HintPath>
@@ -135,20 +163,20 @@
     </ItemGroup>
 
     <ItemGroup>
-      <None Remove="OuterWildsStuff\timberhearth" />
+        <None Remove="OuterWildsStuff\timberhearth" />
     </ItemGroup>
 
     <ItemGroup>
-      <None Remove="OuterWildsStuff\gambling" />
-      <None Remove="OuterWildsStuff\giantsdeep" />
+        <None Remove="OuterWildsStuff\gambling" />
+        <None Remove="OuterWildsStuff\giantsdeep" />
     </ItemGroup>
 
     <ItemGroup>
-      <None Remove="OuterWildsStuff\outerwilds" />
-      <EmbeddedResource Include="OuterWildsStuff\outerwilds" />
-      <None Remove="OuterWildsStuff\eventhorizon" />
-      <EmbeddedResource Include="OuterWildsStuff\eventhorizon" />
-      <None Remove="OuterWildsStuff\atmosphere" />
+        <None Remove="OuterWildsStuff\outerwilds" />
+        <EmbeddedResource Include="OuterWildsStuff\outerwilds" />
+        <None Remove="OuterWildsStuff\eventhorizon" />
+        <EmbeddedResource Include="OuterWildsStuff\eventhorizon" />
+        <None Remove="OuterWildsStuff\atmosphere" />
     </ItemGroup>
 
     <!-- To remove atmosphere stuff

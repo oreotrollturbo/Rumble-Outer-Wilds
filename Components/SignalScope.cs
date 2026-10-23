@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Reflection;
 using MelonLoader;
 using UnityEngine;
 using Il2CppInterop.Runtime;
+using Il2CppPhoton.Pun;
 using Il2CppRUMBLE.Players;
+using OuterWildsRumble.Components;
 using OuterWildsRumble.UIFrameworkSettings;
 using RumbleModdingAPI.RMAPI;
 
@@ -14,6 +17,19 @@ namespace OuterWildsRumble.Components;
 [RegisterTypeInIl2Cpp]
 public class SignalScope : MonoBehaviour
 {
+    // ───────────────────────── Registry ─────────────────────────
+    public static SignalScope Local;
+    public static readonly Dictionary<int, SignalScope> Remote = new Dictionary<int, SignalScope>();
+
+    // A hold-state RPC can arrive before the remote scope exists, so remember it
+    private static readonly Dictionary<int, bool> pendingHolding = new Dictionary<int, bool>();
+
+    // ───────────────────────── Ownership ─────────────────────────
+    public bool isLocal = true;   // set to false right after AddComponent for other players
+    public Player owner;          // remote owner (null for local)
+    public int ownerActor = -1;
+    private bool remoteHolding;
+
     public Player player;
     public Transform rightHandTransform;
     public Transform beltTransform;
@@ -23,16 +39,16 @@ public class SignalScope : MonoBehaviour
     private const float hold_distance = 0.115f;
     private const float holdThreshold = 0.9f;
     private const float releaseThreshold = 0.1f;
-    
+
     private float currentFOV;
-    
+
     public float zoomIncrement = 4.6f;
-    
+
     public float minZoom = 120f;
     public float maxZoom = 1.5f;
 
     private float startingZoom;
-    
+
     public float zoomedInAngleScale  = 0.0625f;
     public float zoomedOutAngleScale = 1.875f;
 
@@ -43,35 +59,35 @@ public class SignalScope : MonoBehaviour
 
     private Vector3 handLocalPosition = new Vector3(0, 0, 0.1f);
     private Quaternion handLocalRotation = Quaternion.Euler(0, 90, 0);
-    
+
     private Vector3 zoomInButtonLocalPosition = new Vector3(-0.01f, 0.05f, -0.015f);
     private Quaternion zoomInButtonLocalRotation = Quaternion.Euler(90f, 180f, 0);
-    
+
     private Vector3 zoomOutButtonLocalPosition = new Vector3(0.01f, 0.05f, -0.015f);
     private Quaternion zoomOutButtonLocalRotation = Quaternion.Euler(90f, 180f, 0);
-    
+
     private Vector3 toggleCamButtonLocalPosition = new Vector3(0.056f, 0.057f, 0);
     private Quaternion toggleCamButtonLocalRotation = Quaternion.Euler(19.2368f, 90f, 0);
-    
+
     private GameObject ZoomInButton;
     private GameObject ZoomOutButton;
     private GameObject ToggleScreenButton;
 
     private bool hasSetUp;
-    
+
     Dictionary<GameObject, MusicEmitter> musicEmitters = new Dictionary<GameObject, MusicEmitter>();
 
     // "PARENTING" VARIABLES
     private Vector3 scopeVelocity = Vector3.zero;
     private Quaternion scopeSmoothedRot;
-    
+
     public float scopePositionSmoothTime = 0.05f;
     public float scopeRotationSmoothing = 15f;
 
     public bool playMusic = true;
     public bool grabDuringMatches = true;
 
-   // statique
+    // statique
     public string staticSoundFileName = "signalscope_static.wav";
     public float staticVolume = 1f;
     private AudioManager.ClipData staticClip;
@@ -80,10 +96,88 @@ public class SignalScope : MonoBehaviour
 
     public SignalScope(IntPtr ptr) : base(ptr) {}
 
+    // ───────────────────────── Static spawning / networking helpers ─────────────────────────
+
+    /// Call on scene load, before spawning scopes. Old scopes died with the old player belts.
+    public static void ClearRegistry()
+    {
+        Local = null;
+        Remote.Clear();
+    }
+
+    private static int GetActor(Player p)
+    {
+        try
+        {
+            var pv = p?.Controller?.gameObject.GetComponent<PhotonView>();
+            if (pv != null && pv.Owner != null) return pv.Owner.ActorNumber;
+        }
+        catch { }
+
+        return -1;
+    }
+
+    /// Call for every non-local player (scene load + onPlayerSpawned). Safe to call repeatedly.
+    public static void SpawnForRemotePlayer(Player p)
+    {
+        if (p == null || !OwSystemSettings.SignalScopeEnabled.Value) return;
+        if (Calls.Players.GetLocalPlayer().Equals(p)) return;
+        MelonCoroutines.Start(SpawnWhenReady(p));
+    }
+
+    private static IEnumerator SpawnWhenReady(Player p)
+    {
+        // The controller / photon view may not exist yet right after spawn
+        float waited = 0f;
+        int actor = -1;
+        while (waited < 20f)
+        {
+            actor = GetActor(p);
+            if (actor >= 0) break;
+            yield return new WaitForSeconds(0.5f);
+            waited += 0.5f;
+        }
+
+        if (actor < 0 || Main.prefabSignalScope == null) yield break;
+        if (Remote.TryGetValue(actor, out var existing) && existing != null) yield break;
+
+        GameObject go = GameObject.Instantiate(Main.prefabSignalScope);
+        go.transform.localScale = new Vector3(2, 2, 2);
+
+        // Start() runs on the next frame, so these fields are set in time
+        SignalScope scope = go.AddComponent<SignalScope>();
+        scope.isLocal = false;
+        scope.owner = p;
+        scope.ownerActor = actor;
+        if (pendingHolding.TryGetValue(actor, out bool h)) scope.remoteHolding = h;
+
+        Remote[actor] = scope;
+    }
+
+    /// Called by the SolarSystem RPC receiver.
+    public static void SetRemoteHolding(int actor, bool holding)
+    {
+        pendingHolding[actor] = holding;
+        if (Remote.TryGetValue(actor, out var scope) && scope != null)
+            scope.remoteHolding = holding;
+    }
+
+    /// Local client tells everyone else whether it is holding its scope.
+    public void BroadcastHoldState()
+    {
+        if (!isLocal) return;
+        if (Main.solarSystem.Root == null) return;
+
+        var ss = Main.solarSystem.Root.GetComponent<SolarSystem>();
+        if (ss != null) ss.SendScopeHolding(isHolding);
+    }
+
+    // ───────────────────────── Lifecycle ─────────────────────────
+
     void Start()
     {
-        gameObject.name = "SignalScope";
-       
+        gameObject.name = isLocal ? "SignalScope" : $"SignalScope_Remote_{ownerActor}";
+
         Camera = transform.GetChild(0).gameObject;
         startingZoom = Camera.GetComponent<Camera>().fieldOfView;
         currentFOV = Camera.GetComponent<Camera>().fieldOfView;
@@ -92,15 +186,20 @@ public class SignalScope : MonoBehaviour
 
         MelonCoroutines.Start(FindPlayerAndSetup());
 
-        SetupButtons();
-        CacheMusicEmitters();
-        SetupStaticSound();
+        if (isLocal)
+        {
+            Local = this;
+            SetupButtons();
+            CacheMusicEmitters();
+            SetupStaticSound();
+        }
+        // Remote scopes: no buttons, no music emitters, no static sound -> they never make noise
     }
 
     void CacheMusicEmitters()
     {
         Type type = typeof(SolarSystemData);
-        
+
         FieldInfo[] fields = type.GetFields(BindingFlags.Public | BindingFlags.Instance);
 
         foreach (var field in fields)
@@ -122,7 +221,6 @@ public class SignalScope : MonoBehaviour
 
     void SetupStaticSound()
     {
-        
         staticClip = AudioManager.PlaySoundIfFileExists(
             Path.Combine(Main.folderPath, staticSoundFileName), 0f, true);
     }
@@ -145,28 +243,28 @@ public class SignalScope : MonoBehaviour
         {
             Screen.SetActive(!Screen.activeSelf);
         };
-        
+
         ZoomInButton = Create.NewButton(zoomInAction);
         ZoomInButton.name = "ZoomInButton";
-        
+
         ZoomOutButton = Create.NewButton(zoomOutAction);
         ZoomOutButton.name = "ZoomOutButton";
-        
+
         ToggleScreenButton = Create.NewButton(toggleScreenAction);
         ToggleScreenButton.name = "ToggleScreenButton";
-        
+
         ZoomInButton.transform.SetParent(transform, false);
         ZoomOutButton.transform.SetParent(transform, false);
         ToggleScreenButton.transform.SetParent(transform, false);
-        
+
         ZoomInButton.transform.localPosition = zoomInButtonLocalPosition;
         ZoomOutButton.transform.localPosition = zoomOutButtonLocalPosition;
         ToggleScreenButton.transform.localPosition = toggleCamButtonLocalPosition;
 
         ZoomInButton.transform.localRotation = zoomInButtonLocalRotation;
         ZoomOutButton.transform.localRotation = zoomOutButtonLocalRotation;
-        ToggleScreenButton.transform.localRotation = toggleCamButtonLocalRotation; 
-        
+        ToggleScreenButton.transform.localRotation = toggleCamButtonLocalRotation;
+
         ZoomInButton.transform.localScale = new Vector3(0.08f, 0.08f, 0.08f);
         ZoomOutButton.transform.localScale = new Vector3(0.08f, 0.08f, 0.08f);
         ToggleScreenButton.transform.localScale = new Vector3(0.08f, 0.08f, 0.08f);
@@ -175,26 +273,35 @@ public class SignalScope : MonoBehaviour
     void FixedUpdate()
     {
         if (!hasSetUp) return;
-        
-        float rightTrigger = Calls.ControllerMap.RightController.GetTrigger();
 
-        if (!isHolding && rightTrigger > holdThreshold && IsHandCloseEnough(rightHandTransform.position) && (grabDuringMatches || !Main.isInMatch))
+        if (isLocal)
         {
-            Grab();
-        }
-        else if (isHolding && (rightTrigger <= releaseThreshold || (!grabDuringMatches && Main.isInMatch)))
-        {
-            ReleaseToBelt();
-        }
+            float rightTrigger = Calls.ControllerMap.RightController.GetTrigger();
 
-        HandleMusicChange();
+            if (!isHolding && rightTrigger > holdThreshold && IsHandCloseEnough(rightHandTransform.position) && (grabDuringMatches || !Main.isInMatch))
+            {
+                Grab();
+            }
+            else if (isHolding && (rightTrigger <= releaseThreshold || (!grabDuringMatches && Main.isInMatch)))
+            {
+                ReleaseToBelt();
+            }
+
+            HandleMusicChange();
+        }
+        else
+        {
+            // Follow whatever the owner told us over the network
+            if (remoteHolding && !isHolding) Grab();
+            else if (!remoteHolding && isHolding) ReleaseToBelt();
+        }
     }
 
     // "PARENTING" LOGIC
     void LateUpdate()
     {
         if (!hasSetUp || !isHolding) return;
-        
+
         // ideal position
         Vector3 idealPos = rightHandTransform.TransformPoint(handLocalPosition);
         Quaternion idealRot = rightHandTransform.rotation * handLocalRotation;
@@ -211,26 +318,39 @@ public class SignalScope : MonoBehaviour
 
     public IEnumerator FindPlayerAndSetup()
     {
-        while (Calls.Players.GetLocalPlayer() == null || 
-               Calls.Players.GetLocalPlayer().Controller == null || 
-               Calls.Players.GetLocalPlayer().Controller.PlayerVisuals == null)
+        Player target = null;
+
+        while (true)
         {
-            if (this == null) yield break; 
+            if (this == null) yield break;
+
+            target = isLocal ? Calls.Players.GetLocalPlayer() : owner;
+
+            if (target != null && target.Controller != null && target.Controller.PlayerVisuals != null)
+                break;
+
             yield return new WaitForSeconds(0.5f);
         }
 
         yield return new WaitForSeconds(1f);
-    
+
         if (this == null) yield break;
 
-        player = Calls.Players.GetLocalPlayer();
+        player = target;
 
         beltTransform = player.Controller.PlayerVisuals.transform.GetChild(1).GetChild(0).GetChild(3);
-        rightHandTransform = player.Controller.gameObject.transform.GetChild(2).GetChild(2);
-    
+        rightHandTransform = GetRightHand(player);
+
         ReleaseToBelt();
-        MelonLogger.Msg("SignalScope: Player found, scope attached to belt.");
+        MelonLogger.Msg($"SignalScope: {(isLocal ? "local" : "remote " + ownerActor)} player found, scope attached to belt.");
         hasSetUp = true;
+    }
+
+    // ASSUMPTION: remote players use the same controller hierarchy as the local one.
+    // If the scope doesn't land in the remote player's hand, fix the path here.
+    private Transform GetRightHand(Player p)
+    {
+        return p.Controller.gameObject.transform.GetChild(2).GetChild(2);
     }
 
     private void Grab()
@@ -247,6 +367,7 @@ public class SignalScope : MonoBehaviour
 
         isHolding = true;
         EnableScreen(true);
+        BroadcastHoldState();
     }
 
     private void ReleaseToBelt()
@@ -257,6 +378,9 @@ public class SignalScope : MonoBehaviour
 
         isHolding = false;
         EnableScreen(false);
+
+        // Don't broadcast during initial setup, only on real releases
+        if (hasSetUp) BroadcastHoldState();
     }
 
     void EnableScreen(bool enable)
@@ -270,6 +394,8 @@ public class SignalScope : MonoBehaviour
         float distance = Vector3.Distance(gameObject.transform.position, handPos);
         return distance <= hold_distance;
     }
+
+    // ───────────────────────── Music (local only) ─────────────────────────
 
     private void HandleMusicChange()
     {
@@ -318,7 +444,7 @@ public class SignalScope : MonoBehaviour
     private void UpdateStaticVolume(float strongestSignal)
     {
         if (staticClip == null) return;
-        
+
         if (!OwSystemSettings.SignalScopePlayStatic.Value) AudioManager.ChangeVolume(staticClip, 0);
 
         // Static whenever nothing else is audible
@@ -339,6 +465,7 @@ public class SignalScope : MonoBehaviour
 
         return 1f - (angleToTarget / detectionAngle);
     }
+
     public void TurnOffAllMusic()
     {
         if (allMusicOff) return;
@@ -365,5 +492,11 @@ public class SignalScope : MonoBehaviour
     {
         if (staticClip != null)
             AudioManager.StopPlayback(staticClip);
+
+        if (!isLocal && Remote.TryGetValue(ownerActor, out var s) && s == this)
+            Remote.Remove(ownerActor);
+
+        if (isLocal && Local == this)
+            Local = null;
     }
 }

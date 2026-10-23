@@ -27,8 +27,8 @@ public class Orbiter : MonoBehaviour
     
     
 
-    public float _currentOrbitAngle = 0;
-    public float _currentSpinAngle = 0;
+    public float _currentOrbitAngle = 0;// TODO network
+    public float _currentSpinAngle = 0;// TODO network
 
     public Orbiter(IntPtr ptr) : base(ptr) { }
 
