@@ -27,8 +27,8 @@ public class Orbiter : MonoBehaviour
     
     
 
-    public float _currentOrbitAngle = 0;// TODO network
-    public float _currentSpinAngle = 0;// TODO network
+    public float _currentOrbitAngle = 0;
+    public float _currentSpinAngle = 0;
 
     public Orbiter(IntPtr ptr) : base(ptr) { }
 
@@ -41,7 +41,15 @@ public class Orbiter : MonoBehaviour
         }
     }
 
-    public Quaternion? customRotation = null; // when set, overrides spin rotation
+    public Quaternion? customRotation = null; // when set, overrides spin rotation (the body is pinned in world space)
+
+    // Orbit offsets are expressed in the solar system's frame, NOT the parent's rotation.
+    // Using orbitParent.rotation made moons inherit their parent's spin (orbit speed = moon + parent spin).
+    private static Quaternion GetSystemFrame()
+    {
+        var root = Main.solarSystem.Root;
+        return root != null ? root.transform.rotation : Quaternion.identity;
+    }
 
     void FixedUpdate()
     {
@@ -58,23 +66,24 @@ public class Orbiter : MonoBehaviour
             Quaternion orbitRot = Quaternion.AngleAxis(_currentOrbitAngle, orbitAxis);
             Vector3 localOffsetDirection = orbitRot * baseDir;
 
-            Vector3 worldOffset = orbitParent.rotation * localOffsetDirection * orbitDistance;
+            Vector3 worldOffset = GetSystemFrame() * localOffsetDirection * orbitDistance;
             transform.position = orbitParent.position + worldOffset;
 
             // Rotation
             if (spinEnabled)
             {
+                // The spin angle must keep advancing even while the body is pinned (anchored),
+                // because SolarSystem uses it to counter-rotate the sky.
+                float deltaAngle = spinSpeed * dt;
+                _currentSpinAngle = (_currentSpinAngle + deltaAngle) % 360f;
+
                 if (customRotation.HasValue)
                 {
                     transform.rotation = customRotation.Value;
                 }
                 else
                 {
-                    float deltaAngle = spinSpeed * dt;
-                    _currentSpinAngle = (_currentSpinAngle + deltaAngle) % 360f;
-                    
                     Quaternion frameSpin = Quaternion.AngleAxis(deltaAngle, spinAxis);
-                    
                     transform.rotation = transform.rotation * frameSpin;
                 }
             }
@@ -86,7 +95,7 @@ public class Orbiter : MonoBehaviour
         Vector3 baseDir = Quaternion.Euler(orbitAngles) * Vector3.forward;
         Quaternion orbitRot = Quaternion.AngleAxis(orbitAngle, orbitAxis);
         Vector3 localOffsetDirection = orbitRot * baseDir;
-        Vector3 worldOffset = orbitParent.rotation * localOffsetDirection * orbitDistance;
+        Vector3 worldOffset = GetSystemFrame() * localOffsetDirection * orbitDistance;
         return orbitParent.position + worldOffset;
     }
 

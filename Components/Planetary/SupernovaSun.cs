@@ -26,6 +26,12 @@ public class SupernovaSun : MonoBehaviour
     private float wallExpansionSpeed = 0f;
     private AudioManager.ClipData wallClip;
 
+    // Wall sound envelope: ramp up while approaching -> hold at max -> fade out
+    private const float wallPeakHoldSeconds = 1f;
+    private const float wallFadeOutSeconds = 4f;
+    private bool wallPeakReached = false;
+    private float wallPeakTimer = 0f;
+
     public float extraDistance = 25f;
     private float originalLightIntensity;
 
@@ -403,6 +409,13 @@ public class SupernovaSun : MonoBehaviour
         return distanceToCover / Mathf.Max(supernovaDuration, 0.0001f);
     }
 
+    /// <summary>
+    /// Wall sound envelope:
+    ///   1. Approaching: ramps from the configured base volume up to 1.0 as the wall closes in.
+    ///   2. Wall reaches the player: holds at max for wallPeakHoldSeconds.
+    ///   3. Then fades to silence over wallFadeOutSeconds and stops the clip,
+    ///      even if the wall is still expanding.
+    /// </summary>
     private void UpdateWallClipVolume()
     {
         if (wallClip == null) return;
@@ -411,12 +424,37 @@ public class SupernovaSun : MonoBehaviour
         float distToPlayer = Vector3.Distance(transform.position, playerTransform.position);
         float surfaceDistance = distToPlayer - currentRadius;
 
-        float volume = surfaceDistance <= 0f
-            ? 1f
-            : Mathf.Lerp(OwSystemSettings.SunSupernovaWallVolume.Value, 1f,
-                1f - Mathf.Clamp01(surfaceDistance / wallRampRange));
+        // Latch the moment the wall reaches the player
+        if (!wallPeakReached && surfaceDistance <= 0f)
+        {
+            wallPeakReached = true;
+            wallPeakTimer = 0f;
+        }
 
-        wallClip.Reader.Volume = volume;
+        if (wallPeakReached)
+        {
+            wallPeakTimer += Time.deltaTime;
+
+            // Hold at max for wallPeakHoldSeconds, then fade out
+            float fadeT = Mathf.Clamp01((wallPeakTimer - wallPeakHoldSeconds) / wallFadeOutSeconds);
+
+            if (fadeT >= 1f)
+            {
+                // Fully faded: stop the looping clip
+                AudioManager.FadeOut(wallClip, 0f, 0f, 0f, true);
+                wallClip = null;
+                return;
+            }
+
+            wallClip.Reader.Volume = Mathf.Lerp(1f, 0f, Mathf.SmoothStep(0f, 1f, fadeT));
+            return;
+        }
+
+        // Approaching: ramp from the configured base volume up to max as the wall closes in
+        float range = Mathf.Max(wallRampRange, 1f);
+        wallClip.Reader.Volume = Mathf.Lerp(
+            OwSystemSettings.SunSupernovaWallVolume.Value, 1f,
+            1f - Mathf.Clamp01(surfaceDistance / range));
     }
 
     private IEnumerator InitializeAfterFrame()
@@ -542,6 +580,8 @@ public class SupernovaSun : MonoBehaviour
         wallClip = AudioManager.PlaySoundIfFileExists(
             Path.Combine(Main.folderPath, supernovaWallSoundName),
             OwSystemSettings.SunSupernovaWallVolume.Value, true);
+        wallPeakReached = false;
+        wallPeakTimer = 0f;
 
         // Previously this waited a *second* full explosionDuration on top of the 2.8s
         // delay above, so the total time spent in Explosion was 2.8 + explosionDuration —
@@ -571,6 +611,7 @@ public class SupernovaSun : MonoBehaviour
         isFadingOut = true;
 
         float fadeDuration = 4f;
+        // If the wall sound is still playing (hasn't finished its own fade), take over from the current volume.
         if (wallClip != null)
             AudioManager.FadeOut(wallClip, fadeDuration, 0, wallClip.Reader.Volume, true);
 
@@ -648,6 +689,8 @@ public class SupernovaSun : MonoBehaviour
         phaseTimer = 0f;
         hasReachedPlayer = false;
         isFadingOut = false;
+        wallPeakReached = false;
+        wallPeakTimer = 0f;
         requiredTarget.engulfed = false;
 
         transform.localScale = initialScale;
@@ -714,7 +757,4 @@ public class SupernovaSun : MonoBehaviour
             HaloRing2Intensity = a.HaloRing2Intensity,
             HaloRing2Width = a.HaloRing2Width,
         };
-
-
-    
 }

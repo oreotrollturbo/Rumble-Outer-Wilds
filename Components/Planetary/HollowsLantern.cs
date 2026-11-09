@@ -11,8 +11,6 @@ namespace OuterWildsRumble.Components;
 public class HollowsLantern : MonoBehaviour
 {
     public HollowsLantern(IntPtr ptr) : base(ptr) { }
-    
-    //TODO network the ammount of meteors
 
     // ── Lava ────────────────────────────────────────────────────────────────
     private Transform lavaTransform;
@@ -32,7 +30,7 @@ public class HollowsLantern : MonoBehaviour
     public float meteorSpawnIntervalMaxEnd = 20f;
     public float meteorDriftSpeed          = 0.7f;   // speed during free-drift phase
     public float meteorPullSpeed           = 1.4f;   // speed once pull phase begins
-    public float meteorDestroyRadius       = 0.02f;
+    public float meteorDestroyRadius       = 0.03f / 30f;
 
     
     public float meteorFreeTimeMin         = 2f;    // min seconds before pull starts

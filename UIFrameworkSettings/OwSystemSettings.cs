@@ -1,1063 +1,1072 @@
-﻿using System.IO;
-using MelonLoader;
-using MelonLoader.Preferences;
+﻿using MelonLoader;
 using OuterWildsRumble.Components;
 using RumbleModdingAPI.RMAPI;
 using UIFramework;
 using UnityEngine;
 
-namespace OuterWildsRumble.UIFrameworkSettings
+namespace OuterWildsRumble.UIFrameworkSettings;
+
+public static class OwSystemSettings
 {
-    public static class OwSystemSettings
+    private const string UserDataPath = "UserData/OuterWildsRumble/";
+    private const string ConfigFile = "settings.cfg";
+
+    private static MelonPreferences_Category globalCat;
+    private static MelonPreferences_Category realisticCat;
+    private static MelonPreferences_Category sunCat;
+    private static MelonPreferences_Category sunStationCat;
+    private static MelonPreferences_Category hourglassCat;
+    private static MelonPreferences_Category timberHearthCat;
+    private static MelonPreferences_Category attlerockCat;
+    private static MelonPreferences_Category brittleHollowCat;
+    private static MelonPreferences_Category hollowsLanternCat;
+    private static MelonPreferences_Category giantsDeepCat;
+    private static MelonPreferences_Category probeCannonCat;
+    private static MelonPreferences_Category orbitalProbeCat;
+    private static MelonPreferences_Category quantumMoonCat;
+    private static MelonPreferences_Category darkBrambleCat;
+    private static MelonPreferences_Category whiteHoleCat;
+    private static MelonPreferences_Category whiteHoleStationCat;
+    private static MelonPreferences_Category interloperCat;
+    private static MelonPreferences_Category satelliteCat;
+    private static MelonPreferences_Category strangerCat;
+    private static MelonPreferences_Category playerShipCat;
+    private static MelonPreferences_Category signalScopeCat;
+    private static MelonPreferences_Category marshmallowCat;
+
+    public static MelonPreferences_Entry<bool> EnabledSolarSystem;
+    public static MelonPreferences_Entry<bool> ShaderReplacement;
+    public static MelonPreferences_Entry<float> ViewDistance;
+    public static MelonPreferences_Entry<bool> RealisticStars;
+    public static MelonPreferences_Entry<bool> OnlySunLighting;
+    public static MelonPreferences_Entry<float> SolarSystemScale;
+    public static MelonPreferences_Entry<bool> SyncSolarSystemInMatches;
+
+    public static MelonPreferences_Entry<float> SolarSystemGymX;
+    public static MelonPreferences_Entry<float> SolarSystemGymY;
+    public static MelonPreferences_Entry<float> SolarSystemGymZ;
+
+    public static MelonPreferences_Entry<float> SolarSystemRingX;
+    public static MelonPreferences_Entry<float> SolarSystemRingY;
+    public static MelonPreferences_Entry<float> SolarSystemRingZ;
+
+    public static MelonPreferences_Entry<float> SolarSystemPitX;
+    public static MelonPreferences_Entry<float> SolarSystemPitY;
+    public static MelonPreferences_Entry<float> SolarSystemPitZ;
+
+    public static MelonPreferences_Entry<float> SolarSystemParkX;
+    public static MelonPreferences_Entry<float> SolarSystemParkY;
+    public static MelonPreferences_Entry<float> SolarSystemParkZ;
+
+    public static MelonPreferences_Entry<bool> TapeRecorderToggle;
+
+    public static MelonPreferences_Entry<bool> RealisticMode;
+    public static MelonPreferences_Entry<float> RealisticSpeedMultiplier;
+
+    public static MelonPreferences_Entry<bool> SunEnabled;
+    public static MelonPreferences_Entry<bool> SunKeepLight;
+    public static MelonPreferences_Entry<bool> SunDoTimeLoop;
+    public static MelonPreferences_Entry<bool> SunDoTimeLoopInMatches;
+    public static MelonPreferences_Entry<bool> SunStayRed;
+    public static MelonPreferences_Entry<bool> SunResetAfterSupernovaEnd;
+
+    public static MelonPreferences_Entry<float> SunEndTimesMusicVolume;
+    public static MelonPreferences_Entry<float> SunCollapseVolume;
+    public static MelonPreferences_Entry<float> SunExplodeVolume;
+    public static MelonPreferences_Entry<float> SunSupernovaWallVolume;
+
+    public static MelonPreferences_Entry<int> SunSecondsToFullRed;
+    public static MelonPreferences_Entry<float> SunWaitAfterRed;
+    public static MelonPreferences_Entry<float> SunExpansionTime;
+    public static MelonPreferences_Entry<float> SunCollapseDuration;
+
+    public static MelonPreferences_Entry<bool> SunStationEnabled;
+    public static MelonPreferences_Entry<float> SunStationOrbitDistance;
+    public static MelonPreferences_Entry<float> SunStationOrbitSpeed;
+    public static MelonPreferences_Entry<float> SunStationSpinSpeed;
+
+    public static MelonPreferences_Entry<bool> HourGlassTwinsEnabled;
+    public static MelonPreferences_Entry<float> HourGlassTwinsOrbitDistance;
+    public static MelonPreferences_Entry<float> HourGlassTwinsOrbitSpeed;
+    public static MelonPreferences_Entry<float> HourGlassTwinsSpinSpeed;
+    public static MelonPreferences_Entry<float> HourGlassTwinsAshSpinSpeed;
+    public static MelonPreferences_Entry<float> HourGlassTwinsEmberSpinSpeed;
+    public static MelonPreferences_Entry<float> HourGlassTwinsTransferDuration;
+    public static MelonPreferences_Entry<float> HourGlassTwinsWaitDuration;
+    public static MelonPreferences_Entry<bool> HourGlassTwinsRandomSandStage;
+
+    public static MelonPreferences_Entry<bool> TimberHearthEnabled;
+    public static MelonPreferences_Entry<float> TimberHearthOrbitDistance;
+    public static MelonPreferences_Entry<float> TimberHearthOrbitSpeed;
+    public static MelonPreferences_Entry<float> TimberHearthSpinSpeed;
+    public static MelonPreferences_Entry<bool> TimberHearthHarmonica;
+
+    public static MelonPreferences_Entry<bool> AttlerockEnabled;
+    public static MelonPreferences_Entry<float> AttlerockOrbitDistance;
+    public static MelonPreferences_Entry<float> AttlerockOrbitSpeed;
+    public static MelonPreferences_Entry<float> AttlerockSpinSpeed;
+
+    public static MelonPreferences_Entry<bool> BrittleHollowEnabled;
+    public static MelonPreferences_Entry<float> BrittleHollowOrbitDistance;
+    public static MelonPreferences_Entry<float> BrittleHollowOrbitSpeed;
+    public static MelonPreferences_Entry<float> BrittleHollowSpinSpeed;
+    public static MelonPreferences_Entry<bool> BrittleHollowBreakAppart;
+    public static MelonPreferences_Entry<float> BrittleHollowBreakIntervalMin;
+    public static MelonPreferences_Entry<float> BrittleHollowBreakIntervalMax;
+
+    public static MelonPreferences_Entry<bool> HollowsLanternEnabled;
+    public static MelonPreferences_Entry<float> HollowsLanternOrbitDistance;
+    public static MelonPreferences_Entry<float> HollowsLanternOrbitSpeed;
+    public static MelonPreferences_Entry<float> HollowsLanternSpinSpeed;
+
+    public static MelonPreferences_Entry<float> HollowsLanternLavaShrinkDuration;
+    public static MelonPreferences_Entry<float> HollowsLanternMeteorSpawnMin;
+    public static MelonPreferences_Entry<float> HollowsLanternMeteorSpawnMax;
+    public static MelonPreferences_Entry<float> HollowsLanternMeteorDriftSpeed;
+    public static MelonPreferences_Entry<float> HollowsLanternMeteorPullSpeed;
+    public static MelonPreferences_Entry<float> HollowsLanternMeteorPullRadius;
+
+    public static MelonPreferences_Entry<bool> GiantsDeepEnabled;
+    public static MelonPreferences_Entry<float> GiantsDeepOrbitDistance;
+    public static MelonPreferences_Entry<float> GiantsDeepOrbitSpeed;
+    public static MelonPreferences_Entry<float> GiantsDeepSpinSpeed;
+
+    public static MelonPreferences_Entry<bool> OrbitalProbeCannonEnabled;
+    public static MelonPreferences_Entry<float> OrbitalProbeCannonOrbitDistance;
+    public static MelonPreferences_Entry<float> OrbitalProbeCannonOrbitSpeed;
+    public static MelonPreferences_Entry<float> OrbitalProbeCannonSpinSpeed;
+    public static MelonPreferences_Entry<bool> OrbitalProbeCannonFire;
+    public static MelonPreferences_Entry<float> OrbitalProbeCannonTimeToAim;
+    public static MelonPreferences_Entry<float> OrbitalProbeCannonExplosionTime;
+    public static MelonPreferences_Entry<float> OrbitalProbeCannonBreakupDuration;
+
+    public static MelonPreferences_Entry<bool> OrbitalProbeEnabled;
+    public static MelonPreferences_Entry<float> OrbitalProbeSpeed;
+
+    public static MelonPreferences_Entry<bool> QuantumMoonEnabled;
+    public static MelonPreferences_Entry<float> QuantumMoonOrbitDistance;
+    public static MelonPreferences_Entry<float> QuantumMoonOrbitSpeed;
+    public static MelonPreferences_Entry<float> QuantumMoonSpinSpeed;
+    public static MelonPreferences_Entry<bool> QuantumMoonPlayMusic;
+
+    public static MelonPreferences_Entry<bool> DarkBrambleEnabled;
+    public static MelonPreferences_Entry<float> DarkBrambleOrbitDistance;
+    public static MelonPreferences_Entry<float> DarkBrambleOrbitSpeed;
+
+    public static MelonPreferences_Entry<bool> WhiteHoleEnabled;
+
+    public static MelonPreferences_Entry<bool> WhiteHoleStationEnabled;
+
+    public static MelonPreferences_Entry<bool> InterloperEnabled;
+    public static MelonPreferences_Entry<float> InterloperSemiMinorAxis;
+    public static MelonPreferences_Entry<float> InterloperOrbitSpeed;
+    public static MelonPreferences_Entry<float> InterloperSpeedIntensity;
+
+    public static MelonPreferences_Entry<bool> SatelliteEnabled;
+    public static MelonPreferences_Entry<float> SatelliteOrbitDistance;
+    public static MelonPreferences_Entry<float> SatelliteOrbitSpeed;
+    public static MelonPreferences_Entry<float> SatelliteSpinSpeed;
+
+    public static MelonPreferences_Entry<bool> StrangerEnabled;
+    public static MelonPreferences_Entry<float> StrangerScale;
+    public static MelonPreferences_Entry<float> StrangerDistance;
+    public static MelonPreferences_Entry<float> StrangerSatelliteAngle;
+    public static MelonPreferences_Entry<bool> StrangerCloakingField;
+    public static MelonPreferences_Entry<float> StrangerCenterSpinSpeed;
+    public static MelonPreferences_Entry<float> StrangerLeaveStartSeconds;
+    public static MelonPreferences_Entry<float> StrangerLeaveDurationSeconds;
+
+    public static MelonPreferences_Entry<bool> PlayerShipEnabled;
+
+    public static MelonPreferences_Entry<bool> SignalScopeEnabled;
+    public static MelonPreferences_Entry<bool> SignalScopePlayMusic;
+    public static MelonPreferences_Entry<bool> SignalScopePlayStatic;
+    public static MelonPreferences_Entry<bool> SignalScopeGrabDuringMatches;
+    public static MelonPreferences_Entry<bool> MusicFromOthers;
+
+    public static MelonPreferences_Entry<float> SignalScopeZoomIncrement;
+    public static MelonPreferences_Entry<float> SignalScopeMaxZoom;
+
+    public static MelonPreferences_Entry<float> SignalScopeOffsetX;
+    public static MelonPreferences_Entry<float> SignalScopeOffsetY;
+    public static MelonPreferences_Entry<float> SignalScopeOffsetZ;
+
+    public static MelonPreferences_Entry<float> SignalScopeRotationX;
+    public static MelonPreferences_Entry<float> SignalScopeRotationY;
+    public static MelonPreferences_Entry<float> SignalScopeRotationZ;
+
+    public static MelonPreferences_Entry<float> SignalScopeMinZoom;
+
+    public static MelonPreferences_Entry<bool> MarshmallowStickIsEnabled;
+    public static MelonPreferences_Entry<float> MarshmallowMergeCooldown;
+    public static MelonPreferences_Entry<float> MarshmallowHoldDistance;
+    public static MelonPreferences_Entry<float> MarshmallowMergeDistance;
+
+    public static void Setup(Main modInstance)
     {
-        // ── Paths ─────────────────────────────────────────────────────────────────
-        private const string UserDataPath = "UserData/OuterWildsRumble/";
-        private const string ConfigFile = "settings.cfg";
+        if (!Directory.Exists(UserDataPath))
+            Directory.CreateDirectory(UserDataPath);
 
-        private static MelonPreferences_Category globalCat;
-        private static MelonPreferences_Category realisticCat;
-        private static MelonPreferences_Category sunCat;
-        private static MelonPreferences_Category sunStationCat;
-        private static MelonPreferences_Category hourglassCat;
-        private static MelonPreferences_Category timberHearthCat;
-        private static MelonPreferences_Category attlerockCat;
-        private static MelonPreferences_Category brittleHollowCat;
-        private static MelonPreferences_Category hollowsLanternCat;
-        private static MelonPreferences_Category giantsDeepCat;
-        private static MelonPreferences_Category probeCannonCat;
-        private static MelonPreferences_Category orbitalProbeCat;
-        private static MelonPreferences_Category quantumMoonCat;
-        private static MelonPreferences_Category darkBrambleCat;
-        private static MelonPreferences_Category whiteHoleCat;
-        private static MelonPreferences_Category whiteHoleStationCat;
-        private static MelonPreferences_Category interloperCat;
-        private static MelonPreferences_Category playerShipCat;
-        private static MelonPreferences_Category signalScopeCat;
+        string configPath = Path.Combine(UserDataPath, ConfigFile);
 
-        // =========================================================================
-        // GLOBAL
-        // =========================================================================
-        public static MelonPreferences_Entry<bool> EnabledSolarSystem;
-        public static MelonPreferences_Entry<bool> ShaderReplacement;
-        public static MelonPreferences_Entry<float> ViewDistance;
-        public static MelonPreferences_Entry<bool> RealisticStars;
-        public static MelonPreferences_Entry<bool> OnlySunLighting;
-        public static MelonPreferences_Entry<float> SolarSystemScale;
+        globalCat = MelonPreferences.CreateCategory("OWR_General", "General");
+        realisticCat = MelonPreferences.CreateCategory("OWR_Realistic", "Realistic Mode");
+        sunCat = MelonPreferences.CreateCategory("OWR_Sun", "Sun");
+        sunStationCat = MelonPreferences.CreateCategory("OWR_SunStation", "Sun Station");
+        hourglassCat = MelonPreferences.CreateCategory("OWR_Hourglass", "Hourglass Twins");
+        timberHearthCat = MelonPreferences.CreateCategory("OWR_TimberHearth", "Timber Hearth");
+        attlerockCat = MelonPreferences.CreateCategory("OWR_Attlerock", "Attlerock");
+        brittleHollowCat = MelonPreferences.CreateCategory("OWR_BrittleHollow", "Brittle Hollow");
+        hollowsLanternCat = MelonPreferences.CreateCategory("OWR_HollowsLantern", "Hollow's Lantern");
+        giantsDeepCat = MelonPreferences.CreateCategory("OWR_GiantsDeep", "Giant's Deep");
+        probeCannonCat = MelonPreferences.CreateCategory("OWR_ProbeCannon", "Probe Cannon");
+        orbitalProbeCat = MelonPreferences.CreateCategory("OWR_OrbitalProbe", "Orbital Probe");
+        quantumMoonCat = MelonPreferences.CreateCategory("OWR_QuantumMoon", "Quantum Moon");
+        darkBrambleCat = MelonPreferences.CreateCategory("OWR_DarkBramble", "Dark Bramble");
+        whiteHoleCat = MelonPreferences.CreateCategory("OWR_WhiteHole", "White Hole");
+        whiteHoleStationCat = MelonPreferences.CreateCategory("OWR_WhiteHoleStation", "White Hole Station");
+        interloperCat = MelonPreferences.CreateCategory("OWR_Interloper", "Interloper");
+        satelliteCat = MelonPreferences.CreateCategory("OWR_Satellite", "Hearthian Satellite");
+        strangerCat = MelonPreferences.CreateCategory("OWR_Stranger", "DLC");
+        playerShipCat = MelonPreferences.CreateCategory("OWR_PlayerShip", "Player Ship");
+        signalScopeCat = MelonPreferences.CreateCategory("OWR_SignalScope", "SignalScope");
+        marshmallowCat = MelonPreferences.CreateCategory("OWR_Marshmallow", "Marshmallow Stick");
 
-        public static MelonPreferences_Entry<float> SolarSystemGymX;
-        public static MelonPreferences_Entry<float> SolarSystemGymY;
-        public static MelonPreferences_Entry<float> SolarSystemGymZ;
-
-        public static MelonPreferences_Entry<float> SolarSystemRingX;
-        public static MelonPreferences_Entry<float> SolarSystemRingY;
-        public static MelonPreferences_Entry<float> SolarSystemRingZ;
-
-        public static MelonPreferences_Entry<float> SolarSystemPitX;
-        public static MelonPreferences_Entry<float> SolarSystemPitY;
-        public static MelonPreferences_Entry<float> SolarSystemPitZ;
-
-        public static MelonPreferences_Entry<float> SolarSystemParkX;
-        public static MelonPreferences_Entry<float> SolarSystemParkY;
-        public static MelonPreferences_Entry<float> SolarSystemParkZ;
-
-        public static MelonPreferences_Entry<bool> TapeRecorderToggle;
-
-        // =========================================================================
-        // REALISTIC MODE
-        // =========================================================================
-        public static MelonPreferences_Entry<bool> RealisticMode;
-        public static MelonPreferences_Entry<float> RealisticSpeedMultiplier;
-
-        // =========================================================================
-        // SUN
-        // =========================================================================
-        public static MelonPreferences_Entry<bool> SunEnabled;
-        public static MelonPreferences_Entry<bool> SunKeepLight;
-        public static MelonPreferences_Entry<bool> SunDoTimeLoop;
-        public static MelonPreferences_Entry<bool> SunDoTimeLoopInMatches;
-        public static MelonPreferences_Entry<bool> SunStayRed;
-        public static MelonPreferences_Entry<bool> SunResetAfterSupernovaEnd;
-
-        public static MelonPreferences_Entry<float> SunEndTimesMusicVolume;
-        public static MelonPreferences_Entry<float> SunCollapseVolume;
-        public static MelonPreferences_Entry<float> SunExplodeVolume;
-        public static MelonPreferences_Entry<float> SunSupernovaWallVolume;
-
-        public static MelonPreferences_Entry<int> SunSecondsToFullRed;
-        public static MelonPreferences_Entry<float> SunWaitAfterRed;
-        public static MelonPreferences_Entry<float> SunExpansionTime;
-        public static MelonPreferences_Entry<float> SunCollapseDuration;
-        public static MelonPreferences_Entry<float> SunExplosionDuration;
-
-        // =========================================================================
-        // SUN STATION
-        // =========================================================================
-        public static MelonPreferences_Entry<bool> SunStationEnabled;
-        public static MelonPreferences_Entry<float> SunStationOrbitDistance;
-        public static MelonPreferences_Entry<float> SunStationOrbitSpeed;
-        public static MelonPreferences_Entry<float> SunStationSpinSpeed;
-
-        // =========================================================================
-        // HOURGLASS TWINS
-        // =========================================================================
-        public static MelonPreferences_Entry<bool> HourGlassTwinsEnabled;
-        public static MelonPreferences_Entry<float> HourGlassTwinsOrbitDistance;
-        public static MelonPreferences_Entry<float> HourGlassTwinsOrbitSpeed;
-        public static MelonPreferences_Entry<float> HourGlassTwinsSpinSpeed;
-        public static MelonPreferences_Entry<float> HourGlassTwinsAshSpinSpeed;
-        public static MelonPreferences_Entry<float> HourGlassTwinsEmberSpinSpeed;
-        public static MelonPreferences_Entry<float> HourGlassTwinsTransferDuration;
-        public static MelonPreferences_Entry<float> HourGlassTwinsWaitDuration;
-        public static MelonPreferences_Entry<bool> HourGlassTwinsRandomSandStage;
-
-        // =========================================================================
-        // TIMBER HEARTH
-        // =========================================================================
-        public static MelonPreferences_Entry<bool> TimberHearthEnabled;
-        public static MelonPreferences_Entry<float> TimberHearthOrbitDistance;
-        public static MelonPreferences_Entry<float> TimberHearthOrbitSpeed;
-        public static MelonPreferences_Entry<float> TimberHearthSpinSpeed;
-        public static MelonPreferences_Entry<bool> TimberHearthHarmonica;
-
-        // =========================================================================
-        // ATTLEROCK
-        // =========================================================================
-        public static MelonPreferences_Entry<bool> AttlerockEnabled;
-        public static MelonPreferences_Entry<float> AttlerockOrbitDistance;
-        public static MelonPreferences_Entry<float> AttlerockOrbitSpeed;
-        public static MelonPreferences_Entry<float> AttlerockSpinSpeed;
-
-        // =========================================================================
-        // BRITTLE HOLLOW
-        // =========================================================================
-        public static MelonPreferences_Entry<bool> BrittleHollowEnabled;
-        public static MelonPreferences_Entry<float> BrittleHollowOrbitDistance;
-        public static MelonPreferences_Entry<float> BrittleHollowOrbitSpeed;
-        public static MelonPreferences_Entry<float> BrittleHollowSpinSpeed;
-        public static MelonPreferences_Entry<bool> BrittleHollowBreakAppart;
-        public static MelonPreferences_Entry<float> BrittleHollowBreakIntervalMin;
-        public static MelonPreferences_Entry<float> BrittleHollowBreakIntervalMax;
-        public static MelonPreferences_Entry<float> BrittleHollowSuckSpeed;
-        public static MelonPreferences_Entry<float> BrittleHollowDriftSpeed;
-
-        // =========================================================================
-        // HOLLOW'S LANTERN
-        // =========================================================================
-        public static MelonPreferences_Entry<bool> HollowsLanternEnabled;
-        public static MelonPreferences_Entry<float> HollowsLanternOrbitDistance;
-        public static MelonPreferences_Entry<float> HollowsLanternOrbitSpeed;
-        public static MelonPreferences_Entry<float> HollowsLanternSpinSpeed;
-
-        public static MelonPreferences_Entry<float> HollowsLanternLavaStartScale;
-        public static MelonPreferences_Entry<float> HollowsLanternTargetLavaScale;
-        public static MelonPreferences_Entry<float> HollowsLanternLavaShrinkDuration;
-        public static MelonPreferences_Entry<float> HollowsLanternMeteorSpawnMin;
-        public static MelonPreferences_Entry<float> HollowsLanternMeteorSpawnMax;
-        public static MelonPreferences_Entry<float> HollowsLanternMeteorSpawnMaxEnd;
-        public static MelonPreferences_Entry<float> HollowsLanternMeteorDriftSpeed; // pre-scale
-        public static MelonPreferences_Entry<float> HollowsLanternMeteorPullSpeed; // pre-scale
-        public static MelonPreferences_Entry<float> HollowsLanternMeteorPullRadius; // pre-scale
-        public static MelonPreferences_Entry<float> HollowsLanternMeteorDestroyRadius; // pre-scale
-
-        // =========================================================================
-        // GIANT'S DEEP
-        // =========================================================================
-        public static MelonPreferences_Entry<bool> GiantsDeepEnabled;
-        public static MelonPreferences_Entry<float> GiantsDeepOrbitDistance;
-        public static MelonPreferences_Entry<float> GiantsDeepOrbitSpeed;
-        public static MelonPreferences_Entry<float> GiantsDeepSpinSpeed;
-
-        // =========================================================================
-        // ORBITAL PROBE CANNON
-        // =========================================================================
-        public static MelonPreferences_Entry<bool> OrbitalProbeCannonEnabled;
-        public static MelonPreferences_Entry<float> OrbitalProbeCannonOrbitDistance;
-        public static MelonPreferences_Entry<float> OrbitalProbeCannonOrbitSpeed;
-        public static MelonPreferences_Entry<float> OrbitalProbeCannonSpinSpeed;
-        public static MelonPreferences_Entry<bool> OrbitalProbeCannonFire;
-        public static MelonPreferences_Entry<float> OrbitalProbeCannonTimeToAim;
-        public static MelonPreferences_Entry<float> OrbitalProbeCannonExplosionTime;
-        public static MelonPreferences_Entry<float> OrbitalProbeCannonBreakupDuration;
-
-        // =========================================================================
-        // ORBITAL PROBE
-        // =========================================================================
-        public static MelonPreferences_Entry<bool> OrbitalProbeEnabled;
-        public static MelonPreferences_Entry<float> OrbitalProbeSpeed;
-
-        // =========================================================================
-        // QUANTUM MOON
-        // =========================================================================
-        public static MelonPreferences_Entry<bool> QuantumMoonEnabled;
-        public static MelonPreferences_Entry<float> QuantumMoonOrbitDistance;
-        public static MelonPreferences_Entry<float> QuantumMoonOrbitSpeed;
-        public static MelonPreferences_Entry<float> QuantumMoonSpinSpeed;
-        public static MelonPreferences_Entry<bool> QuantumMoonPlayMusic;
-
-        // =========================================================================
-        // DARK BRAMBLE
-        // =========================================================================
-        public static MelonPreferences_Entry<bool> DarkBrambleEnabled;
-        public static MelonPreferences_Entry<float> DarkBrambleOrbitDistance;
-        public static MelonPreferences_Entry<float> DarkBrambleOrbitSpeed;
-
-        // =========================================================================
-        // WHITE HOLE
-        // =========================================================================
-        public static MelonPreferences_Entry<bool> WhiteHoleEnabled;
-
-        // =========================================================================
-        // WHITE HOLE STATION
-        // =========================================================================
-        public static MelonPreferences_Entry<bool> WhiteHoleStationEnabled;
-
-        // =========================================================================
-        // INTERLOPER
-        // =========================================================================
-        public static MelonPreferences_Entry<bool> InterloperEnabled;
-        public static MelonPreferences_Entry<float> InterloperSemiMinorAxis;
-        public static MelonPreferences_Entry<float> InterloperOrbitSpeed;
-        public static MelonPreferences_Entry<float> InterloperSpeedIntensity;
-
-        // =========================================================================
-        // PLAYER SHIP
-        // =========================================================================
-        public static MelonPreferences_Entry<bool> PlayerShipEnabled;
-
-
-        // =========================================================================
-        // SIGNAL SCOPE
-        // =========================================================================
-        public static MelonPreferences_Entry<bool> SignalScopeEnabled;
-        public static MelonPreferences_Entry<bool> SignalScopePlayMusic;
-        public static MelonPreferences_Entry<bool> SignalScopePlayStatic;
-        public static MelonPreferences_Entry<bool> SignalScopeGrabDuringMatches;
-
-        public static MelonPreferences_Entry<float> SignalScopeZoomIncrement;
-        public static MelonPreferences_Entry<float> SignalScopeMaxZoom;
-        
-        public static MelonPreferences_Entry<float> SignalScopeOffsetX;
-        public static MelonPreferences_Entry<float> SignalScopeOffsetY;
-        public static MelonPreferences_Entry<float> SignalScopeOffsetZ;
-        
-        public static MelonPreferences_Entry<float> SignalScopeRotationX;
-        public static MelonPreferences_Entry<float> SignalScopeRotationY;
-        public static MelonPreferences_Entry<float> SignalScopeRotationZ;
-
-        public static MelonPreferences_Entry<float> SignalScopeMinZoom;
-
-        // =========================================================================
-        // SETUP
-        // =========================================================================
-        public static void Setup(Main modInstance)
+        var allCategories = new[]
         {
-            if (!Directory.Exists(UserDataPath))
-                Directory.CreateDirectory(UserDataPath);
+            globalCat, realisticCat, sunCat, sunStationCat, hourglassCat, timberHearthCat,
+            attlerockCat, brittleHollowCat, hollowsLanternCat, giantsDeepCat,
+            probeCannonCat, orbitalProbeCat, quantumMoonCat, darkBrambleCat,
+            whiteHoleCat, whiteHoleStationCat, interloperCat, satelliteCat, strangerCat,
+            playerShipCat, signalScopeCat, marshmallowCat
+        };
+        foreach (var cat in allCategories)
+            cat.SetFilePath(configPath);
 
-            string configPath = Path.Combine(UserDataPath, ConfigFile);
+        EnabledSolarSystem = globalCat.CreateEntry(
+            "OW_Enabled_SolarSystem", true,
+            "Enable Solar System", "Toggles the solar system in the sky on/off");
+        ShaderReplacement = globalCat.CreateEntry(
+            "OW_Shader_Replacement", true,
+            "Enable Shader Replacement", "Replaces the games shaders to allow lighting from other light sources");
+        ViewDistance = globalCat.CreateEntry(
+            "OW_View_Distance", 1500f,
+            "Player View Distance",
+            "How far you can see! You will need this if you scale your solar system over 50~");
+        OnlySunLighting = globalCat.CreateEntry(
+            "OW_OnlySunLighting", false,
+            "Only sun lighting",
+            "Removes the built-in light source of the scene leaving the sun to be the only thing lighting everything up");
+        RealisticStars = globalCat.CreateEntry(
+            "OW_RealisticStars", true,
+            "Realistic stars",
+            "Adds the correct outer wilds stars. NOTE: You must use rumble dark mode and replace the skybox with a fully black one for this!!!");
+        SolarSystemScale = globalCat.CreateEntry(
+            "OW_SolarSystemScale", 80f,
+            "Solar System Scale", "The scale of the solar system ! UNSTABLE USE AT YOUR OWN RISK");
+        SyncSolarSystemInMatches = globalCat.CreateEntry(
+            "SyncSolarSystemInMatches", true,
+            "Sync System in Matches", "Synchronise the solar system in matches with your opponent");
 
-            // ── Create categories ────────────────────────────────────────────────
-            globalCat = MelonPreferences.CreateCategory("OWR_General", "General");
-            realisticCat = MelonPreferences.CreateCategory("OWR_Realistic", "Realistic Mode");
-            sunCat = MelonPreferences.CreateCategory("OWR_Sun", "Sun");
-            sunStationCat = MelonPreferences.CreateCategory("OWR_SunStation", "Sun Station");
-            hourglassCat = MelonPreferences.CreateCategory("OWR_Hourglass", "Hourglass Twins");
-            timberHearthCat = MelonPreferences.CreateCategory("OWR_TimberHearth", "Timber Hearth");
-            attlerockCat = MelonPreferences.CreateCategory("OWR_Attlerock", "Attlerock");
-            brittleHollowCat = MelonPreferences.CreateCategory("OWR_BrittleHollow", "Brittle Hollow");
-            hollowsLanternCat = MelonPreferences.CreateCategory("OWR_HollowsLantern", "Hollow's Lantern");
-            giantsDeepCat = MelonPreferences.CreateCategory("OWR_GiantsDeep", "Giant's Deep");
-            probeCannonCat = MelonPreferences.CreateCategory("OWR_ProbeCannon", "Probe Cannon");
-            orbitalProbeCat = MelonPreferences.CreateCategory("OWR_OrbitalProbe", "Orbital Probe");
-            quantumMoonCat = MelonPreferences.CreateCategory("OWR_QuantumMoon", "Quantum Moon");
-            darkBrambleCat = MelonPreferences.CreateCategory("OWR_DarkBramble", "Dark Bramble");
-            whiteHoleCat = MelonPreferences.CreateCategory("OWR_WhiteHole", "White Hole");
-            whiteHoleStationCat = MelonPreferences.CreateCategory("OWR_WhiteHoleStation", "White Hole Station");
-            interloperCat = MelonPreferences.CreateCategory("OWR_Interloper", "Interloper");
-            playerShipCat = MelonPreferences.CreateCategory("OWR_PlayerShip", "Player Ship");
-            signalScopeCat = MelonPreferences.CreateCategory("OWR_SignalScope", "SignalScope");
+        RealisticMode = realisticCat.CreateEntry(
+            "Realistic_Enabled", true,
+            "Realistic Mode",
+            "Positions the solar system at the scene origin and applies the speed multiplier to all orbit/spin speeds");
 
-            // Make all categories write to the same config file
-            var allCategories = new[]
-            {
-                globalCat, realisticCat, sunCat, sunStationCat, hourglassCat, timberHearthCat,
-                attlerockCat, brittleHollowCat, hollowsLanternCat, giantsDeepCat,
-                probeCannonCat, orbitalProbeCat, quantumMoonCat, darkBrambleCat,
-                whiteHoleCat, whiteHoleStationCat, interloperCat, playerShipCat, signalScopeCat
-            };
-            foreach (var cat in allCategories)
-                cat.SetFilePath(configPath);
+        RealisticSpeedMultiplier = realisticCat.CreateEntry(
+            "Realistic_SpeedMultiplier", 1f,
+            "Speed Multiplier",
+            "Global multiplier applied to all orbit and spin speeds when Realistic Mode is enabled (default 0.1 = 10% of normal speed)");
 
-            // ── Populate entries in their categories ─────────────────────────────
+        SolarSystemGymX = globalCat.CreateEntry(
+            "OW_SolarSystemGymX", 2.28f,
+            "Solar System Gym X", "The X position (in-game coordinates) of the solar system in the gym");
+        SolarSystemGymY = globalCat.CreateEntry(
+            "OW_SolarSystemGymY", 276f,
+            "Solar System Gym Y", "The Y position (in-game coordinates) of the solar system in the gym");
+        SolarSystemGymZ = globalCat.CreateEntry(
+            "OW_SolarSystemGymZ", -306f,
+            "Solar System Gym Z", "The Z position (in-game coordinates) of the solar system in the gym");
 
-            // General
-            EnabledSolarSystem = globalCat.CreateEntry(
-                "OW_Enabled_SolarSystem", true,
-                "Enable Solar System", "Toggles the solar system in the sky on/off");
-            ShaderReplacement = globalCat.CreateEntry(
-                "OW_Shader_Replacement", true,
-                "Enable Shader Replacement", "Replaces the games shaders to allow lighting from other light sources");
-            ViewDistance = globalCat.CreateEntry(
-                "OW_View_Distance", 1500f,
-                "Player View Distance",
-                "How far you can see! You will need this if you scale your solar system over 50~");
-            OnlySunLighting = globalCat.CreateEntry(
-                "OW_OnlySunLighting", false,
-                "Only sun lighting",
-                "Removes the built-in light source of the scene leaving the sun to be the only thing lighting everything up");
-            RealisticStars = globalCat.CreateEntry(
-                "OW_RealisticStars", false,
-                "Realistic stars",
-                "Adds the correct outer wilds stars. NOTE: You must use rumble dark mode and replace the skybox with a fully black one for this!!!");
-            SolarSystemScale = globalCat.CreateEntry(
-                "OW_SolarSystemScale", 67f,
-                "Solar System Scale", "The scale of the solar system ! UNSTABLE USE AT YOUR OWN RISK");
+        SolarSystemRingX = globalCat.CreateEntry(
+            "OW_SolarSystemRingX", 325.45f,
+            "Solar System Ring X", "The X position (in-game coordinates) of the solar system in the ring");
+        SolarSystemRingY = globalCat.CreateEntry(
+            "OW_SolarSystemRingY", 334f,
+            "Solar System Ring Y", "The Y position (in-game coordinates) of the solar system in the ring");
+        SolarSystemRingZ = globalCat.CreateEntry(
+            "OW_SolarSystemRingZ", 240.54f,
+            "Solar System Ring Z", "The Z position (in-game coordinates) of the solar system in the ring");
 
-            // Realistic Mode 
-            RealisticMode = realisticCat.CreateEntry(
-                "Realistic_Enabled", false,
-                "Realistic Mode",
-                "Positions the solar system at the scene origin and applies the speed multiplier to all orbit/spin speeds");
+        SolarSystemPitX = globalCat.CreateEntry(
+            "OW_SolarSystemPitX", 0f,
+            "Solar System Pit X", "The X position (in-game coordinates) of the solar system in the pit");
+        SolarSystemPitY = globalCat.CreateEntry(
+            "OW_SolarSystemPitY", 208.5f,
+            "Solar System Pit Y", "The Y position (in-game coordinates) of the solar system in the pit");
+        SolarSystemPitZ = globalCat.CreateEntry(
+            "OW_SolarSystemPitZ", 0f,
+            "Solar System Pit Z", "The Z position (in-game coordinates) of the solar system in the pit");
 
-            RealisticSpeedMultiplier = realisticCat.CreateEntry(
-                "Realistic_SpeedMultiplier", 1f,
-                "Speed Multiplier",
-                "Global multiplier applied to all orbit and spin speeds when Realistic Mode is enabled (default 0.1 = 10% of normal speed)");
+        SolarSystemParkX = globalCat.CreateEntry(
+            "OW_SolarSystemParkX", 373.32f,
+            "Solar System Park X", "The X position (in-game coordinates) of the solar system in the park");
+        SolarSystemParkY = globalCat.CreateEntry(
+            "OW_SolarSystemParkY", 731f,
+            "Solar System Park Y", "The Y position (in-game coordinates) of the solar system in the park");
+        SolarSystemParkZ = globalCat.CreateEntry(
+            "OW_SolarSystemParkZ", 520.5f,
+            "Solar System Park Z", "The Z position (in-game coordinates) of the solar system in the park");
 
+        TapeRecorderToggle = globalCat.CreateEntry(
+            "OW_Strange_Toggle", false,
+            "Dolyl ht P",
+            "WARNING contains spoilers for the base game ending. Are you willing to find and investigate?");
 
-            SolarSystemGymX = globalCat.CreateEntry(
-                "OW_SolarSystemGymX", 2.28f,
-                "Solar System Gym X", "The X position (in-game coordinates) of the solar system in the gym");
-            SolarSystemGymY = globalCat.CreateEntry(
-                "OW_SolarSystemGymY", 276f,
-                "Solar System Gym Y", "The Y position (in-game coordinates) of the solar system in the gym");
-            SolarSystemGymZ = globalCat.CreateEntry(
-                "OW_SolarSystemGymZ", -306f,
-                "Solar System Gym Z", "The Z position (in-game coordinates) of the solar system in the gym");
+        SunEnabled = sunCat.CreateEntry(
+            "Sun_Enabled", true,
+            "Enabled", "Toggle the Sun");
+        SunKeepLight = sunCat.CreateEntry(
+            "Sun_KeepLight", true,
+            "Keep Light", "Keep the sun's light even after disabling it :3");
+        SunDoTimeLoop = sunCat.CreateEntry(
+            "Sun_TimeLoop", true,
+            "Do sun time loop", "Let the sun change stages and eventually go kaboom :3");
+        SunStayRed = sunCat.CreateEntry(
+            "Sun_StayRed", false,
+            "Stay Red", "Makes the sun stay red if the time loop is disabled");
 
-            SolarSystemRingX = globalCat.CreateEntry(
-                "OW_SolarSystemRingX", 325.45f,
-                "Solar System Ring X", "The X position (in-game coordinates) of the solar system in the ring");
-            SolarSystemRingY = globalCat.CreateEntry(
-                "OW_SolarSystemRingY", 334f,
-                "Solar System Ring Y", "The Y position (in-game coordinates) of the solar system in the ring");
-            SolarSystemRingZ = globalCat.CreateEntry(
-                "OW_SolarSystemRingZ", 240.54f,
-                "Solar System Ring Z", "The Z position (in-game coordinates) of the solar system in the ring");
+        SunDoTimeLoopInMatches = sunCat.CreateEntry(
+            "Sun_TimeLoopInMatches", true,
+            "Do sun time loop in matches",
+            "Let the sun change stages during matches, (disable this to stop supernovas in matches)");
 
-            SolarSystemPitX = globalCat.CreateEntry(
-                "OW_SolarSystemPitX", 0f,
-                "Solar System Pit X", "The X position (in-game coordinates) of the solar system in the pit");
-            SolarSystemPitY = globalCat.CreateEntry(
-                "OW_SolarSystemPitY", 208.5f,
-                "Solar System Pit Y", "The Y position (in-game coordinates) of the solar system in the pit");
-            SolarSystemPitZ = globalCat.CreateEntry(
-                "OW_SolarSystemPitZ", 0f,
-                "Solar System Pit Z", "The Z position (in-game coordinates) of the solar system in the pit");
+        SunResetAfterSupernovaEnd = sunCat.CreateEntry(
+            "Sun_ResetInstantly", false,
+            "Instant Reset", "Resets the solar system right after the supernova finishes");
 
-            SolarSystemParkX = globalCat.CreateEntry(
-                "OW_SolarSystemParkX", 373.32f,
-                "Solar System Park X", "The X position (in-game coordinates) of the solar system in the park");
-            SolarSystemParkY = globalCat.CreateEntry(
-                "OW_SolarSystemParkY", 731f,
-                "Solar System Park Y", "The Y position (in-game coordinates) of the solar system in the park");
-            SolarSystemParkZ = globalCat.CreateEntry(
-                "OW_SolarSystemParkZ", 520.5f,
-                "Solar System Park Z", "The Z position (in-game coordinates) of the solar system in the park");
+        SunEndTimesMusicVolume = sunCat.CreateEntry(
+            "Sun_EndTimesVolume", 0.2f,
+            "End Times Volume",
+            "The volume of the end times music from 1 to 0.00 . To disable the music just set it to 0");
+        SunCollapseVolume = sunCat.CreateEntry(
+            "Sun_CollapseVolume", 1f,
+            "Sun Collapsing Volume",
+            "The volume of the end times music from 1 to 0.00 . To disable the music just set it to 0");
+        SunExplodeVolume = sunCat.CreateEntry(
+            "Sun_ExplodeVolume", 1f,
+            "Sun Exploding Volume",
+            "The volume of the sun's explosion from 1 to 0.00 . To disable the music just set it to 0");
+        SunSupernovaWallVolume = sunCat.CreateEntry(
+            "Sun_SuperNovaWallVolume", 0.4f,
+            "Supernova Wall Volume",
+            "The volume of the sun's supernova wall (the wind rushing n stuff) from 1 to 0.00 . To disable the music just set it to 0");
 
-            TapeRecorderToggle = globalCat.CreateEntry(
-                "OW_Strange_Toggle", false,
-                "Dolyl ht P",
-                "WARNING contains spoilers for the base game ending. Are you willing to find and investigate?");
+        SunSecondsToFullRed = sunCat.CreateEntry(
+            "Sun_SecondsToFullRed", 60 * 22,
+            "Seconds to Full Red",
+            "How many seconds the sun takes to turn fully red (~22 min default)");
+        SunWaitAfterRed = sunCat.CreateEntry(
+            "Sun_WaitAfterRed", 92f,
+            "Wait After Red (s)",
+            "Seconds the sun holds at full red before collapsing");
+        SunExpansionTime = sunCat.CreateEntry(
+            "Sun_WallExpansionTime", 25f,
+            "Wall Expansion Time",
+            "How long until the supernova fully engulfs the solar system");
+        SunCollapseDuration = sunCat.CreateEntry(
+            "Sun_CollapseDuration", 9.5f,
+            "Collapse Duration (s)",
+            "How long the collapse animation takes");
 
-            // Sun
-            SunEnabled = sunCat.CreateEntry(
-                "Sun_Enabled", true,
-                "Enabled", "Toggle the Sun");
-            SunKeepLight = sunCat.CreateEntry(
-                "Sun_KeepLight", true,
-                "Keep Light", "Keep the sun's light even after disabling it :3");
-            SunDoTimeLoop = sunCat.CreateEntry(
-                "Sun_TimeLoop", true,
-                "Do sun time loop", "Let the sun change stages and eventually go kaboom :3");
-            SunStayRed = sunCat.CreateEntry(
-                "Sun_StayRed", false,
-                "Stay Red", "Makes the sun stay red if the time loop is disabled");
+        SunStationEnabled = sunStationCat.CreateEntry(
+            "SunStation_Enabled", true,
+            "Enabled", "Toggle the Sun Station");
+        SunStationOrbitDistance = sunStationCat.CreateEntry(
+            "SunStation_OrbitDistance", 23f / 30f,
+            "Orbit Distance",
+            "Pre-scale orbit distance from the Sun (multiplied by 30 at runtime)");
+        SunStationOrbitSpeed = sunStationCat.CreateEntry(
+            "SunStation_OrbitSpeed", 10.2857f,
+            "Orbit Speed", "Degrees per second around the Sun");
+        SunStationSpinSpeed = sunStationCat.CreateEntry(
+            "SunStation_SpinSpeed", SunStationOrbitSpeed.Value,
+            "Spin Speed", "Self-rotation degrees per second");
 
-            SunDoTimeLoopInMatches = sunCat.CreateEntry(
-                "Sun_TimeLoopInMatches", true,
-                "Do sun time loop in matches",
-                "Let the sun change stages during matches, (disable this to stop supernovas in matches)");
+        HourGlassTwinsEnabled = hourglassCat.CreateEntry(
+            "HourGlassTwins_Enabled", true,
+            "Enabled", "Toggle the Hourglass Twins");
+        HourGlassTwinsOrbitDistance = hourglassCat.CreateEntry(
+            "HourGlassTwins_OrbitDistance", 3.88f,
+            "Orbit Distance",
+            "Pre-scale orbit distance from the Sun");
+        HourGlassTwinsOrbitSpeed = hourglassCat.CreateEntry(
+            "HourGlassTwins_OrbitSpeed", 3.2727f,
+            "Orbit Speed", "Degrees per second around the Sun");
+        HourGlassTwinsSpinSpeed = hourglassCat.CreateEntry(
+            "HourGlassTwins_SpinSpeed", 6.5455f,
+            "Spin Speed", "Self-rotation degrees per second");
+        HourGlassTwinsAshSpinSpeed = hourglassCat.CreateEntry(
+            "HourGlassTwins_AshSpinSpeed", 4.0111f,
+            "Ash Twin Spin Speed", "Self-rotation degrees per second for the Ash Twin");
+        HourGlassTwinsEmberSpinSpeed = hourglassCat.CreateEntry(
+            "HourGlassTwins_EmberSpinSpeed", 2.8649f,
+            "Ember Twin Spin Speed", "Self-rotation degrees per second for the Ember Twin");
+        HourGlassTwinsTransferDuration = hourglassCat.CreateEntry(
+            "HourGlassTwins_TransferDuration", 17 * 60f,
+            "Transfer Duration (seconds)",
+            "How long to fully transfer");
+        HourGlassTwinsWaitDuration = hourglassCat.CreateEntry(
+            "HourGlassTwins_WaitDuration", 5 * 60f,
+            "Wait Duration (seconds)",
+            "How long between sand transfers");
+        HourGlassTwinsRandomSandStage = hourglassCat.CreateEntry(
+            "HourGlassTwins_RandomSandStage", false,
+            "Random Start Stage",
+            "Start the sand transfer at a random point in the cycle");
 
-            SunResetAfterSupernovaEnd = sunCat.CreateEntry(
-                "Sun_ResetInstantly", false,
-                "Instant Reset", "Resets the solar system right after the supernova finishes");
+        TimberHearthEnabled = timberHearthCat.CreateEntry(
+            "TimberHearth_Enabled", true,
+            "Enabled", "Toggle Timber Hearth");
+        TimberHearthOrbitDistance = timberHearthCat.CreateEntry(
+            "TimberHearth_OrbitDistance", 5.6f,
+            "Orbit Distance",
+            "Pre-scale orbit distance from the Sun");
+        TimberHearthOrbitSpeed = timberHearthCat.CreateEntry(
+            "TimberHearth_OrbitSpeed", 1.44f,
+            "Orbit Speed", "Degrees per second around the Sun");
+        TimberHearthSpinSpeed = timberHearthCat.CreateEntry(
+            "TimberHearth_SpinSpeed", 0.5730f,
+            "Spin Speed", "Self-rotation degrees per second");
+        TimberHearthHarmonica = timberHearthCat.CreateEntry(
+            "TimberHearth_Harmonica", true,
+            "Harmonica Music", "But.... I thought he was gone....");
 
-            SunEndTimesMusicVolume = sunCat.CreateEntry(
-                "Sun_EndTimesVolume", 0.2f,
-                "End Times Volume",
-                "The volume of the end times music from 1 to 0.00 . To disable the music just set it to 0");
-            SunCollapseVolume = sunCat.CreateEntry(
-                "Sun_CollapseVolume", 1f,
-                "Sun Collapsing Volume",
-                "The volume of the end times music from 1 to 0.00 . To disable the music just set it to 0");
-            SunExplodeVolume = sunCat.CreateEntry(
-                "Sun_ExplodeVolume", 1f,
-                "Sun Exploding Volume",
-                "The volume of the sun's explosion from 1 to 0.00 . To disable the music just set it to 0");
-            SunSupernovaWallVolume = sunCat.CreateEntry(
-                "Sun_SuperNovaWallVolume", 0.4f,
-                "Supernova Wall Volume",
-                "The volume of the sun's supernova wall (the wind rushing n stuff) from 1 to 0.00 . To disable the music just set it to 0");
+        AttlerockEnabled = attlerockCat.CreateEntry(
+            "Attlerock_Enabled", true,
+            "Enabled", "Toggle Attlerock (Timber Hearth's moon)");
+        AttlerockOrbitDistance = attlerockCat.CreateEntry(
+            "Attlerock_OrbitDistance", 0.8f,
+            "Orbit Distance",
+            "Pre-scale orbit distance from Timber Hearth");
+        AttlerockOrbitSpeed = attlerockCat.CreateEntry(
+            "Attlerock_OrbitSpeed", 3.4286f,
+            "Orbit Speed", "Degrees per second around Timber Hearth");
+        AttlerockSpinSpeed = attlerockCat.CreateEntry(
+            "Attlerock_SpinSpeed", AttlerockOrbitSpeed.Value,
+            "Spin Speed", "Self-rotation degrees per second (should match orbit speed to be tidally locked)");
 
+        BrittleHollowEnabled = brittleHollowCat.CreateEntry(
+            "BrittleHollow_Enabled", true,
+            "Enabled", "Toggle Brittle Hollow");
+        BrittleHollowOrbitDistance = brittleHollowCat.CreateEntry(
+            "BrittleHollow_OrbitDistance", 7.8f,
+            "Orbit Distance",
+            "Pre-scale orbit distance from the Sun");
+        BrittleHollowOrbitSpeed = brittleHollowCat.CreateEntry(
+            "BrittleHollow_OrbitSpeed", 0.9068f,
+            "Orbit Speed", "Degrees per second around the Sun");
+        BrittleHollowSpinSpeed = brittleHollowCat.CreateEntry(
+            "BrittleHollow_SpinSpeed", 1.1459f,
+            "Spin Speed", "Self-rotation degrees per second");
+        BrittleHollowBreakAppart = brittleHollowCat.CreateEntry(
+            "BrittleHollow_BreakApart", true,
+            "Break apart", "Weather chunks of brittle hollow will break apart and warp to the white hole");
+        BrittleHollowBreakIntervalMin = brittleHollowCat.CreateEntry(
+            "BrittleHollow_BreakIntervalMin", 28f,
+            "Break Interval Min (s)",
+            "Minimum seconds between chunk break events");
+        BrittleHollowBreakIntervalMax = brittleHollowCat.CreateEntry(
+            "BrittleHollow_BreakIntervalMax", 43f,
+            "Break Interval Max (s)",
+            "Maximum seconds between chunk break events");
 
-            SunSecondsToFullRed = sunCat.CreateEntry(
-                "Sun_SecondsToFullRed", 60 * 22,
-                "Seconds to Full Red",
-                "How many seconds the sun takes to turn fully red (~22 min default)");
-            SunWaitAfterRed = sunCat.CreateEntry(
-                "Sun_WaitAfterRed", 92f,
-                "Wait After Red (s)",
-                "Seconds the sun holds at full red before collapsing");
-            SunExpansionTime = sunCat.CreateEntry(
-                "Sun_WallExpansionTime", 25f,
-                "Wall Expansion Time",
-                "How long until the supernova fully engulfs the solar system");
-            SunCollapseDuration = sunCat.CreateEntry(
-                "Sun_CollapseDuration", 9.5f,
-                "Collapse Duration (s)",
-                "How long the collapse animation takes");
-            SunExplosionDuration = sunCat.CreateEntry(
-                "Sun_ExplosionDuration", 3.7f,
-                "Explosion Duration (s)",
-                "How long the initial explosion flash takes");
+        HollowsLanternEnabled = hollowsLanternCat.CreateEntry(
+            "HollowsLantern_Enabled", true,
+            "Enabled", "Toggle Hollow's Lantern");
+        HollowsLanternOrbitDistance = hollowsLanternCat.CreateEntry(
+            "HollowsLantern_OrbitDistance", 0.66f,
+            "Orbit Distance",
+            "Pre-scale orbit distance from Brittle Hollow");
+        HollowsLanternOrbitSpeed = hollowsLanternCat.CreateEntry(
+            "HollowsLantern_OrbitSpeed", 3.1304f,
+            "Orbit Speed", "Degrees per second around Brittle Hollow");
+        HollowsLanternSpinSpeed = hollowsLanternCat.CreateEntry(
+            "HollowsLantern_SpinSpeed", 11.4613f,
+            "Spin Speed", "Self-rotation degrees per second");
+        HollowsLanternLavaShrinkDuration = hollowsLanternCat.CreateEntry(
+            "HollowsLantern_LavaShrinkDuration", 60f * 19,
+            "Lava Shrink Duration (s)", "Seconds for the lava to shrink from start to target scale");
+        HollowsLanternMeteorSpawnMin = hollowsLanternCat.CreateEntry(
+            "HollowsLantern_MeteorSpawnMin", 6f,
+            "Meteor Spawn Min (s)", "Minimum seconds between meteor launches");
+        HollowsLanternMeteorSpawnMax = hollowsLanternCat.CreateEntry(
+            "HollowsLantern_MeteorSpawnMax", 40f,
+            "Meteor Spawn Max (s)", "Starting maximum seconds between meteor launches");
+        HollowsLanternMeteorDriftSpeed = hollowsLanternCat.CreateEntry(
+            "HollowsLantern_MeteorDriftSpeed", 0.7f / 30f,
+            "Meteor Drift Speed", "Pre-scale speed while meteor drifts randomly (multiplied by scale at runtime)");
+        HollowsLanternMeteorPullSpeed = hollowsLanternCat.CreateEntry(
+            "HollowsLantern_MeteorPullSpeed", 1.4f / 30f,
+            "Meteor Pull Speed", "Pre-scale speed when meteor homes toward Brittle Hollow centre");
+        HollowsLanternMeteorPullRadius = hollowsLanternCat.CreateEntry(
+            "HollowsLantern_MeteorPullRadius", 40f / 30f,
+            "Meteor Pull Radius", "Pre-scale distance at which homing kicks in");
 
-            // Sun Station
-            SunStationEnabled = sunStationCat.CreateEntry(
-                "SunStation_Enabled", true,
-                "Enabled", "Toggle the Sun Station");
-            SunStationOrbitDistance = sunStationCat.CreateEntry(
-                "SunStation_OrbitDistance", 23f / 30f,
-                "Orbit Distance",
-                "Pre-scale orbit distance from the Sun (multiplied by 30 at runtime)");
-            SunStationOrbitSpeed = sunStationCat.CreateEntry(
-                "SunStation_OrbitSpeed", 10.2857f,
-                "Orbit Speed", "Degrees per second around the Sun");
-            SunStationSpinSpeed = sunStationCat.CreateEntry(
-                "SunStation_SpinSpeed", SunStationOrbitSpeed.Value,
-                "Spin Speed", "Self-rotation degrees per second");
+        GiantsDeepEnabled = giantsDeepCat.CreateEntry(
+            "GiantsDeep_Enabled", true,
+            "Enabled", "Toggle Giant's Deep");
+        GiantsDeepOrbitDistance = giantsDeepCat.CreateEntry(
+            "GiantsDeep_OrbitDistance", 10.6f,
+            "Orbit Distance",
+            "Pre-scale orbit distance from the Sun");
+        GiantsDeepOrbitSpeed = giantsDeepCat.CreateEntry(
+            "GiantsDeep_OrbitSpeed", 0.5538f,
+            "Orbit Speed", "Degrees per second around the Sun");
+        GiantsDeepSpinSpeed = giantsDeepCat.CreateEntry(
+            "GiantsDeep_SpinSpeed", 0.2f,
+            "Spin Speed", "Self-rotation degrees per second");
 
-            // Hourglass Twins
-            HourGlassTwinsEnabled = hourglassCat.CreateEntry(
-                "HourGlassTwins_Enabled", true,
-                "Enabled", "Toggle the Hourglass Twins");
-            HourGlassTwinsOrbitDistance = hourglassCat.CreateEntry(
-                "HourGlassTwins_OrbitDistance", 3.88f,
-                "Orbit Distance",
-                "Pre-scale orbit distance from the Sun");
-            HourGlassTwinsOrbitSpeed = hourglassCat.CreateEntry(
-                "HourGlassTwins_OrbitSpeed", 3.2727f,
-                "Orbit Speed", "Degrees per second around the Sun");
-            HourGlassTwinsSpinSpeed = hourglassCat.CreateEntry(
-                "HourGlassTwins_SpinSpeed", 6.5455f,
-                "Spin Speed", "Self-rotation degrees per second");
-            HourGlassTwinsAshSpinSpeed = hourglassCat.CreateEntry(
-                "HourGlassTwins_AshSpinSpeed", 4.0111f,
-                "Ash Twin Spin Speed", "Self-rotation degrees per second for the Ash Twin");
-            HourGlassTwinsEmberSpinSpeed = hourglassCat.CreateEntry(
-                "HourGlassTwins_EmberSpinSpeed", 2.8649f,
-                "Ember Twin Spin Speed", "Self-rotation degrees per second for the Ember Twin");
-            HourGlassTwinsTransferDuration = hourglassCat.CreateEntry(
-                "HourGlassTwins_TransferDuration", 17 * 60f,
-                "Transfer Duration (seconds)",
-                "How long to fully transfer");
-            HourGlassTwinsWaitDuration = hourglassCat.CreateEntry(
-                "HourGlassTwins_WaitDuration", 5 * 60f,
-                "Wait Duration (seconds)",
-                "How long between sand transfers");
-            HourGlassTwinsRandomSandStage = hourglassCat.CreateEntry(
-                "HourGlassTwins_RandomSandStage", false,
-                "Random Start Stage",
-                "Start the sand transfer at a random point in the cycle");
+        OrbitalProbeCannonEnabled = probeCannonCat.CreateEntry(
+            "OrbitalProbeCannon_Enabled", true,
+            "Enabled", "Toggle the Orbital Probe Cannon");
+        OrbitalProbeCannonOrbitDistance = probeCannonCat.CreateEntry(
+            "OrbitalProbeCannon_OrbitDistance", 1.3f,
+            "Orbit Distance",
+            "Pre-scale orbit distance from Giant's Deep");
+        OrbitalProbeCannonOrbitSpeed = probeCannonCat.CreateEntry(
+            "OrbitalProbeCannon_OrbitSpeed", 7.2f,
+            "Orbit Speed", "Degrees per second around Giant's Deep");
+        OrbitalProbeCannonSpinSpeed = probeCannonCat.CreateEntry(
+            "OrbitalProbeCannon_SpinSpeed", OrbitalProbeCannonOrbitSpeed.Value,
+            "Spin Speed", "Self-rotation degrees per second (should match orbit speed to be tidally locked)");
+        OrbitalProbeCannonFire = probeCannonCat.CreateEntry(
+            "OrbitalProbeCannon_Fire", true,
+            "Fire probe", "Weather the orbital probe cannon will fire the probe (and then break)");
+        OrbitalProbeCannonTimeToAim = probeCannonCat.CreateEntry(
+            "OrbitalProbeCannon_TimeToAim", 10f,
+            "Time to Aim (s)",
+            "Seconds the cannon spends rotating to its aim direction");
+        OrbitalProbeCannonExplosionTime = probeCannonCat.CreateEntry(
+            "OrbitalProbeCannon_ExplosionTime", 6f,
+            "Explosion Hold Time (s)",
+            "Seconds the explosion light stays at full intensity");
+        OrbitalProbeCannonBreakupDuration = probeCannonCat.CreateEntry(
+            "OrbitalProbeCannon_BreakupDuration", 18f,
+            "Breakup Duration (s)",
+            "Seconds it takes the cannon to physically break apart");
 
-            // Timber Hearth
-            TimberHearthEnabled = timberHearthCat.CreateEntry(
-                "TimberHearth_Enabled", true,
-                "Enabled", "Toggle Timber Hearth");
-            TimberHearthOrbitDistance = timberHearthCat.CreateEntry(
-                "TimberHearth_OrbitDistance", 5.6f,
-                "Orbit Distance",
-                "Pre-scale orbit distance from the Sun");
-            TimberHearthOrbitSpeed = timberHearthCat.CreateEntry(
-                "TimberHearth_OrbitSpeed", 1.44f,
-                "Orbit Speed", "Degrees per second around the Sun");
-            TimberHearthSpinSpeed = timberHearthCat.CreateEntry(
-                "TimberHearth_SpinSpeed", 0.5730f,
-                "Spin Speed", "Self-rotation degrees per second");
-            TimberHearthHarmonica = timberHearthCat.CreateEntry(
-                "TimberHearth_Harmonica", true,
-                "Harmonica Music", "But.... I thought he was gone....");
+        OrbitalProbeEnabled = orbitalProbeCat.CreateEntry(
+            "OrbitalProbe_Enabled", true,
+            "Enabled", "Toggle the Orbital Probe");
+        OrbitalProbeSpeed = orbitalProbeCat.CreateEntry(
+            "OrbitalProbe_Speed", 20f,
+            "Launch Speed",
+            "How fast the probe will go once fired");
 
-            // Attlerock
-            AttlerockEnabled = attlerockCat.CreateEntry(
-                "Attlerock_Enabled", true,
-                "Enabled", "Toggle Attlerock (Timber Hearth's moon)");
-            AttlerockOrbitDistance = attlerockCat.CreateEntry(
-                "Attlerock_OrbitDistance", 0.8f,
-                "Orbit Distance",
-                "Pre-scale orbit distance from Timber Hearth");
-            AttlerockOrbitSpeed = attlerockCat.CreateEntry(
-                "Attlerock_OrbitSpeed", 3.4286f,
-                "Orbit Speed", "Degrees per second around Timber Hearth");
-            AttlerockSpinSpeed = attlerockCat.CreateEntry(
-                "Attlerock_SpinSpeed", AttlerockOrbitSpeed.Value,
-                "Spin Speed", "Self-rotation degrees per second (should match orbit speed to be tidally locked)");
+        QuantumMoonEnabled = quantumMoonCat.CreateEntry(
+            "QuantumMoon_Enabled", true,
+            "Enabled", "Toggle the Quantum Moon");
+        QuantumMoonOrbitDistance = quantumMoonCat.CreateEntry(
+            "QuantumMoon_OrbitDistance", 1.7f,
+            "Orbit Distance",
+            "Pre-scale orbit distance from its current parent");
+        QuantumMoonOrbitSpeed = quantumMoonCat.CreateEntry(
+            "QuantumMoon_OrbitSpeed", 1.2f,
+            "Orbit Speed", "Degrees per second around parent");
+        QuantumMoonSpinSpeed = quantumMoonCat.CreateEntry(
+            "QuantumMoon_SpinSpeed", 4f,
+            "Spin Speed", "Self-rotation degrees per second");
+        QuantumMoonPlayMusic = quantumMoonCat.CreateEntry(
+            "QuantumMoon_PlayMusic", false,
+            "Play Music",
+            "Toggles the mysterious music coming from the quantum moon. WARNING only enable if you've finished the base game");
 
-            // Brittle Hollow
-            BrittleHollowEnabled = brittleHollowCat.CreateEntry(
-                "BrittleHollow_Enabled", true,
-                "Enabled", "Toggle Brittle Hollow");
-            BrittleHollowOrbitDistance = brittleHollowCat.CreateEntry(
-                "BrittleHollow_OrbitDistance", 7.8f,
-                "Orbit Distance",
-                "Pre-scale orbit distance from the Sun");
-            BrittleHollowOrbitSpeed = brittleHollowCat.CreateEntry(
-                "BrittleHollow_OrbitSpeed", 0.9068f,
-                "Orbit Speed", "Degrees per second around the Sun");
-            BrittleHollowSpinSpeed = brittleHollowCat.CreateEntry(
-                "BrittleHollow_SpinSpeed", 1.1459f,
-                "Spin Speed", "Self-rotation degrees per second");
-            BrittleHollowBreakAppart = brittleHollowCat.CreateEntry(
-                "BrittleHollow_BreakApart", true,
-                "Break apart", "Weather chunks of brittle hollow will break apart and warp to the white hole");
-            BrittleHollowBreakIntervalMin = brittleHollowCat.CreateEntry(
-                "BrittleHollow_BreakIntervalMin", 28f,
-                "Break Interval Min (s)",
-                "Minimum seconds between chunk break events");
-            BrittleHollowBreakIntervalMax = brittleHollowCat.CreateEntry(
-                "BrittleHollow_BreakIntervalMax", 43f,
-                "Break Interval Max (s)",
-                "Maximum seconds between chunk break events");
-            BrittleHollowSuckSpeed = brittleHollowCat.CreateEntry(
-                "BrittleHollow_SuckSpeed", 1f / 30f,
-                "Suck Speed",
-                "Units per second chunks move toward the black hole");
-            BrittleHollowDriftSpeed = brittleHollowCat.CreateEntry(
-                "BrittleHollow_DriftSpeed", 0.09f / 30f,
-                "Drift Speed",
-                "Units per second chunks drift near the white hole");
+        DarkBrambleEnabled = darkBrambleCat.CreateEntry(
+            "DarkBramble_Enabled", true,
+            "Enabled", "Toggle Dark Bramble");
+        DarkBrambleOrbitDistance = darkBrambleCat.CreateEntry(
+            "DarkBramble_OrbitDistance", 14.6f,
+            "Orbit Distance",
+            "Pre-scale orbit distance from the Sun");
+        DarkBrambleOrbitSpeed = darkBrambleCat.CreateEntry(
+            "DarkBramble_OrbitSpeed", 0.4f,
+            "Orbit Speed", "Degrees per second around the Sun");
 
-            HollowsLanternEnabled = hollowsLanternCat.CreateEntry(
-                "HollowsLantern_Enabled", true,
-                "Enabled", "Toggle Hollow's Lantern");
-            HollowsLanternOrbitDistance = hollowsLanternCat.CreateEntry(
-                "HollowsLantern_OrbitDistance", 0.66f,
-                "Orbit Distance",
-                "Pre-scale orbit distance from Brittle Hollow");
-            HollowsLanternOrbitSpeed = hollowsLanternCat.CreateEntry(
-                "HollowsLantern_OrbitSpeed", 3.1304f,
-                "Orbit Speed", "Degrees per second around Brittle Hollow");
-            HollowsLanternSpinSpeed = hollowsLanternCat.CreateEntry(
-                "HollowsLantern_SpinSpeed", 11.4613f,
-                "Spin Speed", "Self-rotation degrees per second");
-            HollowsLanternLavaStartScale = hollowsLanternCat.CreateEntry(
-                "HollowsLantern_LavaStartScale", 89f,
-                "Lava Start Scale", "Uniform local scale of the lava sphere at the beginning");
-            HollowsLanternTargetLavaScale = hollowsLanternCat.CreateEntry(
-                "HollowsLantern_TargetLavaScale", 84f,
-                "Lava Target Scale", "Uniform local scale the lava shrinks to over the shrink duration");
-            HollowsLanternLavaShrinkDuration = hollowsLanternCat.CreateEntry(
-                "HollowsLantern_LavaShrinkDuration", 60f * 19,
-                "Lava Shrink Duration (s)", "Seconds for the lava to shrink from start to target scale");
-            HollowsLanternMeteorSpawnMin = hollowsLanternCat.CreateEntry(
-                "HollowsLantern_MeteorSpawnMin", 6f,
-                "Meteor Spawn Min (s)", "Minimum seconds between meteor launches");
-            HollowsLanternMeteorSpawnMax = hollowsLanternCat.CreateEntry(
-                "HollowsLantern_MeteorSpawnMax", 40f,
-                "Meteor Spawn Max (s)", "Starting maximum seconds between meteor launches");
-            HollowsLanternMeteorSpawnMaxEnd = hollowsLanternCat.CreateEntry(
-                "HollowsLantern_MeteorSpawnMaxEnd", 20f,
-                "Meteor Spawn Max End (s)", "Maximum spawn interval at end of shrink duration (ramp target)");
-            HollowsLanternMeteorDriftSpeed = hollowsLanternCat.CreateEntry(
-                "HollowsLantern_MeteorDriftSpeed", 0.7f / 30f,
-                "Meteor Drift Speed", "Pre-scale speed while meteor drifts randomly (multiplied by scale at runtime)");
-            HollowsLanternMeteorPullSpeed = hollowsLanternCat.CreateEntry(
-                "HollowsLantern_MeteorPullSpeed", 1.4f / 30f,
-                "Meteor Pull Speed", "Pre-scale speed when meteor homes toward Brittle Hollow centre");
-            HollowsLanternMeteorPullRadius = hollowsLanternCat.CreateEntry(
-                "HollowsLantern_MeteorPullRadius", 40f / 30f,
-                "Meteor Pull Radius", "Pre-scale distance at which homing kicks in");
-            HollowsLanternMeteorDestroyRadius = hollowsLanternCat.CreateEntry(
-                "HollowsLantern_MeteorDestroyRadius", 0.03f / 30f,
-                "Meteor Destroy Radius", "Pre-scale distance at which a meteor is destroyed on arrival");
+        WhiteHoleEnabled = whiteHoleCat.CreateEntry(
+            "WhiteHole_Enabled", true,
+            "Enabled", "Toggle the White Hole");
 
-            // Giant's Deep
-            GiantsDeepEnabled = giantsDeepCat.CreateEntry(
-                "GiantsDeep_Enabled", true,
-                "Enabled", "Toggle Giant's Deep");
-            GiantsDeepOrbitDistance = giantsDeepCat.CreateEntry(
-                "GiantsDeep_OrbitDistance", 10.6f,
-                "Orbit Distance",
-                "Pre-scale orbit distance from the Sun");
-            GiantsDeepOrbitSpeed = giantsDeepCat.CreateEntry(
-                "GiantsDeep_OrbitSpeed", 0.5538f,
-                "Orbit Speed", "Degrees per second around the Sun");
-            GiantsDeepSpinSpeed = giantsDeepCat.CreateEntry(
-                "GiantsDeep_SpinSpeed", 0.2f,
-                "Spin Speed", "Self-rotation degrees per second");
+        WhiteHoleStationEnabled = whiteHoleStationCat.CreateEntry(
+            "WhiteHoleStation_Enabled", true,
+            "Enabled", "Toggle the White Hole Station");
 
-            // Orbital Probe Cannon
-            OrbitalProbeCannonEnabled = probeCannonCat.CreateEntry(
-                "OrbitalProbeCannon_Enabled", true,
-                "Enabled", "Toggle the Orbital Probe Cannon");
-            OrbitalProbeCannonOrbitDistance = probeCannonCat.CreateEntry(
-                "OrbitalProbeCannon_OrbitDistance", 1.3f,
-                "Orbit Distance",
-                "Pre-scale orbit distance from Giant's Deep");
-            OrbitalProbeCannonOrbitSpeed = probeCannonCat.CreateEntry(
-                "OrbitalProbeCannon_OrbitSpeed", 7.2f,
-                "Orbit Speed", "Degrees per second around Giant's Deep");
-            OrbitalProbeCannonSpinSpeed = probeCannonCat.CreateEntry(
-                "OrbitalProbeCannon_SpinSpeed", OrbitalProbeCannonOrbitSpeed.Value,
-                "Spin Speed", "Self-rotation degrees per second (should match orbit speed to be tidally locked)");
-            OrbitalProbeCannonFire = probeCannonCat.CreateEntry(
-                "OrbitalProbeCannon_Fire", true,
-                "Fire probe", "Weather the orbital probe cannon will fire the probe (and then break)");
-            OrbitalProbeCannonTimeToAim = probeCannonCat.CreateEntry(
-                "OrbitalProbeCannon_TimeToAim", 10f,
-                "Time to Aim (s)",
-                "Seconds the cannon spends rotating to its aim direction");
-            OrbitalProbeCannonExplosionTime = probeCannonCat.CreateEntry(
-                "OrbitalProbeCannon_ExplosionTime", 6f,
-                "Explosion Hold Time (s)",
-                "Seconds the explosion light stays at full intensity");
-            OrbitalProbeCannonBreakupDuration = probeCannonCat.CreateEntry(
-                "OrbitalProbeCannon_BreakupDuration", 18f,
-                "Breakup Duration (s)",
-                "Seconds it takes the cannon to physically break apart");
+        InterloperEnabled = interloperCat.CreateEntry(
+            "Interloper_Enabled", true,
+            "Enabled", "Toggle the Interloper");
+        InterloperSemiMinorAxis = interloperCat.CreateEntry(
+            "Interloper_SemiMinorAxis", 5.66f,
+            "Semi-Minor Axis",
+            "Pre-scale width of the elliptical orbit");
+        InterloperOrbitSpeed = interloperCat.CreateEntry(
+            "Interloper_OrbitSpeed", 0.75f,
+            "Orbit Speed",
+            "Base angular speed along the ellipse");
+        InterloperSpeedIntensity = interloperCat.CreateEntry(
+            "Interloper_SpeedIntensity", 1.1f,
+            "Speed Intensity",
+            "Higher values = faster near perihelion");
 
-            // Orbital Probe
-            OrbitalProbeEnabled = orbitalProbeCat.CreateEntry(
-                "OrbitalProbe_Enabled", true,
-                "Enabled", "Toggle the Orbital Probe");
-            OrbitalProbeSpeed = orbitalProbeCat.CreateEntry(
-                "OrbitalProbe_Speed", 20f,
-                "Launch Speed",
-                "How fast the probe will go once fired");
+        SatelliteEnabled = satelliteCat.CreateEntry(
+            "Satellite_Enabled", true,
+            "Enabled", "Toggle the Hearthian map satellite");
+        SatelliteOrbitDistance = satelliteCat.CreateEntry(
+            "Satellite_OrbitDistance", 1100f / 65f,
+            "Orbit Distance", "Pre-scale orbit distance from the Sun");
+        SatelliteOrbitSpeed = satelliteCat.CreateEntry(
+            "Satellite_OrbitSpeed", -0.277f,
+            "Orbit Speed", "Degrees per second around the Sun (negative = climbs towards the Stranger)");
+        SatelliteSpinSpeed = satelliteCat.CreateEntry(
+            "Satellite_SpinSpeed", -0.277f,
+            "Spin Speed", "Self-rotation degrees per second");
 
-            // Quantum Moon
-            QuantumMoonEnabled = quantumMoonCat.CreateEntry(
-                "QuantumMoon_Enabled", true,
-                "Enabled", "Toggle the Quantum Moon");
-            QuantumMoonOrbitDistance = quantumMoonCat.CreateEntry(
-                "QuantumMoon_OrbitDistance", 1.7f,
-                "Orbit Distance",
-                "Pre-scale orbit distance from its current parent");
-            QuantumMoonOrbitSpeed = quantumMoonCat.CreateEntry(
-                "QuantumMoon_OrbitSpeed", 1.2f,
-                "Orbit Speed", "Degrees per second around parent");
-            QuantumMoonSpinSpeed = quantumMoonCat.CreateEntry(
-                "QuantumMoon_SpinSpeed", 4f,
-                "Spin Speed", "Self-rotation degrees per second");
-            QuantumMoonPlayMusic = quantumMoonCat.CreateEntry(
-                "QuantumMoon_PlayMusic", false,
-                "Play Music",
-                "Toggles the mysterious music coming from the quantum moon. WARNING only enable if you've finished the base game");
+        StrangerEnabled = strangerCat.CreateEntry(
+            "Stranger_Enabled", false,
+            "Enabled", "Toggle the Stranger");
+        StrangerScale = strangerCat.CreateEntry(
+            "Stranger_Scale", 1f,
+            "Scale", "Size of the Stranger (multiplied by the solar system scale / 30)");
+        StrangerDistance = strangerCat.CreateEntry(
+            "Stranger_Distance", 13.5f,
+            "Distance From Sun", "Pre-scale distance from the Sun (10.6 is about Giant's Deep)");
+        StrangerSatelliteAngle = strangerCat.CreateEntry(
+            "Stranger_SatelliteAngle", -40f,
+            "Satellite Angle", "Point on the satellite's orbit (degrees) the Stranger sits in line with");
+        StrangerCloakingField = strangerCat.CreateEntry(
+            "Stranger_CloakingField", true,
+            "Cloaking Field", "Toggle the Stranger's cloaking field");
+        StrangerCenterSpinSpeed = strangerCat.CreateEntry(
+            "Stranger_CenterSpinSpeed", 5f,
+            "Center Spin Speed", "Degrees per second the Stranger's center spins");
+        StrangerLeaveStartSeconds = strangerCat.CreateEntry(
+            "Stranger_LeaveStartSeconds", 400f,
+            "Leave Start (s)", "Seconds after the loop starts before the Stranger starts moving away (400 = 6:40)");
+        StrangerLeaveDurationSeconds = strangerCat.CreateEntry(
+            "Stranger_LeaveDurationSeconds", 22 * 60f - 400f,
+            "Leave Duration (s)",
+            "How long the Stranger takes to reach its final distance (default: until the 22:00 loop end)");
 
-            // Dark Bramble
-            DarkBrambleEnabled = darkBrambleCat.CreateEntry(
-                "DarkBramble_Enabled", true,
-                "Enabled", "Toggle Dark Bramble");
-            DarkBrambleOrbitDistance = darkBrambleCat.CreateEntry(
-                "DarkBramble_OrbitDistance", 14.6f,
-                "Orbit Distance",
-                "Pre-scale orbit distance from the Sun");
-            DarkBrambleOrbitSpeed = darkBrambleCat.CreateEntry(
-                "DarkBramble_OrbitSpeed", 0.4f,
-                "Orbit Speed", "Degrees per second around the Sun");
+        PlayerShipEnabled = playerShipCat.CreateEntry(
+            "PlayerShip_Enabled", true,
+            "Enabled", "Toggle the Hearthian spaceship model");
 
-            // White Hole
-            WhiteHoleEnabled = whiteHoleCat.CreateEntry(
-                "WhiteHole_Enabled", true,
-                "Enabled", "Toggle the White Hole");
+        SignalScopeEnabled = signalScopeCat.CreateEntry(
+            "SignalScope_Enabled", true,
+            "Enabled", "Toggle the SignalScope");
 
-            // White Hole Station
-            WhiteHoleStationEnabled = whiteHoleStationCat.CreateEntry(
-                "WhiteHoleStation_Enabled", true,
-                "Enabled", "Toggle the White Hole Station");
+        SignalScopePlayMusic = signalScopeCat.CreateEntry(
+            "SignalScope_Music_Enabled", true,
+            "Play music", "Toggle the SignalScope playing music when you point it at planets");
 
-            // Interloper
-            InterloperEnabled = interloperCat.CreateEntry(
-                "Interloper_Enabled", true,
-                "Enabled", "Toggle the Interloper");
-            InterloperSemiMinorAxis = interloperCat.CreateEntry(
-                "Interloper_SemiMinorAxis", 5.66f,
-                "Semi-Minor Axis",
-                "Pre-scale width of the elliptical orbit");
-            InterloperOrbitSpeed = interloperCat.CreateEntry(
-                "Interloper_OrbitSpeed", 0.75f,
-                "Orbit Speed",
-                "Base angular speed along the ellipse");
-            InterloperSpeedIntensity = interloperCat.CreateEntry(
-                "Interloper_SpeedIntensity", 1.1f,
-                "Speed Intensity",
-                "Higher values = faster near perihelion");
+        SignalScopePlayStatic = signalScopeCat.CreateEntry(
+            "SignalScope_Static_Enabled", true,
+            "Play static", "Toggle the SignalScope playing static when you aren't pointing it at a signal");
 
-            // Player Ship
-            PlayerShipEnabled = playerShipCat.CreateEntry(
-                "PlayerShip_Enabled", true,
-                "Enabled", "Toggle the Hearthian spaceship model");
+        SignalScopeGrabDuringMatches = signalScopeCat.CreateEntry(
+            "SignalScope_Grabbing_During_Matches", true,
+            "Grabbable During Matches",
+            "Weather the signalscope can be grabbed during a match (once the match ends it can be grabbed)");
 
-            // SignalScope
-            SignalScopeEnabled = signalScopeCat.CreateEntry(
-                "SignalScope_Enabled", true,
-                "Enabled", "Toggle the SignalScope");
+        MusicFromOthers = signalScopeCat.CreateEntry(
+            "SignalScope_Music_From_Others", true,
+            "Music from other signalscopes",
+            "Plays music from other players signalscopes when they hold them!");
 
-            SignalScopePlayMusic = signalScopeCat.CreateEntry(
-                "SignalScope_Music_Enabled", true,
-                "Play music", "Toggle the SignalScope playing music when you point it at planets");
+        SignalScopeZoomIncrement = signalScopeCat.CreateEntry(
+            "SignalScope_Zoom_Increment", 4.6f,
+            "Zoom Increment", "By how much the signalscope will zoom every button press (its an FOV slider)");
 
-            SignalScopePlayStatic = signalScopeCat.CreateEntry(
-                "SignalScope_Static_Enabled", true,
-                "Play static", "Toggle the SignalScope playing music when you point it at planets");
+        SignalScopeMinZoom = signalScopeCat.CreateEntry(
+            "SignalScope_Min_Zoom", 120f,
+            "Minimum Zoom", "The minimum zoom the signalscope can reach (camera FOV)");
 
-            SignalScopeGrabDuringMatches = signalScopeCat.CreateEntry(
-                "SignalScope_Grabbing_During_Matches", true,
-                "Grabbable During Matches",
-                "Weather the signalscope can be grabbed during a match (once the match ends it can be grabbed)");
+        SignalScopeMaxZoom = signalScopeCat.CreateEntry(
+            "SignalScope_Max_Zoom", 1.5f,
+            "Maximum Zoom", "The maximum zoom the signalscope can reach (camera FOV)");
 
-            SignalScopeZoomIncrement = signalScopeCat.CreateEntry(
-                "SignalScope_Zoom_Increment", 4.6f,
-                "Zoom Increment", "By how much the signalscope will zoom every button press (its an FOV slider)");
+        SignalScopeOffsetX = signalScopeCat.CreateEntry(
+            "SignalScope_Offset_X", 0.1f,
+            "X offset", "The offset of your signalscope from your hip");
 
-            SignalScopeMinZoom = signalScopeCat.CreateEntry(
-                "SignalScope_Min_Zoom", 120f,
-                "Minimum Zoom", "The minimum zoom the signalscope can reach (camera FOV)");
+        SignalScopeOffsetY = signalScopeCat.CreateEntry(
+            "SignalScope_Offset_Y", 0f,
+            "Y offset", "The offset of your signalscope from your hip");
 
-            SignalScopeMaxZoom = signalScopeCat.CreateEntry(
-                "SignalScope_Max_Zoom", 1.5f,
-                "Maximum Zoom", "The maximum zoom the signalscope can reach (camera FOV)");
-            
-            
-            SignalScopeOffsetX = signalScopeCat.CreateEntry(
-                "SignalScope_Offset_X", 0.1f,
-                "X offset", "The offset of your signalscope from your hip");
-            
-            SignalScopeOffsetY = signalScopeCat.CreateEntry(
-                "SignalScope_Offset_Y", 0f,
-                "Y offset", "The offset of your signalscope from your hip");
-            
-            SignalScopeOffsetZ = signalScopeCat.CreateEntry(
-                "SignalScope_Offset_Z", -0.1f,
-                "Z offset", "The offset of your signalscope from your hip");
-            
-            
-            SignalScopeRotationX = signalScopeCat.CreateEntry(
-                "SignalScope_Rotation_X", 0f,
-                "Rotation X", "The roation of your signalscope when on your hip");
-            
-            SignalScopeRotationY = signalScopeCat.CreateEntry(
-                "SignalScope_Rotation_Y", 0f,
-                "Rotation Y", "The roation of your signalscope when on your hip");
-            
-            SignalScopeRotationZ = signalScopeCat.CreateEntry(
-                "SignalScope_Rotation_Z", 270f,
-                "Rotation Z", "The roation of your signalscope when on your hip");
-            
-            
+        SignalScopeOffsetZ = signalScopeCat.CreateEntry(
+            "SignalScope_Offset_Z", -0.1f,
+            "Z offset", "The offset of your signalscope from your hip");
 
-            // ── Register all categories with UIFramework ─────────────────────────
-            var uiHandle = UI.RegisterMelon(modInstance,
-                globalCat, realisticCat, sunCat, sunStationCat, hourglassCat,
-                timberHearthCat, attlerockCat, brittleHollowCat,
-                hollowsLanternCat, giantsDeepCat, probeCannonCat,
-                orbitalProbeCat, quantumMoonCat, darkBrambleCat,
-                whiteHoleCat, whiteHoleStationCat, interloperCat,
-                playerShipCat, signalScopeCat);
+        SignalScopeRotationX = signalScopeCat.CreateEntry(
+            "SignalScope_Rotation_X", 0f,
+            "Rotation X", "The roation of your signalscope when on your hip");
 
-            uiHandle.OnModSaved += OnSettingsSaved;
-        }
+        SignalScopeRotationY = signalScopeCat.CreateEntry(
+            "SignalScope_Rotation_Y", 0f,
+            "Rotation Y", "The roation of your signalscope when on your hip");
 
-        // =========================================================================
-        // SAVE CALLBACK
-        // =========================================================================
-        private static void OnSettingsSaved()
+        SignalScopeRotationZ = signalScopeCat.CreateEntry(
+            "SignalScope_Rotation_Z", 270f,
+            "Rotation Z", "The roation of your signalscope when on your hip");
+
+        MarshmallowStickIsEnabled = marshmallowCat.CreateEntry(
+            "MarshmallowStick_IsEnabled", true,
+            "IsEnabled", "Toggle the marshmallow stick");
+        MarshmallowMergeCooldown = marshmallowCat.CreateEntry(
+            "Marshmallow_MergeCooldown", 2f,
+            "Merge Cooldown (s)", "Seconds before the marshmallow can be grabbed off the stick");
+        MarshmallowHoldDistance = marshmallowCat.CreateEntry(
+            "Marshmallow_HoldDistance", 0.115f,
+            "Grab Distance", "How close your hand has to be to grab the stick or marshmallow");
+        MarshmallowMergeDistance = marshmallowCat.CreateEntry(
+            "Marshmallow_MergeDistance", 0.08f,
+            "Merge Distance", "How close the marshmallow has to be to the tip of the stick to stick onto it");
+
+        var uiHandle = UI.RegisterMelon(modInstance,
+            globalCat, realisticCat, sunCat, sunStationCat, hourglassCat,
+            timberHearthCat, attlerockCat, brittleHollowCat,
+            hollowsLanternCat, giantsDeepCat, probeCannonCat,
+            orbitalProbeCat, quantumMoonCat, darkBrambleCat,
+            whiteHoleCat, whiteHoleStationCat, interloperCat, satelliteCat, strangerCat,
+            playerShipCat, signalScopeCat, marshmallowCat);
+
+        uiHandle.OnModSaved += OnSettingsSaved;
+    }
+
+    private static void OnSettingsSaved()
+    {
+        Melon<Main>.Logger.Msg("[OwSystemSettings] Settings saved — applying to live solar system.");
+        ApplyToSolarSystem();
+    }
+
+    private static bool IsMatchMap(string m) => m == "Map0" || m == "Map1";
+
+    /// <summary>
+    /// Time-loop on/off, taking the "in matches" toggle into account.
+    /// Call this from ApplyToSolarSystem and from Main.SceneLoaded (after the solar system exists).
+    /// </summary>
+    public static void ApplySunLoop(string mapName)
+    {
+        var sys = Main.solarSystem;
+        if (sys.Sun == null) return;
+
+        var sn = sys.Sun.GetComponent<SupernovaSun>();
+        if (sn == null) return;
+
+        sn.DoTimeLoop = SunDoTimeLoop.Value && (!IsMatchMap(mapName) || SunDoTimeLoopInMatches.Value);
+    }
+
+    public static void ApplyToSolarSystem()
+    {
+        var sys = Main.solarSystem;
+        if (sys.Root == null) return;
+
+        string sceneName = Calls.Scene.GetSceneName();
+
+        float speedMult = RealisticMode.Value ? RealisticSpeedMultiplier.Value / 1f : 1f;
+        float sunStationSpeedMult = RealisticMode.Value ? RealisticSpeedMultiplier.Value / 1f : 1f;
+
+        sys.Root.SetActive(EnabledSolarSystem.Value);
+        var solarSystemComp = sys.Root.GetComponent<SolarSystem>();
+        if (solarSystemComp != null) solarSystemComp.SceneLoaded(sceneName);
+
+        if (sys.StarBackground != null)
         {
-            Melon<Main>.Logger.Msg("[OwSystemSettings] Settings saved — applying to live solar system.");
-            ApplyToSolarSystem();
-        }
-
-        // =========================================================================
-        // APPLY (unchanged — accesses the same static entry fields)
-        // =========================================================================
-        public static void ApplyToSolarSystem()
-        {
-            var sys = Main.solarSystem;
-
-
-            float speedMult = RealisticMode.Value ? RealisticSpeedMultiplier.Value / 10f : 1f;
-            float sunStationSpeedMult = RealisticMode.Value ? RealisticSpeedMultiplier.Value / 3f : 1f;
-
-            sys.Root.SetActive(EnabledSolarSystem.Value);
-            sys.Root.GetComponent<SolarSystem>().SceneLoaded(Calls.Scene.GetSceneName());
-
             sys.StarBackground.SetActive(RealisticStars.Value);
-            
-            Calls.Players.GetLocalPlayer().Controller.gameObject.transform.GetChild(2).GetChild(0).GetChild(0).gameObject.GetComponent<Camera>().farClipPlane
-                = ViewDistance.Value;
-        
-            Main.solarSystem.StarBackground.GetComponent<StarBackground>().RescaleToFarClip();
+            var stars = sys.StarBackground.GetComponent<StarBackground>();
+            if (stars != null) stars.RescaleToFarClip();
+        }
 
-            if (Main.solarSystem.SignalScope != null)
+        Calls.Players.GetLocalPlayer().Controller.gameObject.transform.GetChild(2).GetChild(0).GetChild(0).gameObject
+                .GetComponent<Camera>().farClipPlane
+            = ViewDistance.Value;
+
+        if (sys.SignalScope != null)
+        {
+            sys.SignalScope.SetActive(SignalScopeEnabled.Value);
+            sys.SignalScope.transform.GetChild(0).GetComponent<Camera>().farClipPlane = ViewDistance.Value;
+        }
+
+        if (sys.Sun != null)
+        {
+            if (SunKeepLight.Value)
             {
-                Main.solarSystem.SignalScope.transform.GetChild(0).GetComponent<Camera>().farClipPlane = ViewDistance.Value;
+                sys.Sun.SetActive(true);
+                sys.Sun.transform.GetChild(0).gameObject.SetActive(false);
+                sys.Sun.transform.GetChild(1).gameObject.SetActive(SunEnabled.Value);
             }
-            
-
-            if (sys.Sun != null)
+            else
             {
-                if (SunKeepLight.Value)
-                {
-                    sys.Sun.SetActive(true);
-                    sys.Sun.transform.GetChild(0).gameObject.SetActive(false);
-                    sys.Sun.transform.GetChild(1).gameObject.SetActive(SunEnabled.Value);
-                }
-                else
-                {
-                    sys.Sun.SetActive(SunEnabled.Value);
-                    sys.Sun.transform.GetChild(0).gameObject.SetActive(false);
-                    sys.Sun.transform.GetChild(1).gameObject.SetActive(true);
-                }
-
-                var sn = sys.Sun.GetComponent<SupernovaSun>();
-                if (sn != null)
-                {
-                    sn.secondsToFullRed = SunSecondsToFullRed.Value;
-                    sn.waitAfterRed = SunWaitAfterRed.Value;
-                    sn.supernovaDuration = SunExpansionTime.Value;
-                    sn.collapseDuration = SunCollapseDuration.Value;
-                    sn.explosionDuration = SunExplosionDuration.Value;
-                    sn.DoTimeLoop = SunDoTimeLoop.Value;
-                }
+                sys.Sun.SetActive(SunEnabled.Value);
+                sys.Sun.transform.GetChild(0).gameObject.SetActive(false);
+                sys.Sun.transform.GetChild(1).gameObject.SetActive(true);
             }
 
-            if (sys.SunStation != null)
+            var sn = sys.Sun.GetComponent<SupernovaSun>();
+            if (sn != null)
             {
-                sys.SunStation.SetActive(SunStationEnabled.Value);
-                var orb = sys.SunStation.GetComponent<Orbiter>();
-                if (orb != null)
-                {
-                    orb.orbitDistance = SunStationOrbitDistance.Value;
-                    orb.orbitSpeed = SunStationOrbitSpeed.Value * sunStationSpeedMult;
-                    orb.spinSpeed = SunStationSpinSpeed.Value * sunStationSpeedMult;
-                }
+                sn.secondsToFullRed = SunSecondsToFullRed.Value;
+                sn.waitAfterRed = SunWaitAfterRed.Value;
+                sn.supernovaDuration = SunExpansionTime.Value;
+                sn.collapseDuration = SunCollapseDuration.Value;
             }
 
-            if (sys.HourGlassTwins != null)
-            {
-                sys.HourGlassTwins.SetActive(HourGlassTwinsEnabled.Value);
-                var orb = sys.HourGlassTwins.GetComponent<Orbiter>();
-                if (orb != null)
-                {
-                    orb.orbitDistance = HourGlassTwinsOrbitDistance.Value;
-                    orb.orbitSpeed = HourGlassTwinsOrbitSpeed.Value * speedMult;
-                    orb.spinSpeed = HourGlassTwinsSpinSpeed.Value * speedMult;
-                }
+            ApplySunLoop(sceneName);
+        }
 
-                var hgt = sys.HourGlassTwins.GetComponent<HourGlassTwins>();
-                if (hgt != null)
-                {
-                    hgt.transferDurationSeconds = HourGlassTwinsTransferDuration.Value;
-                    hgt.waitDurationSeconds = HourGlassTwinsWaitDuration.Value;
-                    hgt.ashSpinSpeed = HourGlassTwinsAshSpinSpeed.Value;
-                    hgt.emberSpinSpeed = HourGlassTwinsEmberSpinSpeed.Value;
-                    
-                    HourGlassTwins.randomSandStage = HourGlassTwinsRandomSandStage.Value;
-                }
+        if (sys.SunStation != null)
+        {
+            sys.SunStation.SetActive(SunStationEnabled.Value);
+            var orb = sys.SunStation.GetComponent<Orbiter>();
+            if (orb != null)
+            {
+                orb.orbitDistance = SunStationOrbitDistance.Value;
+                orb.orbitSpeed = SunStationOrbitSpeed.Value * sunStationSpeedMult;
+                orb.spinSpeed = SunStationSpinSpeed.Value * sunStationSpeedMult;
+            }
+        }
+
+        if (sys.HourGlassTwins != null)
+        {
+            sys.HourGlassTwins.SetActive(HourGlassTwinsEnabled.Value);
+            var orb = sys.HourGlassTwins.GetComponent<Orbiter>();
+            if (orb != null)
+            {
+                orb.orbitDistance = HourGlassTwinsOrbitDistance.Value;
+                orb.orbitSpeed = HourGlassTwinsOrbitSpeed.Value * speedMult;
+                orb.spinSpeed = HourGlassTwinsSpinSpeed.Value * speedMult;
             }
 
-            if (sys.TimberHearth != null)
+            var hgt = sys.HourGlassTwins.GetComponent<HourGlassTwins>();
+            if (hgt != null)
             {
-                sys.TimberHearth.SetActive(TimberHearthEnabled.Value);
-                var orb = sys.TimberHearth.GetComponent<Orbiter>();
-                var mus = sys.TimberHearth.GetComponent<MusicEmitter>();
-                if (orb != null)
-                {
-                    orb.orbitDistance = TimberHearthOrbitDistance.Value;
-                    orb.orbitSpeed = TimberHearthOrbitSpeed.Value * speedMult;
-                    orb.spinSpeed = TimberHearthSpinSpeed.Value * speedMult;
-                }
+                hgt.transferDurationSeconds = HourGlassTwinsTransferDuration.Value;
+                hgt.waitDurationSeconds = HourGlassTwinsWaitDuration.Value;
+                hgt.ashSpinSpeed = HourGlassTwinsAshSpinSpeed.Value;
+                hgt.emberSpinSpeed = HourGlassTwinsEmberSpinSpeed.Value;
 
-                if (mus != null)
-                {
-                    mus.isEnabled = TimberHearthEnabled.Value;
-                }
+                HourGlassTwins.randomSandStage = HourGlassTwinsRandomSandStage.Value;
+            }
+        }
+
+        if (sys.TimberHearth != null)
+        {
+            sys.TimberHearth.SetActive(TimberHearthEnabled.Value);
+            var orb = sys.TimberHearth.GetComponent<Orbiter>();
+            var mus = sys.TimberHearth.GetComponent<MusicEmitter>();
+            if (orb != null)
+            {
+                orb.orbitDistance = TimberHearthOrbitDistance.Value;
+                orb.orbitSpeed = TimberHearthOrbitSpeed.Value * speedMult;
+                orb.spinSpeed = TimberHearthSpinSpeed.Value * speedMult;
             }
 
-            if (sys.Attlerock != null)
+            if (mus != null)
             {
-                sys.Attlerock.SetActive(AttlerockEnabled.Value);
-                var orb = sys.Attlerock.GetComponent<Orbiter>();
-                if (orb != null)
-                {
-                    orb.orbitDistance = AttlerockOrbitDistance.Value;
-                    orb.orbitSpeed = AttlerockOrbitSpeed.Value * speedMult;
-                    orb.spinSpeed = AttlerockSpinSpeed.Value * speedMult;
-                }
+                mus.isEnabled = TimberHearthEnabled.Value && TimberHearthHarmonica.Value;
+            }
+        }
+
+        if (sys.Attlerock != null)
+        {
+            sys.Attlerock.SetActive(AttlerockEnabled.Value);
+            var orb = sys.Attlerock.GetComponent<Orbiter>();
+            if (orb != null)
+            {
+                orb.orbitDistance = AttlerockOrbitDistance.Value;
+                orb.orbitSpeed = AttlerockOrbitSpeed.Value * speedMult;
+                orb.spinSpeed = AttlerockSpinSpeed.Value * speedMult;
+            }
+        }
+
+        if (sys.BrittleHollow != null)
+        {
+            sys.BrittleHollow.SetActive(BrittleHollowEnabled.Value);
+            var orb = sys.BrittleHollow.GetComponent<Orbiter>();
+            if (orb != null)
+            {
+                orb.orbitDistance = BrittleHollowOrbitDistance.Value;
+                orb.orbitSpeed = BrittleHollowOrbitSpeed.Value * speedMult;
+                orb.spinSpeed = BrittleHollowSpinSpeed.Value * speedMult;
             }
 
-            if (sys.BrittleHollow != null)
+            var bh = sys.BrittleHollow.GetComponent<BrittleHollow>();
+            if (bh != null)
             {
-                sys.BrittleHollow.SetActive(BrittleHollowEnabled.Value);
-                var orb = sys.BrittleHollow.GetComponent<Orbiter>();
-                if (orb != null)
-                {
-                    orb.orbitDistance = BrittleHollowOrbitDistance.Value;
-                    orb.orbitSpeed = BrittleHollowOrbitSpeed.Value * speedMult;
-                    orb.spinSpeed = BrittleHollowSpinSpeed.Value * speedMult;
-                }
+                bh.breakApart = BrittleHollowBreakAppart.Value;
+                bh.breakIntervalMin = BrittleHollowBreakIntervalMin.Value;
+                bh.breakIntervalMax = BrittleHollowBreakIntervalMax.Value;
+            }
+        }
 
-                var bh = sys.BrittleHollow.GetComponent<BrittleHollow>();
-                if (bh != null)
-                {
-                    bh.breakApart = BrittleHollowBreakAppart.Value;
-                    bh.breakIntervalMin = BrittleHollowBreakIntervalMin.Value;
-                    bh.breakIntervalMax = BrittleHollowBreakIntervalMax.Value;
-                }
+        if (sys.HollowsLantern != null)
+        {
+            sys.HollowsLantern.SetActive(HollowsLanternEnabled.Value);
+            var orb = sys.HollowsLantern.GetComponent<Orbiter>();
+            if (orb != null)
+            {
+                orb.orbitDistance = HollowsLanternOrbitDistance.Value;
+                orb.orbitSpeed = HollowsLanternOrbitSpeed.Value * speedMult;
+                orb.spinSpeed = HollowsLanternSpinSpeed.Value * speedMult;
             }
 
-            if (sys.HollowsLantern != null)
+            var hl = sys.HollowsLantern.GetComponent<HollowsLantern>();
+            if (hl != null)
             {
-                sys.HollowsLantern.SetActive(HollowsLanternEnabled.Value);
-                var orb = sys.HollowsLantern.GetComponent<Orbiter>();
-                if (orb != null)
-                {
-                    orb.orbitDistance = HollowsLanternOrbitDistance.Value;
-                    orb.orbitSpeed = HollowsLanternOrbitSpeed.Value * speedMult;
-                    orb.spinSpeed = HollowsLanternSpinSpeed.Value * speedMult;
-                }
+                hl.lavaShrinkDuration = HollowsLanternLavaShrinkDuration.Value;
+                hl.meteorSpawnIntervalMin = HollowsLanternMeteorSpawnMin.Value;
+                hl.meteorSpawnIntervalMax = HollowsLanternMeteorSpawnMax.Value;
+            }
+        }
 
-                var hl = sys.HollowsLantern.GetComponent<HollowsLantern>();
-                if (hl != null)
-                {
-                    hl.lavaStartScale = Vector3.one * HollowsLanternLavaStartScale.Value;
-                    hl.targetLavaScale = Vector3.one * HollowsLanternTargetLavaScale.Value;
-                    hl.lavaShrinkDuration = HollowsLanternLavaShrinkDuration.Value;
-                    hl.meteorSpawnIntervalMin = HollowsLanternMeteorSpawnMin.Value;
-                    hl.meteorSpawnIntervalMax = HollowsLanternMeteorSpawnMax.Value;
-                    hl.meteorSpawnIntervalMaxEnd = HollowsLanternMeteorSpawnMaxEnd.Value;
-                }
+        if (sys.GiantsDeep != null)
+        {
+            sys.GiantsDeep.SetActive(GiantsDeepEnabled.Value);
+            var orb = sys.GiantsDeep.GetComponent<Orbiter>();
+            if (orb != null)
+            {
+                orb.orbitDistance = GiantsDeepOrbitDistance.Value;
+                orb.orbitSpeed = GiantsDeepOrbitSpeed.Value * speedMult;
+                orb.spinSpeed = GiantsDeepSpinSpeed.Value * speedMult;
+            }
+        }
+
+        if (sys.OrbitalProbeCannon != null)
+        {
+            sys.OrbitalProbeCannon.SetActive(OrbitalProbeCannonEnabled.Value);
+            var orb = sys.OrbitalProbeCannon.GetComponent<Orbiter>();
+            if (orb != null)
+            {
+                orb.orbitDistance = OrbitalProbeCannonOrbitDistance.Value;
+                orb.orbitSpeed = OrbitalProbeCannonOrbitSpeed.Value * speedMult;
+                orb.spinSpeed = OrbitalProbeCannonSpinSpeed.Value * speedMult;
             }
 
-            if (sys.GiantsDeep != null)
+            var cannon = sys.OrbitalProbeCannon.GetComponent<OrbitalProbeCannon>();
+            if (cannon != null)
             {
-                sys.GiantsDeep.SetActive(GiantsDeepEnabled.Value);
-                var orb = sys.GiantsDeep.GetComponent<Orbiter>();
-                if (orb != null)
-                {
-                    orb.orbitDistance = GiantsDeepOrbitDistance.Value;
-                    orb.orbitSpeed = GiantsDeepOrbitSpeed.Value * speedMult;
-                    orb.spinSpeed = GiantsDeepSpinSpeed.Value * speedMult;
-                }
+                cannon.fireProbe = OrbitalProbeCannonFire.Value;
+                cannon.timeToAim = OrbitalProbeCannonTimeToAim.Value;
+                cannon.explosionTime = OrbitalProbeCannonExplosionTime.Value;
+                cannon.breakupDuration = OrbitalProbeCannonBreakupDuration.Value;
+            }
+        }
+
+        if (sys.OrbitalProbe != null)
+        {
+            sys.OrbitalProbe.SetActive(OrbitalProbeEnabled.Value);
+            var probe = sys.OrbitalProbe.GetComponent<OrbitalProbe>();
+            if (probe != null)
+                probe.probeSpeed = OrbitalProbeSpeed.Value;
+        }
+
+        if (sys.QuantumMoon != null)
+        {
+            sys.QuantumMoon.SetActive(QuantumMoonEnabled.Value);
+            var orb = sys.QuantumMoon.GetComponent<Orbiter>();
+            if (orb != null)
+            {
+                orb.orbitDistance = QuantumMoonOrbitDistance.Value;
+                orb.orbitSpeed = QuantumMoonOrbitSpeed.Value * speedMult;
+                orb.spinSpeed = QuantumMoonSpinSpeed.Value * speedMult;
             }
 
-            if (sys.OrbitalProbeCannon != null)
+            var mus = sys.QuantumMoon.GetComponent<MusicEmitter>();
+            if (mus != null)
             {
-                sys.OrbitalProbeCannon.SetActive(OrbitalProbeCannonEnabled.Value);
-                var orb = sys.OrbitalProbeCannon.GetComponent<Orbiter>();
-                if (orb != null)
-                {
-                    orb.orbitDistance = OrbitalProbeCannonOrbitDistance.Value;
-                    orb.orbitSpeed = OrbitalProbeCannonOrbitSpeed.Value * speedMult;
-                    orb.spinSpeed = OrbitalProbeCannonSpinSpeed.Value * speedMult;
-                }
-
-                var cannon = sys.OrbitalProbeCannon.GetComponent<OrbitalProbeCannon>();
-                if (cannon != null)
-                {
-                    cannon.fireProbe = OrbitalProbeCannonFire.Value;
-                    cannon.timeToAim = OrbitalProbeCannonTimeToAim.Value;
-                    cannon.explosionTime = OrbitalProbeCannonExplosionTime.Value;
-                    cannon.breakupDuration = OrbitalProbeCannonBreakupDuration.Value;
-                }
+                mus.isEnabled = QuantumMoonPlayMusic.Value;
             }
+        }
 
-            if (sys.OrbitalProbe != null)
+        if (sys.DarkBramble != null)
+        {
+            sys.DarkBramble.SetActive(DarkBrambleEnabled.Value);
+            var orb = sys.DarkBramble.GetComponent<Orbiter>();
+            if (orb != null)
             {
-                sys.OrbitalProbe.SetActive(OrbitalProbeEnabled.Value);
-                var probe = sys.OrbitalProbe.GetComponent<OrbitalProbe>();
-                if (probe != null)
-                    probe.probeSpeed = OrbitalProbeSpeed.Value;
+                orb.orbitDistance = DarkBrambleOrbitDistance.Value;
+                orb.orbitSpeed = DarkBrambleOrbitSpeed.Value * speedMult;
             }
+        }
 
-            if (sys.QuantumMoon != null)
+        if (sys.WhiteHole != null)
+            sys.WhiteHole.SetActive(WhiteHoleEnabled.Value);
+
+        if (sys.WhiteHoleStation != null)
+            sys.WhiteHoleStation.SetActive(WhiteHoleStationEnabled.Value);
+
+        if (sys.Interloper != null)
+        {
+            sys.Interloper.SetActive(InterloperEnabled.Value);
+            var ell = sys.Interloper.GetComponent<EllipticalOrbiter>();
+            if (ell != null)
             {
-                sys.QuantumMoon.SetActive(QuantumMoonEnabled.Value);
-                var orb = sys.QuantumMoon.GetComponent<Orbiter>();
-                if (orb != null)
-                {
-                    orb.orbitDistance = QuantumMoonOrbitDistance.Value;
-                    orb.orbitSpeed = QuantumMoonOrbitSpeed.Value * speedMult;
-                    orb.spinSpeed = QuantumMoonSpinSpeed.Value * speedMult;
-                }
-
-                var mus = sys.QuantumMoon.GetComponent<MusicEmitter>();
-                if (mus != null)
-                {
-                    mus.isEnabled = QuantumMoonPlayMusic.Value;
-                }
+                ell.semiMinorAxis = InterloperSemiMinorAxis.Value;
+                ell.orbitSpeed = InterloperOrbitSpeed.Value * speedMult;
+                ell.speedIntensity = InterloperSpeedIntensity.Value * speedMult;
             }
+        }
 
-            if (sys.DarkBramble != null)
+        if (sys.HearthianMapSatelite != null)
+        {
+            sys.HearthianMapSatelite.SetActive(SatelliteEnabled.Value);
+            var orb = sys.HearthianMapSatelite.GetComponent<Orbiter>();
+            if (orb != null)
             {
-                sys.DarkBramble.SetActive(DarkBrambleEnabled.Value);
-                var orb = sys.DarkBramble.GetComponent<Orbiter>();
-                if (orb != null)
-                {
-                    orb.orbitDistance = DarkBrambleOrbitDistance.Value;
-                    orb.orbitSpeed = DarkBrambleOrbitSpeed.Value * speedMult;
-                }
+                orb.orbitDistance = SatelliteOrbitDistance.Value; // rescaled by SolarSystemScaler below
+                orb.orbitSpeed = SatelliteOrbitSpeed.Value * speedMult;
+                orb.spinSpeed = SatelliteSpinSpeed.Value * speedMult;
             }
+        }
 
-            if (sys.WhiteHole != null)
-                sys.WhiteHole.SetActive(WhiteHoleEnabled.Value);
+        if (sys.PlayerShip != null)
+        {
+            sys.PlayerShip.SetActive(PlayerShipEnabled.Value);
+        }
 
-            if (sys.WhiteHoleStation != null)
-                sys.WhiteHoleStation.SetActive(WhiteHoleStationEnabled.Value);
-
-            if (sys.Interloper != null)
+        if (sys.SignalScope != null)
+        {
+            var scope = sys.SignalScope.GetComponent<SignalScope>();
+            if (scope != null)
             {
-                sys.Interloper.SetActive(InterloperEnabled.Value);
-                var ell = sys.Interloper.GetComponent<EllipticalOrbiter>();
-                if (ell != null)
-                {
-                    ell.semiMinorAxis = InterloperSemiMinorAxis.Value;
-                    ell.orbitSpeed = InterloperOrbitSpeed.Value * speedMult;
-                    ell.speedIntensity = InterloperSpeedIntensity.Value * speedMult;
-                }
-            }
-
-            if (sys.PlayerShip != null)
-            {
-                sys.PlayerShip.SetActive(PlayerShipEnabled.Value);
-            }
-
-            if (sys.SignalScope != null)
-            {
-                var scope = sys.SignalScope.GetComponent<SignalScope>();
                 scope.playMusic = SignalScopePlayMusic.Value;
                 scope.grabDuringMatches = SignalScopeGrabDuringMatches.Value;
                 scope.minZoom = SignalScopeMinZoom.Value;
                 scope.maxZoom = SignalScopeMaxZoom.Value;
                 scope.zoomIncrement = SignalScopeZoomIncrement.Value;
+                scope.beltLocalPosition = new Vector3(SignalScopeOffsetX.Value, SignalScopeOffsetY.Value,
+                    SignalScopeOffsetZ.Value);
+                scope.beltLocalRotation = Quaternion.Euler(SignalScopeRotationX.Value, SignalScopeRotationY.Value,
+                    SignalScopeRotationZ.Value);
             }
+        }
 
-            if (sys.TapeRecorder != null)
-            {
-                sys.TapeRecorder.SetActive(TapeRecorderToggle.Value);
-            }
+        if (sys.MarshmallowStick != null)
+        {
+            sys.MarshmallowStick.SetActive(MarshmallowStickIsEnabled.Value);
+            MarshmallowStick.RefreshAll();
+        }
 
-            SolarSystemScaler.Apply(SolarSystemScale.Value);
+        if (sys.TapeRecorder != null)
+        {
+            sys.TapeRecorder.SetActive(TapeRecorderToggle.Value);
+        }
+
+        SolarSystemScaler.Apply(SolarSystemScale.Value);
+
+        if (sys.Stranger != null)
+        {
+            var st = sys.Stranger.GetComponent<Stranger>();
+            if (st != null) st.ApplySettings(); // after the scaler so our scale wins
         }
     }
 }

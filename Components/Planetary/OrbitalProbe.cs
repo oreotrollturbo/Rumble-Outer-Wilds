@@ -52,9 +52,8 @@ public class OrbitalProbe : MonoBehaviour
         }
         else
         {
-            // Fly forever
-            // todo i think the rotation is wrong ?
             transform.position += launchDirection * probeSpeed * Time.fixedDeltaTime;
+            transform.Rotate(Vector3.up, 5f * Time.deltaTime, Space.Self);
         }
     }
 

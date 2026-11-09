@@ -7,6 +7,7 @@ using MelonLoader;
 using UnityEngine;
 using Il2CppInterop.Runtime;
 using Il2CppRUMBLE.Interactions.InteractionBase;
+using OuterWildsRumble.Components.Utils;
 using OuterWildsRumble.UIFrameworkSettings;
 using RumbleModdingAPI.RMAPI;
 using Random = UnityEngine.Random;
@@ -60,8 +61,8 @@ public class QuantumTapeRecorder : MonoBehaviour
 
         qObject = gameObject.AddComponent<QuantumObject>();
 
-        ButtonWithLabel startButton = new ButtonWithLabel(Vector3.zero, "Play", "PlayButton", transform);
-        ButtonWithLabel stopButton = new ButtonWithLabel(Vector3.zero, "Stop", "StopButton", transform);
+        RumbleUtils.ButtonWithLabel startButton = new RumbleUtils.ButtonWithLabel(Vector3.zero, "Play", "PlayButton", transform);
+        RumbleUtils.ButtonWithLabel stopButton = new RumbleUtils.ButtonWithLabel(Vector3.zero, "Stop", "StopButton", transform);
 
         startButton.button.transform.localScale = new Vector3(0.25f,0.25f,0.25f);
         stopButton.button.transform.localScale = new Vector3(0.25f,0.25f,0.25f);

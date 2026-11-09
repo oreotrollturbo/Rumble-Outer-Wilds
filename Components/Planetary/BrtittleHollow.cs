@@ -23,11 +23,11 @@ public class BrittleHollow : MonoBehaviour
 
     internal float breakIntervalMin = 28f;
     internal float breakIntervalMax = 43f;
-    internal float suckSpeed        = 1f;
+    internal float suckSpeed        = 1f / 30f;
     internal float suckStopDistance = 0.05f;
     internal float spitYRange       = 0.9f;
     internal float spitSpeed        = 0.1f;
-    internal float driftSpeed       = 0.09f;
+    internal float driftSpeed       = 0.09f / 30f;
     internal float driftMaxRadius   = 9f;
 
     internal bool cancelled = false;

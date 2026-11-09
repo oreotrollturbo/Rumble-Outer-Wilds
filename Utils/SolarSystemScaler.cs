@@ -27,16 +27,6 @@ public static class SolarSystemScaler
     private const float BaseSpitSpeed = 0.1f / 30f;
     private const float BaseSpitYRange = 0.9f / 30f;
     private const float BaseSuckStopDistance = 0.05f / 30f;
-    // add near the other Base* constants
-    private const float BaseHeaSateliteOrbitDistance = 1100f/65f;
-
-    // ── Quantum moon orbit distances per possible parent (base, pre-scale) ─
-    // Mirrors the dictionary built in Main.SetupQuantumMoon().
-    private static readonly (float childIndex, float dist)[] AshTwinChildren =
-    {
-        (2, 0.59f), // AshTwin  child index 2
-        (0, 0.59f), // CaveTwin child index 0
-    };
 
     // ─────────────────────────────────────────────────────────────────────
     /// <summary>Apply all scale-dependent values from base * scale.</summary>
@@ -47,6 +37,7 @@ public static class SolarSystemScaler
 
         // Root transform – direct set, never compounds
         sys.Root.transform.localScale = Vector3.one * scale;
+
         // ── Orbiter distances ─────────────────────────────────────────────
         SetOrbiterDist(sys.SunStation, OwSystemSettings.SunStationOrbitDistance.Value, scale);
         SetOrbiterDist(sys.HourGlassTwins, OwSystemSettings.HourGlassTwinsOrbitDistance.Value, scale);
@@ -58,8 +49,7 @@ public static class SolarSystemScaler
         SetOrbiterDist(sys.OrbitalProbeCannon, OwSystemSettings.OrbitalProbeCannonOrbitDistance.Value, scale);
         SetOrbiterDist(sys.QuantumMoon, OwSystemSettings.QuantumMoonOrbitDistance.Value, scale);
         SetOrbiterDist(sys.DarkBramble, OwSystemSettings.DarkBrambleOrbitDistance.Value, scale);
-        // inside Apply(), alongside the other SetOrbiterDist calls
-        SetOrbiterDist(sys.HearthianMapSatelite, BaseHeaSateliteOrbitDistance, scale);
+        SetOrbiterDist(sys.HearthianMapSatelite, OwSystemSettings.SatelliteOrbitDistance.Value, scale);
 
         // ── Elliptical orbiter (Interloper) ───────────────────────────────
         var ell = sys.Interloper?.GetComponent<EllipticalOrbiter>();
@@ -91,8 +81,8 @@ public static class SolarSystemScaler
         if (bh != null)
         {
             // Settings-backed fields
-            bh.suckSpeed = OwSystemSettings.BrittleHollowSuckSpeed.Value * scale;
-            bh.driftSpeed = OwSystemSettings.BrittleHollowDriftSpeed.Value * scale;
+            bh.suckSpeed *= scale;
+            bh.driftSpeed *= scale;
             // Component-default fields
             bh.spitSpeed = BaseSpitSpeed * scale;
             bh.spitYRange = BaseSpitYRange * scale;
@@ -103,11 +93,8 @@ public static class SolarSystemScaler
         var hl = sys.HollowsLantern?.GetComponent<HollowsLantern>();
         if (hl != null)
         {
-            hl.meteorDestroyRadius = OwSystemSettings.HollowsLanternMeteorDestroyRadius.Value * scale;
+            hl.meteorDestroyRadius *= scale;
         }
-
-        // ── Orbital probe  ───────────────────────────────────────────
-        var probe = sys.OrbitalProbe?.GetComponent<OrbitalProbe>();
 
         // ── Music emitter detection radius ────────────────────────────────
         foreach (var mus in sys.Root.GetComponentsInChildren<MusicEmitter>())

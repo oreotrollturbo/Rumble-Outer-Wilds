@@ -17,6 +17,7 @@ namespace OuterWildsRumble.Components;
 [RegisterTypeInIl2Cpp]
 public class SignalScope : MonoBehaviour
 {
+    public static GameObject prefabSignalScope;
     // ───────────────────────── Registry ─────────────────────────
     public static SignalScope Local;
     public static readonly Dictionary<int, SignalScope> Remote = new Dictionary<int, SignalScope>();
@@ -54,8 +55,10 @@ public class SignalScope : MonoBehaviour
 
     private bool isHolding = false;
 
-    private Vector3 beltLocalPosition = new Vector3(0.1f, 0f, -0.1f);
-    private Quaternion beltLocalRotation = Quaternion.Euler(0, 0, 270);
+    private float prevRightTrigger;
+
+    public Vector3 beltLocalPosition = new Vector3(OwSystemSettings.SignalScopeOffsetX.Value, OwSystemSettings.SignalScopeOffsetY.Value, OwSystemSettings.SignalScopeOffsetZ.Value);
+    public Quaternion beltLocalRotation = Quaternion.Euler(OwSystemSettings.SignalScopeRotationX.Value, OwSystemSettings.SignalScopeRotationY.Value, OwSystemSettings.SignalScopeRotationZ.Value);
 
     private Vector3 handLocalPosition = new Vector3(0, 0, 0.1f);
     private Quaternion handLocalRotation = Quaternion.Euler(0, 90, 0);
@@ -138,10 +141,10 @@ public class SignalScope : MonoBehaviour
             waited += 0.5f;
         }
 
-        if (actor < 0 || Main.prefabSignalScope == null) yield break;
+        if (actor < 0 || prefabSignalScope == null) yield break;
         if (Remote.TryGetValue(actor, out var existing) && existing != null) yield break;
 
-        GameObject go = GameObject.Instantiate(Main.prefabSignalScope);
+        GameObject go = GameObject.Instantiate(prefabSignalScope);
         go.transform.localScale = new Vector3(2, 2, 2);
 
         // Start() runs on the next frame, so these fields are set in time
@@ -168,8 +171,8 @@ public class SignalScope : MonoBehaviour
         if (!isLocal) return;
         if (Main.solarSystem.Root == null) return;
 
-        var ss = Main.solarSystem.Root.GetComponent<SolarSystem>();
-        if (ss != null) ss.SendScopeHolding(isHolding);
+        var networking = Main.solarSystem.Root.GetComponent<SolarSystemNetworking>();
+        if (networking != null) networking.SendScopeHolding(isHolding);
     }
 
     // ───────────────────────── Lifecycle ─────────────────────────
@@ -277,8 +280,10 @@ public class SignalScope : MonoBehaviour
         if (isLocal)
         {
             float rightTrigger = Calls.ControllerMap.RightController.GetTrigger();
+            bool pressedThisFrame = rightTrigger > holdThreshold && prevRightTrigger <= holdThreshold;
+            prevRightTrigger = rightTrigger;
 
-            if (!isHolding && rightTrigger > holdThreshold && IsHandCloseEnough(rightHandTransform.position) && (grabDuringMatches || !Main.isInMatch))
+            if (!isHolding && pressedThisFrame && IsHandCloseEnough(rightHandTransform.position) && (grabDuringMatches || !Main.isInMatch))
             {
                 Grab();
             }
@@ -399,7 +404,10 @@ public class SignalScope : MonoBehaviour
 
     private void HandleMusicChange()
     {
-        if (!isHolding || !playMusic)
+        bool hearOthers = OwSystemSettings.MusicFromOthers.Value;
+        bool localActive = isHolding && playMusic;
+
+        if (!playMusic || (!localActive && !(hearOthers && AnyRemoteHolding())))
         {
             TurnOffAllMusic();
             return;
@@ -407,7 +415,7 @@ public class SignalScope : MonoBehaviour
 
         allMusicOff = false;
 
-        float angleMultiplier;
+        float angleMultiplier = 1f;
         if (currentFOV <= startingZoom)
         {
             float t = Mathf.InverseLerp(startingZoom, maxZoom, currentFOV);
@@ -419,50 +427,88 @@ public class SignalScope : MonoBehaviour
             angleMultiplier = Mathf.Lerp(1f, zoomedOutAngleScale, t);
         }
 
-        float strongestSignal = 0f;
+        float strongestLocalSignal = 0f;
+        List<GameObject> dead = null;
 
         foreach (KeyValuePair<GameObject, MusicEmitter> entry in musicEmitters)
         {
             GameObject body = entry.Key;
             MusicEmitter emitter = entry.Value;
 
-            if (!body.activeSelf)
+            if (body == null || emitter == null)
             {
-                emitter.SetVolume(0);
+                if (dead == null) dead = new List<GameObject>();
+                dead.Add(body);
                 continue;
             }
 
-            float strength = GetSignalStrengthForTarget(body, emitter.detectionAngle * angleMultiplier);
-            emitter.SetVolume(strength);
+            if (!body.activeInHierarchy)
+            {
+                emitter.SetVolume(0f);
+                continue;
+            }
 
-            if (strength > strongestSignal) strongestSignal = strength;
+            float strength = 0f;
+
+            if (localActive)
+            {
+                strength = GetSignalStrengthForTarget(
+                    Camera.transform, body, emitter.detectionAngle * angleMultiplier);
+                if (strength > strongestLocalSignal) strongestLocalSignal = strength;
+            }
+
+            if (hearOthers)
+            {
+                foreach (var kv in Remote)
+                {
+                    SignalScope other = kv.Value;
+                    if (other == null || !other.isHolding || other.Camera == null) continue;
+
+                    // Remote zoom isn't synced, so the default angle is used
+                    float s = GetSignalStrengthForTarget(
+                        other.Camera.transform, body, emitter.detectionAngle);
+                    if (s > strength) strength = s;
+                }
+            }
+
+            emitter.SetVolume(strength);
         }
 
-        UpdateStaticVolume(strongestSignal);
+        if (dead != null)
+            foreach (var go in dead)
+                if (go != null) musicEmitters.Remove(go);
+
+        // Static only reflects the local scope
+        UpdateStaticVolume(localActive, strongestLocalSignal);
     }
 
-    private void UpdateStaticVolume(float strongestSignal)
+    private bool AnyRemoteHolding()
+    {
+        foreach (var kv in Remote)
+            if (kv.Value != null && kv.Value.isHolding) return true;
+        return false;
+    }
+
+    private void UpdateStaticVolume(bool localActive, float strongestSignal)
     {
         if (staticClip == null) return;
 
-        if (!OwSystemSettings.SignalScopePlayStatic.Value) AudioManager.ChangeVolume(staticClip, 0);
+        if (!localActive || !OwSystemSettings.SignalScopePlayStatic.Value)
+        {
+            AudioManager.ChangeVolume(staticClip, 0f);
+            return;
+        }
 
         // Static whenever nothing else is audible
-        float target = staticVolume * (1f - strongestSignal);
-        AudioManager.ChangeVolume(staticClip, target);
+        AudioManager.ChangeVolume(staticClip, staticVolume * (1f - strongestSignal));
     }
 
-    private float GetSignalStrengthForTarget(GameObject target, float detectionAngle)
+    private float GetSignalStrengthForTarget(Transform scopeCam, GameObject target, float detectionAngle)
     {
-        Vector3 scopePos     = Camera.transform.position;
-        Vector3 scopeForward = Camera.transform.forward;
-        Vector3 dirToTarget  = (target.transform.position - scopePos).normalized;
+        Vector3 dirToTarget = (target.transform.position - scopeCam.position).normalized;
+        float angleToTarget = Vector3.Angle(scopeCam.forward, dirToTarget);
 
-        float angleToTarget = Vector3.Angle(scopeForward, dirToTarget);
-
-        if (angleToTarget > detectionAngle)
-            return 0f;
-
+        if (angleToTarget > detectionAngle) return 0f;
         return 1f - (angleToTarget / detectionAngle);
     }
 
@@ -472,7 +518,7 @@ public class SignalScope : MonoBehaviour
         allMusicOff = true;
         foreach (var emitter in musicEmitters.Values)
         {
-            emitter.SetVolume(0f);
+            if (emitter != null) emitter.SetVolume(0f);
         }
 
         if (staticClip != null)
@@ -483,7 +529,7 @@ public class SignalScope : MonoBehaviour
     {
         if (musicEmitters.TryGetValue(go, out MusicEmitter emitter))
         {
-            emitter.SetVolume(0f);
+            if (emitter != null) emitter.SetVolume(0f);
         }
         musicEmitters.Remove(go);
     }
