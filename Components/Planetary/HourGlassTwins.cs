@@ -26,12 +26,13 @@ public class HourGlassTwins : MonoBehaviour
 
     private Quaternion defaultFunnelRotation;
 
-    // --- References ---
     private GameObject sandFunnel;
     private GameObject ashTwinSand;
     private GameObject emberTwinSand;
     private GameObject ashTwinPlanet;
     private GameObject emberTwinPlanet;
+
+    private bool _initialised;
 
     public enum State
     {
@@ -57,11 +58,22 @@ public class HourGlassTwins : MonoBehaviour
 
         defaultFunnelRotation = sandFunnel.transform.localRotation;
 
+        _initialised = true;
+        ResetLoop();
+    }
+    
+    public void ResetLoop()
+    {
+        if (!_initialised) return;
+
+        flowingToAsh = false;
+
         float sandProgress = 0f; // 0 = start of Ash->Ember flow (Ash full)
         if (randomSandStage) sandProgress = UnityEngine.Random.Range(0f, 1f);
 
         SetSandScales(sandProgress);
         sandFunnel.transform.localScale = funnelInactiveScale;
+        sandFunnel.transform.localRotation = defaultFunnelRotation;
 
         currentState = State.WaitingForTransfer;
         stateTimer = 0f;

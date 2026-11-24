@@ -88,7 +88,7 @@ public class EllipticalOrbiter : MonoBehaviour
             }
         }
 
-        // Spin
+        // Spin spin spin spin spin spin spin spin spin spin, fidget spiner 
         transform.Rotate(spinAxis, spinSpeed * Time.fixedDeltaTime, Space.Self);
     }
 }

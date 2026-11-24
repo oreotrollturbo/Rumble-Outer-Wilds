@@ -9,7 +9,7 @@ public class HearthianMapSatelite : MonoBehaviour
 {
     public HearthianMapSatelite(IntPtr ptr) : base(ptr) {}
 
-    // ── Pulse timing ──────────────────────────────────────────────────────────
+    //pulses
     public float offDuration     = 3f;
     public float fadeInDuration  = 0.7f;
     public float onDuration      = 1.8f;

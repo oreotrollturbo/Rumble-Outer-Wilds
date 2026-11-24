@@ -15,20 +15,27 @@ public class Orbiter : MonoBehaviour
     private Vector3 orbitAngles = Vector3.zero;
 
     public Vector3 orbitAxis = Vector3.up;
-    public float orbitSpeed = 30f; //degs per sec
+    public float orbitSpeed = 30f;
 
     public Vector3 spinAxis = Vector3.up;
-    public float spinSpeed = 30f; //degs per sec
+    public float spinSpeed = 30f;
 
     public bool randomisePos = !OwSystemSettings.RealisticMode.Value;
     public bool spinEnabled = true;
-    
+
     public bool disableOrbit = false;
-    
-    
 
     public float _currentOrbitAngle = 0;
     public float _currentSpinAngle = 0;
+
+    private float _initialOrbitAngle;
+    private float _initialSpinAngle;
+    private Quaternion _initialLocalRotation = Quaternion.identity;
+    private bool _hasInitialState;
+
+    public bool HasInitialState => _hasInitialState;
+
+    public Quaternion? customRotation = null;
 
     public Orbiter(IntPtr ptr) : base(ptr) { }
 
@@ -39,12 +46,34 @@ public class Orbiter : MonoBehaviour
             _currentOrbitAngle = GetRandomAngle();
             _currentSpinAngle = GetRandomAngle();
         }
+
+        _initialOrbitAngle = _currentOrbitAngle;
+        _initialSpinAngle = _currentSpinAngle;
+        _initialLocalRotation = transform.localRotation;
+        _hasInitialState = true;
     }
 
-    public Quaternion? customRotation = null; // when set, overrides spin rotation (the body is pinned in world space)
+    public void ResetLoop()
+    {
+        if (!_hasInitialState) return;
 
-    // Orbit offsets are expressed in the solar system's frame, NOT the parent's rotation.
-    // Using orbitParent.rotation made moons inherit their parent's spin (orbit speed = moon + parent spin).
+        _currentOrbitAngle = _initialOrbitAngle;
+        _currentSpinAngle = _initialSpinAngle;
+        customRotation = null;
+        transform.localRotation = _initialLocalRotation;
+
+        if (orbitParent)
+            transform.position = GetPositionAtAngle(_currentOrbitAngle);
+    }
+
+    public Quaternion GetSystemSpinRotation()
+    {
+        if (!_hasInitialState) return transform.localRotation;
+
+        return _initialLocalRotation *
+               Quaternion.AngleAxis(_currentSpinAngle - _initialSpinAngle, spinAxis.normalized);
+    }
+
     private static Quaternion GetSystemFrame()
     {
         var root = Main.solarSystem.Root;
@@ -61,7 +90,6 @@ public class Orbiter : MonoBehaviour
             _currentOrbitAngle += orbitSpeed * dt;
             _currentOrbitAngle %= 360f;
 
-            //Positioning
             Vector3 baseDir = Quaternion.Euler(orbitAngles) * Vector3.forward;
             Quaternion orbitRot = Quaternion.AngleAxis(_currentOrbitAngle, orbitAxis);
             Vector3 localOffsetDirection = orbitRot * baseDir;
@@ -69,11 +97,8 @@ public class Orbiter : MonoBehaviour
             Vector3 worldOffset = GetSystemFrame() * localOffsetDirection * orbitDistance;
             transform.position = orbitParent.position + worldOffset;
 
-            // Rotation
             if (spinEnabled)
             {
-                // The spin angle must keep advancing even while the body is pinned (anchored),
-                // because SolarSystem uses it to counter-rotate the sky.
                 float deltaAngle = spinSpeed * dt;
                 _currentSpinAngle = (_currentSpinAngle + deltaAngle) % 360f;
 
@@ -89,7 +114,7 @@ public class Orbiter : MonoBehaviour
             }
         }
     }
-    
+
     public Vector3 GetPositionAtAngle(float orbitAngle)
     {
         Vector3 baseDir = Quaternion.Euler(orbitAngles) * Vector3.forward;
@@ -99,7 +124,6 @@ public class Orbiter : MonoBehaviour
         return orbitParent.position + worldOffset;
     }
 
-    // what _currentOrbitAngle will be after a given number of seconds
     public float GetOrbitAngleAfter(float seconds)
     {
         return (_currentOrbitAngle + orbitSpeed * seconds) % 360f;

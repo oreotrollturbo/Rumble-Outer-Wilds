@@ -175,7 +175,6 @@
         <None Remove="OuterWildsStuff\outerwilds" />
         <EmbeddedResource Include="Assetbundles\outerwilds" />
         <None Remove="OuterWildsStuff\eventhorizon" />
-        <EmbeddedResource Include="Assetbundles\eventhorizon" />
         <None Remove="OuterWildsStuff\atmosphere" />
     </ItemGroup>
 

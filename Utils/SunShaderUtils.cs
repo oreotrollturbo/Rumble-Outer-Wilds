@@ -5,9 +5,6 @@ namespace OuterWildsRumble.Components.SupernovaUtils;
 
 public static class SunShaderUtils
 {
-    // =========================
-    // DATA STRUCTS (moved here)
-    // =========================
 
     public struct SunCoreSettings
     {
@@ -38,10 +35,6 @@ public static class SunShaderUtils
         public float HaloRing2Width;
     }
 
-    // =========================
-    // PROPERTY HELPERS
-    // =========================
-
     public static float GetFloat(Material m, string prop, float fallback = 0f)
         => m.HasProperty(prop) ? m.GetFloat(prop) : fallback;
 
@@ -60,10 +53,6 @@ public static class SunShaderUtils
             m.SetColor(prop, value);
     }
 
-    // =========================
-    // CORE READ
-    // =========================
-
     public static SunCoreSettings ReadCore(Material mat)
     {
         return new SunCoreSettings
@@ -77,10 +66,6 @@ public static class SunShaderUtils
             Color4 = GetColor(mat, "Color_ED9867B5", Color.white),
         };
     }
-
-    // =========================
-    // HALO READ
-    // =========================
 
     public static SunHaloSettings ReadHalo(Material mat)
     {
@@ -103,10 +88,6 @@ public static class SunShaderUtils
         };
     }
 
-    // =========================
-    // CORE APPLY
-    // =========================
-
     public static void ApplyCore(Material mat, SunCoreSettings s)
     {
         SetFloat(mat, "Vector1_89F39960", s.SunBright);
@@ -118,9 +99,6 @@ public static class SunShaderUtils
         SetColor(mat, "Color_ED9867B5", s.Color4);
     }
 
-    // =========================
-    // HALO APPLY
-    // =========================
 
     public static void ApplyHalo(Material mat, SunHaloSettings s)
     {
@@ -139,10 +117,7 @@ public static class SunShaderUtils
         SetFloat(mat, "Vector1_E678A47B", s.HaloRing2Intensity);
         SetFloat(mat, "Vector1_5B67CB2F", s.HaloRing2Width);
     }
-
-    // =========================
-    // OPTIONAL GAMEOBJECT WRAPPERS
-    // =========================
+    
 
     public static SunCoreSettings ReadCore(GameObject go)
     {

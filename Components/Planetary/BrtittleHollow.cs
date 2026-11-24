@@ -36,8 +36,6 @@ public class BrittleHollow : MonoBehaviour
 
     public bool breakApart = true;
     
-    // TODO network how many pieces are gone so the client can replicate it
-
     void Start()
     {
         var bhRoot = transform.GetChild(0);
@@ -216,7 +214,6 @@ internal static class BrittleHollowCoroutines
     {
         if (piece == null) yield break;
 
-        // Safety guard: ensure the piece is still under the system root before drifting.
         Transform systemRoot = bh.transform.parent;
         if (systemRoot != null && piece.parent != systemRoot)
             piece.SetParent(systemRoot, worldPositionStays: true);

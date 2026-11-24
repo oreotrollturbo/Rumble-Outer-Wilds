@@ -14,6 +14,7 @@ public class OrbitalProbe : MonoBehaviour
     public OrbitalProbe(IntPtr ptr) : base(ptr) {}
 
     public float probeSpeed = 60f;
+    public float rotationSpeed = 30f;
 
     private Quaternion rotOffset = Quaternion.Euler(0, 0, 90f);
 
@@ -46,14 +47,14 @@ public class OrbitalProbe : MonoBehaviour
     {
         if (!isLaunched)
         {
-            // Dock: follow tip transform with offset
+            // Dock: follow tip transform with offset, MIGHT BE WRONG
             transform.position = midTransform.TransformPoint(middleLocalOffset);
             transform.rotation = midTransform.rotation * rotOffset;
         }
         else
         {
             transform.position += launchDirection * probeSpeed * Time.fixedDeltaTime;
-            transform.Rotate(Vector3.up, 5f * Time.deltaTime, Space.Self);
+            transform.Rotate(Vector3.up, rotationSpeed * Time.deltaTime, Space.Self);
         }
     }
 

@@ -21,7 +21,6 @@ public class LoopingSampleProvider : ISampleProvider
 
         while (totalSamplesRead < count)
         {
-            //Read from le file
             int samplesRead = _sourceStream.Read(buffer, offset + totalSamplesRead, count - totalSamplesRead);
             
             if (samplesRead == 0)

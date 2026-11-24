@@ -9,6 +9,7 @@ public class Stranger : MonoBehaviour
 {
     public Transform sun;                 // the Sun
     public float satelliteAngle = -30f;   // the point on the satellite's orbit the Stranger sits in line with
+    public float sideOffsetAngle = 4f;    // degrees sideways from the satellite line (negative = other side)
     public float distance = 10.6f;        // pre-scale distance from the Sun, ~Giant's Deep
     public float modelScale = 0.0004f;    // size of the Stranger (times system scale / 30)
 
@@ -32,8 +33,7 @@ public class Stranger : MonoBehaviour
         EnsureRefs();
         ApplyCloak();
     }
-
-    // Children may not be resolved yet when settings are applied (Start hasn't run), so resolve lazily
+    
     private void EnsureRefs()
     {
         if (Center == null && transform.childCount > 0)
@@ -48,10 +48,7 @@ public class Stranger : MonoBehaviour
             CloakingField.SetActive(cloakingFieldEnabled);
     }
 
-    /// <summary>
-    /// Pulls everything from settings. Scale is applied here (once per settings change)
-    /// instead of every frame. Call this AFTER SolarSystemScaler.Apply.
-    /// </summary>
+    
     public void ApplySettings()
     {
         gameObject.SetActive(OwSystemSettings.StrangerEnabled.Value);
@@ -59,19 +56,18 @@ public class Stranger : MonoBehaviour
         modelScale = OwSystemSettings.StrangerScale.Value;
         distance = OwSystemSettings.StrangerDistance.Value;
         satelliteAngle = OwSystemSettings.StrangerSatelliteAngle.Value;
+        sideOffsetAngle = OwSystemSettings.StrangerSideOffsetAngle.Value;
         centerSpinSpeed = OwSystemSettings.StrangerCenterSpinSpeed.Value;
         leaveStartSeconds = OwSystemSettings.StrangerLeaveStartSeconds.Value;
         leaveDurationSeconds = OwSystemSettings.StrangerLeaveDurationSeconds.Value;
         cloakingFieldEnabled = OwSystemSettings.StrangerCloakingField.Value;
 
-        float systemScale = OwSystemSettings.SolarSystemScale.Value;
-        transform.localScale = Vector3.one * (BaseScale * modelScale * systemScale / 30f);
+        transform.localScale = Vector3.one * (BaseScale * modelScale);
 
         EnsureRefs();
         ApplyCloak();
     }
 
-    /// <summary>Restarts the 6:40 timer, which snaps the Stranger back to its start position. Called when the loop restarts.</summary>
     public void ResetLoop()
     {
         _elapsed = 0f;
@@ -86,28 +82,17 @@ public class Stranger : MonoBehaviour
             Center.transform.Rotate(Vector3.up, centerSpinSpeed * Time.deltaTime, Space.Self);
     }
 
-    // Position/rotation only. Scale is not touched here.
     void LateUpdate()
     {
-        if (sun == null) return;
         
-        var satOrb = Main.solarSystem.HearthianMapSatelite?.GetComponent<Orbiter>();
-        if (satOrb != null && Time.frameCount % 120 == 0)
-        {
-            float sep = Vector3.Angle(satOrb.transform.position - sun.position, transform.position - sun.position);
-            MelonLogger.Msg($"[StrangerDebug] satAngle={satOrb._currentOrbitAngle:F1} target={satelliteAngle} separation={sep:F1} elapsed={_elapsed:F0}");
-        }
-
         Transform root = Main.solarSystem.Root.transform;
         float systemScale = OwSystemSettings.SolarSystemScale.Value;
 
-        // Direction from the Sun towards the satellite's orbit point at satelliteAngle
         if (TryGetSatelliteDirection(out Vector3 dir))
             _lastDir = dir;
         else
             dir = _lastDir;
 
-        // Distance from the Sun, drifting outwards along the same line after leaveStartSeconds
         float startDist = distance * systemScale;
         float dist = startDist;
 
@@ -123,30 +108,27 @@ public class Stranger : MonoBehaviour
     }
 
     /// <summary>
-    /// Direction from the Sun to where the satellite is when its orbit angle equals satelliteAngle.
-    /// Uses the Orbiter's own position math, so it stays fixed while the satellite moves.
+    /// Get the satellite direction and calculate X degrees to put at
     /// </summary>
     private bool TryGetSatelliteDirection(out Vector3 dir)
     {
         dir = Vector3.forward;
 
         GameObject sat = Main.solarSystem.HearthianMapSatelite;
-        if (sat == null) return false;
 
         Orbiter orb = sat.GetComponent<Orbiter>();
-        if (orb == null || orb.orbitParent == null) return false;
 
         Vector3 offset = orb.GetPositionAtAngle(satelliteAngle) - sun.position;
         if (offset.sqrMagnitude < 1e-6f) return false;
 
-        dir = offset.normalized;
+        Transform root = Main.solarSystem.Root.transform;
+        dir = Quaternion.AngleAxis(sideOffsetAngle, root.up) * offset.normalized;
         return true;
     }
 
     private float GetLeaveTargetDistance(float startDist)
     {
         GameObject sat = Main.solarSystem.HearthianMapSatelite;
-        if (sat == null) return startDist * 3f; // fallback if the satellite is missing
 
         float satDist = Vector3.Distance(sat.transform.position, sun.position);
         return Mathf.Max(startDist, satDist * leaveDistanceMargin);

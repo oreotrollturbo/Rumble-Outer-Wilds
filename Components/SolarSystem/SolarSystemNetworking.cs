@@ -18,13 +18,13 @@ namespace OuterWildsRumble.Components;
 [RegisterTypeInIl2Cpp]
 public class SolarSystemNetworking : MonoBehaviourPun
 {
-    private SolarSystemRealisticMode _realistic;
+    private RealisticMode _realistic;
 
-    private SolarSystemRealisticMode Realistic
+    private RealisticMode Realistic
     {
         get
         {
-            if (_realistic == null) _realistic = GetComponent<SolarSystemRealisticMode>();
+            if (_realistic == null) _realistic = GetComponent<RealisticMode>();
             return _realistic;
         }
     }
@@ -425,11 +425,6 @@ public class SolarSystemNetworking : MonoBehaviourPun
         }
 
         ApplyFrame(hasFrame, anchorName, rootRot, hasCustom, customRot);
-
-        // The spin angle just jumped to the host's value. Reset the baseline even if no frame block arrived,
-        // otherwise realistic mode treats the jump as one huge rotation step and the sky snaps.
-        if (Realistic != null)
-            Realistic.ResyncSpinBaseline();
 
         MelonLogger.Msg($"[SolarSystem] Applied {applied} entries. Unmatched paths: {(missing.Length == 0 ? "none" : missing.ToString())}");
     }

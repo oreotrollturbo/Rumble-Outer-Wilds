@@ -14,7 +14,6 @@ public class RumbleUtils
 
         public ButtonWithLabel(Vector3 localPosition, string labelText, string objectName, Transform parent = null)
         {
-            // Create button at origin with identity rotation
             button = Create.NewButton(
                 Vector3.zero, 
                 Quaternion.identity
@@ -26,21 +25,19 @@ public class RumbleUtils
                 button.transform.SetParent(parent, false);
             }
 
-            // Set local transforms
             button.transform.localPosition = localPosition;
             button.transform.localRotation = Quaternion.Euler(90, 180, 0);
     
-            // Create label as child of button
             label = Create.NewText(labelText, 0.5f, Color.white, Vector3.zero, Quaternion.identity);
             label.name = objectName + " label";
             label.transform.SetParent(button.transform, false);
-            label.transform.localPosition = new Vector3(0, 0.1f, 0f); // Position below button   0f, 0f, 0.12f
+            label.transform.localPosition = new Vector3(0, 0.1f, 0f);
             label.transform.localRotation = Quaternion.Euler(90, 180, 0);
             
             TextMeshPro tmp = label.GetComponent<TextMeshPro>();
             tmp.text = labelText;
-            tmp.enableWordWrapping = false;       //no line breaks
-            tmp.overflowMode = TextOverflowModes.Overflow; //allows text to extend
+            tmp.enableWordWrapping = false;      
+            tmp.overflowMode = TextOverflowModes.Overflow; 
         }
 
         public ButtonWithLabel(Vector3 localPosition, string labelText, string objectName, GameObject parent)

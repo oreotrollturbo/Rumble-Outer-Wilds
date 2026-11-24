@@ -33,8 +33,8 @@ public class HollowsLantern : MonoBehaviour
     public float meteorDestroyRadius       = 0.03f / 30f;
 
     
-    public float meteorFreeTimeMin         = 2f;    // min seconds before pull starts
-    public float meteorFreeTimeMax         = 50f;   // max seconds before pull starts
+    public float meteorFreeTimeMin         = 2f;    //min seconds before pull starts
+    public float meteorFreeTimeMax         = 50f;   //max seconds before pull starts
 
     public float meteorOrbitRadiusVariance = 15f;
     
@@ -106,8 +106,7 @@ public class HollowsLantern : MonoBehaviour
         MelonLogger.Msg("[HollowsLantern] SolarSystemRestart complete.");
     }
 
-    // ── Lava shrink ──────────────────────────────────────────────────────────
-    private void FixedUpdate()
+    private void FixedUpdate() //lava stuff
     {
         if (lavaElapsed < lavaShrinkDuration)
         {
@@ -117,7 +116,6 @@ public class HollowsLantern : MonoBehaviour
         }
     }
 
-    // ── Coroutine tracking ───────────────────────────────────────────────────
     private void StartTracked(IEnumerator routine)
     {
         object handle = MelonCoroutines.Start(routine);

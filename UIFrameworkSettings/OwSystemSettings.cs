@@ -22,7 +22,6 @@ public static class OwSystemSettings
     private static MelonPreferences_Category hollowsLanternCat;
     private static MelonPreferences_Category giantsDeepCat;
     private static MelonPreferences_Category probeCannonCat;
-    private static MelonPreferences_Category orbitalProbeCat;
     private static MelonPreferences_Category quantumMoonCat;
     private static MelonPreferences_Category darkBrambleCat;
     private static MelonPreferences_Category whiteHoleCat;
@@ -62,6 +61,12 @@ public static class OwSystemSettings
 
     public static MelonPreferences_Entry<bool> RealisticMode;
     public static MelonPreferences_Entry<float> RealisticSpeedMultiplier;
+    
+    public static MelonPreferences_Entry<bool> FlashlightEnabled;
+    public static MelonPreferences_Entry<float> FlashlightIntensity;
+    public static MelonPreferences_Entry<float> FlashLightRange;
+    public static MelonPreferences_Entry<float> FlashlightOuterAngle;
+    public static MelonPreferences_Entry<float> FlashlightInnerAngle;
 
     public static MelonPreferences_Entry<bool> SunEnabled;
     public static MelonPreferences_Entry<bool> SunKeepLight;
@@ -154,8 +159,13 @@ public static class OwSystemSettings
     public static MelonPreferences_Entry<float> DarkBrambleOrbitSpeed;
 
     public static MelonPreferences_Entry<bool> WhiteHoleEnabled;
+    public static MelonPreferences_Entry<float> WhiteHoleDistance;
+    public static MelonPreferences_Entry<float> WhiteHoleScale;
+    public static MelonPreferences_Entry<float> WhiteHoleLightIntensity;
+    public static MelonPreferences_Entry<float> WhiteHoleLightRange;
 
     public static MelonPreferences_Entry<bool> WhiteHoleStationEnabled;
+    public static MelonPreferences_Entry<float> WhiteHoleStationOffset;
 
     public static MelonPreferences_Entry<bool> InterloperEnabled;
     public static MelonPreferences_Entry<float> InterloperSemiMinorAxis;
@@ -168,9 +178,11 @@ public static class OwSystemSettings
     public static MelonPreferences_Entry<float> SatelliteSpinSpeed;
 
     public static MelonPreferences_Entry<bool> StrangerEnabled;
+    public static MelonPreferences_Entry<bool> StrangerPlayMusic;
     public static MelonPreferences_Entry<float> StrangerScale;
     public static MelonPreferences_Entry<float> StrangerDistance;
     public static MelonPreferences_Entry<float> StrangerSatelliteAngle;
+    public static MelonPreferences_Entry<float> StrangerSideOffsetAngle;
     public static MelonPreferences_Entry<bool> StrangerCloakingField;
     public static MelonPreferences_Entry<float> StrangerCenterSpinSpeed;
     public static MelonPreferences_Entry<float> StrangerLeaveStartSeconds;
@@ -220,7 +232,6 @@ public static class OwSystemSettings
         hollowsLanternCat = MelonPreferences.CreateCategory("OWR_HollowsLantern", "Hollow's Lantern");
         giantsDeepCat = MelonPreferences.CreateCategory("OWR_GiantsDeep", "Giant's Deep");
         probeCannonCat = MelonPreferences.CreateCategory("OWR_ProbeCannon", "Probe Cannon");
-        orbitalProbeCat = MelonPreferences.CreateCategory("OWR_OrbitalProbe", "Orbital Probe");
         quantumMoonCat = MelonPreferences.CreateCategory("OWR_QuantumMoon", "Quantum Moon");
         darkBrambleCat = MelonPreferences.CreateCategory("OWR_DarkBramble", "Dark Bramble");
         whiteHoleCat = MelonPreferences.CreateCategory("OWR_WhiteHole", "White Hole");
@@ -236,7 +247,7 @@ public static class OwSystemSettings
         {
             globalCat, realisticCat, sunCat, sunStationCat, hourglassCat, timberHearthCat,
             attlerockCat, brittleHollowCat, hollowsLanternCat, giantsDeepCat,
-            probeCannonCat, orbitalProbeCat, quantumMoonCat, darkBrambleCat,
+            probeCannonCat, quantumMoonCat, darkBrambleCat,
             whiteHoleCat, whiteHoleStationCat, interloperCat, satelliteCat, strangerCat,
             playerShipCat, signalScopeCat, marshmallowCat
         };
@@ -250,7 +261,7 @@ public static class OwSystemSettings
             "OW_Shader_Replacement", true,
             "Enable Shader Replacement", "Replaces the games shaders to allow lighting from other light sources");
         ViewDistance = globalCat.CreateEntry(
-            "OW_View_Distance", 1500f,
+            "OW_View_Distance", 155500f,
             "Player View Distance",
             "How far you can see! You will need this if you scale your solar system over 50~");
         OnlySunLighting = globalCat.CreateEntry(
@@ -262,12 +273,13 @@ public static class OwSystemSettings
             "Realistic stars",
             "Adds the correct outer wilds stars. NOTE: You must use rumble dark mode and replace the skybox with a fully black one for this!!!");
         SolarSystemScale = globalCat.CreateEntry(
-            "OW_SolarSystemScale", 80f,
+            "OW_SolarSystemScale", 1210f,
             "Solar System Scale", "The scale of the solar system ! UNSTABLE USE AT YOUR OWN RISK");
         SyncSolarSystemInMatches = globalCat.CreateEntry(
             "SyncSolarSystemInMatches", true,
             "Sync System in Matches", "Synchronise the solar system in matches with your opponent");
 
+        
         RealisticMode = realisticCat.CreateEntry(
             "Realistic_Enabled", true,
             "Realistic Mode",
@@ -277,7 +289,28 @@ public static class OwSystemSettings
             "Realistic_SpeedMultiplier", 1f,
             "Speed Multiplier",
             "Global multiplier applied to all orbit and spin speeds when Realistic Mode is enabled (default 0.1 = 10% of normal speed)");
-
+        
+        FlashlightEnabled = realisticCat.CreateEntry(
+            "Flashlight_Enabled", true,
+            "Flashlight Enabled",
+            "The enable a flashlight mounted to your head (tap on the bottom right of your head to toggle it)");
+        FlashlightIntensity = realisticCat.CreateEntry(
+            "Flashlight_Intensity", 3f,
+            "Flashlight Intensity",
+            "The intensity of the flashlight's light");
+        FlashLightRange = realisticCat.CreateEntry(
+            "Flashlight_Range", 17f,
+            "Flashlight Range",
+            "The range of the flashlight's light");
+        FlashlightOuterAngle = realisticCat.CreateEntry(
+            "Flashlight_Outer_Angle", 55f,
+            "Flashlight Outer Angle",
+            "The outer angle of the flashlight's light (anywhere where the light reaches)");
+        FlashlightInnerAngle = realisticCat.CreateEntry(
+            "Flashlight_Inner_Angle", 35f,
+            "Flashlight Inner Angle",
+            "The inner angle of the flashlight's light (the spot where light is at max intensity)");
+        
         SolarSystemGymX = globalCat.CreateEntry(
             "OW_SolarSystemGymX", 2.28f,
             "Solar System Gym X", "The X position (in-game coordinates) of the solar system in the gym");
@@ -334,7 +367,7 @@ public static class OwSystemSettings
             "Do sun time loop", "Let the sun change stages and eventually go kaboom :3");
         SunStayRed = sunCat.CreateEntry(
             "Sun_StayRed", false,
-            "Stay Red", "Makes the sun stay red if the time loop is disabled");
+            "Stay MainPhase", "Makes the sun stay red if the time loop is disabled");
 
         SunDoTimeLoopInMatches = sunCat.CreateEntry(
             "Sun_TimeLoopInMatches", true,
@@ -364,11 +397,11 @@ public static class OwSystemSettings
 
         SunSecondsToFullRed = sunCat.CreateEntry(
             "Sun_SecondsToFullRed", 60 * 22,
-            "Seconds to Full Red",
+            "Seconds to Full MainPhase",
             "How many seconds the sun takes to turn fully red (~22 min default)");
         SunWaitAfterRed = sunCat.CreateEntry(
             "Sun_WaitAfterRed", 92f,
-            "Wait After Red (s)",
+            "Wait After MainPhase (s)",
             "Seconds the sun holds at full red before collapsing");
         SunExpansionTime = sunCat.CreateEntry(
             "Sun_WallExpansionTime", 25f,
@@ -397,7 +430,7 @@ public static class OwSystemSettings
             "HourGlassTwins_Enabled", true,
             "Enabled", "Toggle the Hourglass Twins");
         HourGlassTwinsOrbitDistance = hourglassCat.CreateEntry(
-            "HourGlassTwins_OrbitDistance", 3.88f,
+            "HourGlassTwins_OrbitDistance", 4.121f,
             "Orbit Distance",
             "Pre-scale orbit distance from the Sun");
         HourGlassTwinsOrbitSpeed = hourglassCat.CreateEntry(
@@ -429,7 +462,7 @@ public static class OwSystemSettings
             "TimberHearth_Enabled", true,
             "Enabled", "Toggle Timber Hearth");
         TimberHearthOrbitDistance = timberHearthCat.CreateEntry(
-            "TimberHearth_OrbitDistance", 5.6f,
+            "TimberHearth_OrbitDistance", 7.083f,
             "Orbit Distance",
             "Pre-scale orbit distance from the Sun");
         TimberHearthOrbitSpeed = timberHearthCat.CreateEntry(
@@ -446,11 +479,11 @@ public static class OwSystemSettings
             "Attlerock_Enabled", true,
             "Enabled", "Toggle Attlerock (Timber Hearth's moon)");
         AttlerockOrbitDistance = attlerockCat.CreateEntry(
-            "Attlerock_OrbitDistance", 0.8f,
+            "Attlerock_OrbitDistance", 0.742f,
             "Orbit Distance",
             "Pre-scale orbit distance from Timber Hearth");
         AttlerockOrbitSpeed = attlerockCat.CreateEntry(
-            "Attlerock_OrbitSpeed", 3.4286f,
+            "Attlerock_OrbitSpeed", 3.4853f,
             "Orbit Speed", "Degrees per second around Timber Hearth");
         AttlerockSpinSpeed = attlerockCat.CreateEntry(
             "Attlerock_SpinSpeed", AttlerockOrbitSpeed.Value,
@@ -460,7 +493,7 @@ public static class OwSystemSettings
             "BrittleHollow_Enabled", true,
             "Enabled", "Toggle Brittle Hollow");
         BrittleHollowOrbitDistance = brittleHollowCat.CreateEntry(
-            "BrittleHollow_OrbitDistance", 7.8f,
+            "BrittleHollow_OrbitDistance", 9.637f,
             "Orbit Distance",
             "Pre-scale orbit distance from the Sun");
         BrittleHollowOrbitSpeed = brittleHollowCat.CreateEntry(
@@ -485,7 +518,7 @@ public static class OwSystemSettings
             "HollowsLantern_Enabled", true,
             "Enabled", "Toggle Hollow's Lantern");
         HollowsLanternOrbitDistance = hollowsLanternCat.CreateEntry(
-            "HollowsLantern_OrbitDistance", 0.66f,
+            "HollowsLantern_OrbitDistance", 0.824f,
             "Orbit Distance",
             "Pre-scale orbit distance from Brittle Hollow");
         HollowsLanternOrbitSpeed = hollowsLanternCat.CreateEntry(
@@ -517,7 +550,7 @@ public static class OwSystemSettings
             "GiantsDeep_Enabled", true,
             "Enabled", "Toggle Giant's Deep");
         GiantsDeepOrbitDistance = giantsDeepCat.CreateEntry(
-            "GiantsDeep_OrbitDistance", 10.6f,
+            "GiantsDeep_OrbitDistance", 13.566f,
             "Orbit Distance",
             "Pre-scale orbit distance from the Sun");
         GiantsDeepOrbitSpeed = giantsDeepCat.CreateEntry(
@@ -556,11 +589,11 @@ public static class OwSystemSettings
             "Breakup Duration (s)",
             "Seconds it takes the cannon to physically break apart");
 
-        OrbitalProbeEnabled = orbitalProbeCat.CreateEntry(
+        OrbitalProbeEnabled = probeCannonCat.CreateEntry(
             "OrbitalProbe_Enabled", true,
             "Enabled", "Toggle the Orbital Probe");
-        OrbitalProbeSpeed = orbitalProbeCat.CreateEntry(
-            "OrbitalProbe_Speed", 20f,
+        OrbitalProbeSpeed = probeCannonCat.CreateEntry(
+            "OrbitalProbe_Speed", 40f,
             "Launch Speed",
             "How fast the probe will go once fired");
 
@@ -586,20 +619,35 @@ public static class OwSystemSettings
             "DarkBramble_Enabled", true,
             "Enabled", "Toggle Dark Bramble");
         DarkBrambleOrbitDistance = darkBrambleCat.CreateEntry(
-            "DarkBramble_OrbitDistance", 14.6f,
+            "DarkBramble_OrbitDistance", 16.486f,
             "Orbit Distance",
             "Pre-scale orbit distance from the Sun");
         DarkBrambleOrbitSpeed = darkBrambleCat.CreateEntry(
-            "DarkBramble_OrbitSpeed", 0.4f,
+            "DarkBramble_OrbitSpeed", 0.4114f,
             "Orbit Speed", "Degrees per second around the Sun");
 
         WhiteHoleEnabled = whiteHoleCat.CreateEntry(
             "WhiteHole_Enabled", true,
             "Enabled", "Toggle the White Hole");
+        WhiteHoleDistance = whiteHoleCat.CreateEntry(
+            "WhiteHole_Distance", 18.2f,
+            "Distance From Sun", "Pre-scale distance of the white hole from the Sun (also the far focus of the Interloper's orbit)");
+        WhiteHoleScale = whiteHoleCat.CreateEntry(
+            "WhiteHole_Scale", 0.14f,
+            "Scale", "Pre-scale size of the white hole");
+        WhiteHoleLightIntensity = whiteHoleCat.CreateEntry(
+            "WhiteHole_LightIntensity", 130f,
+            "Light Intensity", "Intensity of the white hole's light");
+        WhiteHoleLightRange = whiteHoleCat.CreateEntry(
+            "WhiteHole_LightRange", 300f,
+            "Light Range", "Range of the white hole's light");
 
         WhiteHoleStationEnabled = whiteHoleStationCat.CreateEntry(
             "WhiteHoleStation_Enabled", true,
             "Enabled", "Toggle the White Hole Station");
+        WhiteHoleStationOffset = whiteHoleStationCat.CreateEntry(
+            "WhiteHoleStation_Offset", 0.8f,
+            "Distance From White Hole", "Pre-scale distance the station sits closer to the Sun than the white hole");
 
         InterloperEnabled = interloperCat.CreateEntry(
             "Interloper_Enabled", true,
@@ -633,15 +681,22 @@ public static class OwSystemSettings
         StrangerEnabled = strangerCat.CreateEntry(
             "Stranger_Enabled", false,
             "Enabled", "Toggle the Stranger");
+        StrangerPlayMusic = strangerCat.CreateEntry(
+            "Stranger_Music", false,
+            "Stranger Music", "Play the prisoners music from the stranger");
         StrangerScale = strangerCat.CreateEntry(
             "Stranger_Scale", 1f,
             "Scale", "Size of the Stranger (multiplied by the solar system scale / 30)");
         StrangerDistance = strangerCat.CreateEntry(
-            "Stranger_Distance", 13.5f,
-            "Distance From Sun", "Pre-scale distance from the Sun (10.6 is about Giant's Deep)");
+            "Stranger_Distance", 15.5f,
+            "Distance From Sun", "Pre-scale distance from the Sun (13.566 is about Giant's Deep)");
         StrangerSatelliteAngle = strangerCat.CreateEntry(
             "Stranger_SatelliteAngle", -40f,
             "Satellite Angle", "Point on the satellite's orbit (degrees) the Stranger sits in line with");
+        StrangerSideOffsetAngle = strangerCat.CreateEntry(
+            "Stranger_SideOffsetAngle", 0.5f,
+            "Side Offset Angle",
+            "Degrees the Stranger is shifted sideways from the satellite's line so it doesn't perfectly eclipse the Sun (negative = other side)");
         StrangerCloakingField = strangerCat.CreateEntry(
             "Stranger_CloakingField", true,
             "Cloaking Field", "Toggle the Stranger's cloaking field");
@@ -735,7 +790,7 @@ public static class OwSystemSettings
             globalCat, realisticCat, sunCat, sunStationCat, hourglassCat,
             timberHearthCat, attlerockCat, brittleHollowCat,
             hollowsLanternCat, giantsDeepCat, probeCannonCat,
-            orbitalProbeCat, quantumMoonCat, darkBrambleCat,
+            quantumMoonCat, darkBrambleCat,
             whiteHoleCat, whiteHoleStationCat, interloperCat, satelliteCat, strangerCat,
             playerShipCat, signalScopeCat, marshmallowCat);
 
@@ -749,11 +804,7 @@ public static class OwSystemSettings
     }
 
     private static bool IsMatchMap(string m) => m == "Map0" || m == "Map1";
-
-    /// <summary>
-    /// Time-loop on/off, taking the "in matches" toggle into account.
-    /// Call this from ApplyToSolarSystem and from Main.SceneLoaded (after the solar system exists).
-    /// </summary>
+    
     public static void ApplySunLoop(string mapName)
     {
         var sys = Main.solarSystem;
@@ -999,10 +1050,25 @@ public static class OwSystemSettings
         }
 
         if (sys.WhiteHole != null)
+        {
             sys.WhiteHole.SetActive(WhiteHoleEnabled.Value);
+            sys.WhiteHole.transform.localPosition = new Vector3(0f, 0f, WhiteHoleDistance.Value);
+            sys.WhiteHole.transform.localScale = Vector3.one * WhiteHoleScale.Value;
+
+            var whLight = sys.WhiteHole.GetComponent<Light>();
+            if (whLight != null)
+            {
+                whLight.intensity = WhiteHoleLightIntensity.Value;
+                whLight.range = WhiteHoleLightRange.Value;
+            }
+        }
 
         if (sys.WhiteHoleStation != null)
+        {
             sys.WhiteHoleStation.SetActive(WhiteHoleStationEnabled.Value);
+            sys.WhiteHoleStation.transform.localPosition =
+                new Vector3(0f, 0f, WhiteHoleDistance.Value - WhiteHoleStationOffset.Value);
+        }
 
         if (sys.Interloper != null)
         {
@@ -1066,7 +1132,8 @@ public static class OwSystemSettings
         if (sys.Stranger != null)
         {
             var st = sys.Stranger.GetComponent<Stranger>();
-            if (st != null) st.ApplySettings(); // after the scaler so our scale wins
+            if (st != null) st.ApplySettings();
+            sys.Stranger.GetComponent<MusicEmitter>().isEnabled = StrangerPlayMusic.Value;
         }
     }
 }

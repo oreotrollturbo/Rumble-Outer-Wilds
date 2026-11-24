@@ -182,6 +182,15 @@ public class SignalScope : MonoBehaviour
         gameObject.name = isLocal ? "SignalScope" : $"SignalScope_Remote_{ownerActor}";
 
         Camera = transform.GetChild(0).gameObject;
+
+        if (!isLocal)
+        {
+            // Remote scopes must never render, or they overwrite the shared RenderTexture
+            // that the local screen displays. Their Camera transform is still used for audio math.
+            Camera.GetComponent<Camera>().enabled = false;
+            Camera.SetActive(false);
+        }
+
         startingZoom = Camera.GetComponent<Camera>().fieldOfView;
         currentFOV = Camera.GetComponent<Camera>().fieldOfView;
         Camera.GetComponent<Camera>().farClipPlane = OwSystemSettings.ViewDistance.Value;
@@ -196,7 +205,7 @@ public class SignalScope : MonoBehaviour
             CacheMusicEmitters();
             SetupStaticSound();
         }
-        // Remote scopes: no buttons, no music emitters, no static sound -> they never make noise
+        // Remote scopes: no buttons, no music emitters, no static sound, no camera -> they never make noise or render
     }
 
     void CacheMusicEmitters()
@@ -390,6 +399,14 @@ public class SignalScope : MonoBehaviour
 
     void EnableScreen(bool enable)
     {
+        if (!isLocal)
+        {
+            // Remote scope: model only, no camera, no screen (the screen material shows YOUR feed)
+            Camera.SetActive(false);
+            Screen.SetActive(false);
+            return;
+        }
+
         Camera.SetActive(enable);
         Screen.SetActive(enable);
     }

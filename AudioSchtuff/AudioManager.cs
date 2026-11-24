@@ -120,18 +120,15 @@ public static class AudioManager
 
         if (stopOnEnd)
         {
-            //Directly clean up without calling StopPlayback (avoids recursion)
             if (clipData.MixerInput != null && globalMixer != null)
                 globalMixer.RemoveMixerInput(clipData.MixerInput);
             clipData.Reader?.Dispose();
 
-            //Remove our own token from the dictionary
             if (fadeTokens.ContainsKey(clipData))
                 fadeTokens.Remove(clipData);
         }
         else
         {
-            //Normal fade ended, remove the token
             if (fadeTokens.ContainsKey(clipData))
                 fadeTokens.Remove(clipData);
         }

@@ -13,7 +13,7 @@ namespace OuterWildsRumble.Components;
 [RegisterTypeInIl2Cpp]
 public class SupernovaSun : MonoBehaviour
 {
-    // Sounds names
+    //Sound names
     private const string endTimesSoundName = "OW_EndTimes.wav";
     private const string supernovaCollapseSoundName = "Sun_supernova_collapse.wav";
     private const string supernovaExplosionSoundName = "Sun_supernova_explosion.wav";
@@ -26,7 +26,6 @@ public class SupernovaSun : MonoBehaviour
     private float wallExpansionSpeed = 0f;
     private AudioManager.ClipData wallClip;
 
-    // Wall sound envelope: ramp up while approaching -> hold at max -> fade out
     private const float wallPeakHoldSeconds = 1f;
     private const float wallFadeOutSeconds = 4f;
     private bool wallPeakReached = false;
@@ -66,7 +65,7 @@ public class SupernovaSun : MonoBehaviour
 
     public enum Phase
     {
-        Red,
+        MainPhase,
         RedFullWait,
         Collapse,
         Explosion,
@@ -74,7 +73,7 @@ public class SupernovaSun : MonoBehaviour
         Done
     }
 
-    public Phase currentPhase = Phase.Red;
+    public Phase currentPhase = Phase.MainPhase;
     private float phaseTimer = 0f;
 
     private GameObject opaqueSunGO;
@@ -128,9 +127,8 @@ public class SupernovaSun : MonoBehaviour
 
     void Start()
     {
-        // Locate both sun GameObjects from the root.
         transparentSunGO = transform.GetChild(0).gameObject; // hidden until Explosion
-        opaqueSunGO = transform.GetChild(1).gameObject; // visible during Red…Collapse
+        opaqueSunGO = transform.GetChild(1).gameObject; // visible during MainPhase…Collapse
 
         //main renderers.
         opaqueSunRenderer = opaqueSunGO.GetComponent<Renderer>();
@@ -173,14 +171,12 @@ public class SupernovaSun : MonoBehaviour
             originalLightIntensity = sunLight.intensity;
         }
 
-        // Compute radius from the opaque sun's renderer (it's visible at Start).
         sunBaseRadius = Mathf.Max(
             opaqueSunRenderer.bounds.extents.x,
             opaqueSunRenderer.bounds.extents.y,
             opaqueSunRenderer.bounds.extents.z);
         sunRadiusPerUnitScale = sunBaseRadius / initialScale.x;
 
-        // Required engulf target.
         requiredTarget = new RequiredTarget
         {
             transform = Main.solarSystem.HearthianMapSatelite.transform,
@@ -228,13 +224,13 @@ public class SupernovaSun : MonoBehaviour
             }
             else
             {
-                currentPhase = Phase.Red;
+                currentPhase = Phase.MainPhase;
             }
         }
 
         switch (currentPhase)
         {
-            case Phase.Red: UpdateRedPhase(); break;
+            case Phase.MainPhase: UpdateRedPhase(); break;
             case Phase.RedFullWait: UpdateRedFullWaitPhase(); break;
             case Phase.Collapse: UpdateCollapsePhase(); break;
             case Phase.Explosion: UpdateExplosionPhase(); break;
@@ -408,14 +404,7 @@ public class SupernovaSun : MonoBehaviour
         float distanceToCover = Mathf.Max(0f, farthestDistanceNeeded - startRadius);
         return distanceToCover / Mathf.Max(supernovaDuration, 0.0001f);
     }
-
-    /// <summary>
-    /// Wall sound envelope:
-    ///   1. Approaching: ramps from the configured base volume up to 1.0 as the wall closes in.
-    ///   2. Wall reaches the player: holds at max for wallPeakHoldSeconds.
-    ///   3. Then fades to silence over wallFadeOutSeconds and stops the clip,
-    ///      even if the wall is still expanding.
-    /// </summary>
+    
     private void UpdateWallClipVolume()
     {
         if (wallClip == null) return;
@@ -424,7 +413,6 @@ public class SupernovaSun : MonoBehaviour
         float distToPlayer = Vector3.Distance(transform.position, playerTransform.position);
         float surfaceDistance = distToPlayer - currentRadius;
 
-        // Latch the moment the wall reaches the player
         if (!wallPeakReached && surfaceDistance <= 0f)
         {
             wallPeakReached = true;
@@ -435,12 +423,11 @@ public class SupernovaSun : MonoBehaviour
         {
             wallPeakTimer += Time.deltaTime;
 
-            // Hold at max for wallPeakHoldSeconds, then fade out
+            //Fade out after a while so it doesnt take fucking ages
             float fadeT = Mathf.Clamp01((wallPeakTimer - wallPeakHoldSeconds) / wallFadeOutSeconds);
 
             if (fadeT >= 1f)
             {
-                // Fully faded: stop the looping clip
                 AudioManager.FadeOut(wallClip, 0f, 0f, 0f, true);
                 wallClip = null;
                 return;
@@ -450,7 +437,6 @@ public class SupernovaSun : MonoBehaviour
             return;
         }
 
-        // Approaching: ramp from the configured base volume up to max as the wall closes in
         float range = Mathf.Max(wallRampRange, 1f);
         wallClip.Reader.Volume = Mathf.Lerp(
             OwSystemSettings.SunSupernovaWallVolume.Value, 1f,
@@ -503,14 +489,13 @@ public class SupernovaSun : MonoBehaviour
             superHalo.HaloRing1Color = Color.darkCyan;
             superHalo.HaloRing2Color = Color.cyan;
 
-            // Pre-load start state into the transparent sun's halo.
             if (transHaloMaterial != null) SunShaderUtils.ApplyHalo(transHaloMaterial, startHalo);
         }
     }
 
     private void OnRedFull()
     {
-        if (currentPhase != Phase.Red) return;
+        if (currentPhase != Phase.MainPhase) return;
         Main.solarSystem.SunStation.gameObject.SetActive(false);
         AudioManager.PlaySoundIfFileExists(
             Path.Combine(Main.folderPath, endTimesSoundName),
@@ -524,7 +509,7 @@ public class SupernovaSun : MonoBehaviour
     {
         yield return new WaitForSeconds(waitAfterRed);
 
-        // ── Collapse — opaque sun shrinks its corona ──────────────────────────
+        // Collapse the opaque sun
         currentPhase = Phase.Collapse;
         phaseTimer = 0f;
         AudioManager.PlaySoundIfFileExists(
@@ -553,9 +538,7 @@ public class SupernovaSun : MonoBehaviour
 
         yield return new WaitForSeconds(0.2f);
 
-        // ── Swap to transparent sun ───────────────────────────────────────────
-        // Seed the transparent sun with the final white-collapse state so there
-        // is no visual pop on the first Explosion frame.
+        // Swap to transparent sun
         SunShaderUtils.ApplyCore(transSunMaterial, whiteCore);
         if (transHaloMaterial != null) SunShaderUtils.ApplyHalo(transHaloMaterial, whiteHalo);
         transSunMaterial.SetFloat("_Alpha", 1f);
@@ -564,11 +547,11 @@ public class SupernovaSun : MonoBehaviour
         opaqueSunGO.SetActive(false);
         transparentSunGO.SetActive(true);
 
-        // Redirect active material refs to the transparent sun.
+        //Change active material refs to the transparent sun.
         sunMaterial = transSunMaterial;
-        haloMaterial = transHaloMaterial; // null is safe — all ApplyHalo calls are guarded
+        haloMaterial = transHaloMaterial; 
 
-        // ── Explosion ─────────────────────────────────────────────────────────
+        //Kaboom
         currentPhase = Phase.Explosion;
         phaseTimer = 0f;
         AudioManager.PlaySoundIfFileExists(
@@ -582,22 +565,15 @@ public class SupernovaSun : MonoBehaviour
             OwSystemSettings.SunSupernovaWallVolume.Value, true);
         wallPeakReached = false;
         wallPeakTimer = 0f;
-
-        // Previously this waited a *second* full explosionDuration on top of the 2.8s
-        // delay above, so the total time spent in Explosion was 2.8 + explosionDuration —
-        // but UpdateExplosionPhase's lerp (phaseTimer / explosionDuration) already hits
-        // t=1 at just explosionDuration. The sun sat frozen at its final explosion state
-        // for the extra 2.8s before Wall phase kicked in. Waiting only the remainder
-        // makes the visual finish exactly when the phase changes.
+        
         yield return new WaitForSeconds(Mathf.Max(0f, explosionDuration - 2.8f));
 
-        // Force the final explosion state to avoid any flash at the Wall boundary.
         SunShaderUtils.ApplyCore(sunMaterial, superCore);
         if (haloMaterial != null) SunShaderUtils.ApplyHalo(haloMaterial, superHalo);
         sunLight.color = sunlightBlue;
         transform.localScale = explosionTargetScale;
 
-        // ── Wall ──────────────────────────────────────────────────────────────
+        //Le wall, (post initial explosion)
         currentPhase = Phase.Wall;
         phaseTimer = 0f;
         float currentRadius = sunRadiusPerUnitScale * transform.localScale.x;
@@ -611,11 +587,9 @@ public class SupernovaSun : MonoBehaviour
         isFadingOut = true;
 
         float fadeDuration = 4f;
-        // If the wall sound is still playing (hasn't finished its own fade), take over from the current volume.
         if (wallClip != null)
             AudioManager.FadeOut(wallClip, fadeDuration, 0, wallClip.Reader.Volume, true);
 
-        // At this point sunMaterial points to the transparent sun — _Alpha is valid.
         float startCoreAlpha = sunMaterial.GetFloat("_Alpha");
         float startHaloAlpha = haloMaterial != null ? haloMaterial.GetFloat("_Alpha") : 1f;
         float startLightIntensity = sunLight.intensity;
@@ -642,22 +616,20 @@ public class SupernovaSun : MonoBehaviour
             ResetAfterExplosion();
     }
 
-    // ── Reset ─────────────────────────────────────────────────────────────────
     /// <summary>
-    /// Full reset back to Phase.Red. Only valid when currentPhase == Done.
+    /// Full reset back to Phase.MainPhase. Only valid when currentPhase == Done.
     /// </summary>
     public void ResetAfterExplosion()
     {
         if (currentPhase != Phase.Done) return;
 
-        // Stop wall sound.
+        //Stop the wall sound
         if (wallClip != null)
         {
             AudioManager.FadeOut(wallClip, 0f, 0f, 0f, true);
             wallClip = null;
         }
-
-        // Re-enable required target and swallowed bodies.
+        
         requiredTarget.transform.gameObject.SetActive(true);
         foreach (var body in bodiesToSwallow)
         {
@@ -665,27 +637,22 @@ public class SupernovaSun : MonoBehaviour
                 body.transform.gameObject.SetActive(true);
         }
 
-        // Restore opaque sun; hide transparent.
         transparentSunGO.SetActive(false);
         opaqueSunGO.SetActive(true);
 
-        // Restore the corona object on the opaque sun.
         if (opaqueCollapseObject != null)
         {
             opaqueCollapseObject.localScale = Vector3.one;
             opaqueCollapseObject.gameObject.SetActive(true);
         }
 
-        // Reset transparent sun's _Alpha so it is ready for the next cycle.
         transSunMaterial.SetFloat("_Alpha", 1f);
         if (transHaloMaterial != null) transHaloMaterial.SetFloat("_Alpha", 1f);
 
-        // Redirect active refs back to the opaque materials.
         sunMaterial = opaqueSunMaterial;
         haloMaterial = opaqueHaloMaterial;
 
-        // Reset state flags.
-        currentPhase = Phase.Red;
+        currentPhase = Phase.MainPhase;
         phaseTimer = 0f;
         hasReachedPlayer = false;
         isFadingOut = false;
@@ -711,7 +678,7 @@ public class SupernovaSun : MonoBehaviour
         MelonCoroutines.Start(InitializeAfterFrame());
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
+    //############## HELPERS #####################
     private float CalculateWorldRadius(Transform obj)
     {
         Renderer[] allRenderers = obj.GetComponentsInChildren<Renderer>();

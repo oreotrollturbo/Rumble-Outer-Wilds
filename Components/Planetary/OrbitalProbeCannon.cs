@@ -50,8 +50,7 @@ public class OrbitalProbeCannon : MonoBehaviour
 
     private Quaternion targetRotation;
     public Orbiter orbiter;
-
-    // ── Initial-state 
+    
     private Vector3 baseInitialLocalPosition;
     private Quaternion baseInitialLocalRotation;
     private Vector3 middleInitialLocalPosition;
@@ -60,7 +59,6 @@ public class OrbitalProbeCannon : MonoBehaviour
     private Quaternion tipInitialLocalRotation;
     private Quaternion cannonInitialWorldRotation;
 
-    // ── Active coroutine handles
     private object firingCoroutine;
     private object explosionCoroutine;
 
@@ -98,10 +96,7 @@ public class OrbitalProbeCannon : MonoBehaviour
         firingCoroutine = MelonCoroutines.Start(FiringSequence());
     }
 
-    /// <summary>
-    /// Stops any in-progress sequence, snaps everything back to its spawn-time
-    /// state, then kicks off a fresh firing sequence — ready to use on loop reset.
-    /// </summary>
+    
     public void Restart()
     {
         MelonLogger.Msg("[OrbitalProbeCannon] Restarting");
